@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Propuesta de contenido y optimización digital para Daring.">
+  <title>Daring | Una comunicación a la altura del producto</title>
+  <link rel="stylesheet" href="assets/design-tokens.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --orange: #8f2d24; --orange-soft: var(--orange); --ink: #1e2421; --cream: #f6f0e6; --paper: #fffaf2; --sand: #e8dcc9; --olive: #68724b; --muted: #706b62; --line: rgba(30, 36, 33, .14); --shadow: 0 24px 70px rgba(55, 42, 29, .13); --ease: cubic-bezier(.2, .8, .2, 1); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--cream); color: var(--ink); font-family: var(--font-body); text-align: center; overflow-x: hidden; }
+    img { max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    .container { width: min(1160px, calc(100% - 3rem)); margin-inline: auto; }
+    .site-header { position: absolute; z-index: 10; top: 0; right: 0; left: 0; padding: 1.5rem 0; color: var(--paper); }
+    .nav { display: flex; justify-content: space-between; align-items: center; }
+    .brand { display: inline-flex; align-items: center; }
+    .brand img { display: block; width: 128px; height: auto; }
+    .nav-link { color: rgba(255,253,248,.72); font-size: .78rem; font-weight: 700; transition: color .2s ease; }
+    .nav-link:hover { color: white; }
+    .hero { position: relative; display: grid; align-items: end; min-height: 760px; padding: 9rem 0 6rem; overflow: hidden; background: var(--ink); color: var(--paper); }
+    .hero::before { content: ""; position: absolute; width: min(62vw, 800px); height: min(62vw, 800px); border: 1px solid rgba(255,253,248,.12); border-radius: 50%; top: 8%; right: -17%; animation: orbit 18s linear infinite; }
+    .hero::after { content: ""; position: absolute; width: 26rem; height: 26rem; border-radius: 50%; background: rgba(143,45,36,.22); filter: blur(35px); top: 12%; right: -12rem; }
+    .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: .95fr 1.05fr; gap: 6vw; align-items: center; }
+    .eyebrow { display: inline-flex; align-items: center; gap: .65rem; color: var(--orange-soft); font-size: .72rem; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 28px; height: 2px; background: currentColor; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2, h3 { font-family: var(--font-display); font-weight: 400; letter-spacing: -.025em; }
+    h1, h2, h3 { overflow-wrap: break-word; }
+    h1 { max-width: 690px; margin-top: 1.4rem; font-size: clamp(3.8rem, 7.7vw, 7.7rem); line-height: .89; }
+    h1 em { color: var(--orange-soft); font-style: normal; }
+    h1 em, .quality h2 span { white-space: nowrap; }
+    .hero-copy p { max-width: 510px; margin-top: 1.65rem; color: rgba(255,253,248,.71); font-size: clamp(1rem, 1.5vw, 1.18rem); line-height: 1.6; }
+    .hero-image { position: relative; min-height: 510px; border-radius: 230px 230px 26px 26px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.32); transform: rotate(2deg); animation: float 7s ease-in-out infinite; }
+    .hero-image img { display: block; width: 100%; height: 100%; min-height: 510px; object-fit: cover; }
+    .hero-foot { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2.3rem; }
+    .pill { padding: .65rem .85rem; border: 1px solid rgba(255,255,255,.17); border-radius: 99px; color: rgba(255,253,248,.78); font-size: .74rem; font-weight: 700; }
+    .scroll-cue { position: absolute; right: 3rem; bottom: 2rem; color: rgba(255,253,248,.46); font-size: .67rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; writing-mode: vertical-rl; }
+    section { padding: 8rem 0; }
+    .intro { display: grid; grid-template-columns: .8fr 1.2fr; gap: 7vw; align-items: start; }
+    .idea-media { position: relative; min-height: 470px; border-radius: 22px; overflow: hidden; background: var(--sand); box-shadow: var(--shadow); }
+    .idea-media::after { content: "DARING / COCINA CASERA"; position: absolute; right: 1.2rem; bottom: 1rem; left: 1.2rem; color: white; font-size: .62rem; font-weight: 800; letter-spacing: .15em; text-shadow: 0 1px 12px rgba(0,0,0,.45); }
+    .idea-media img { display: block; width: 100%; height: 100%; min-height: 470px; object-fit: cover; object-position: center; filter: saturate(1.06) contrast(1.04) brightness(.98); }
+    .idea-media .section-label { position: absolute; z-index: 1; top: 1.2rem; left: 1.2rem; padding: .5rem .7rem; border-radius: 99px; background: rgba(255,250,242,.9); }
+    .section-label { color: var(--orange); font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h2 { max-width: 850px; margin-top: .8rem; font-size: clamp(2.8rem, 5.5vw, 5.5rem); line-height: .96; }
+    .intro h2 { margin-top: 0; }
+    .intro h2 span { color: var(--orange); }
+    .body-copy { max-width: 600px; margin-right: auto; margin-left: auto; color: var(--muted); font-size: 1rem; line-height: 1.7; }
+    .body-copy + .body-copy { margin-top: 1rem; }
+    .signal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 3.6rem; }
+    .signal { padding: 1.5rem; border-top: 2px solid var(--orange); background: rgba(255,253,248,.54); }
+    .signal:nth-child(2) { border-color: var(--olive); }
+    .signal:nth-child(3) { border-color: var(--ink); }
+    .signal strong { display: block; margin-bottom: .55rem; font-size: .93rem; }
+    .signal p { color: var(--muted); font-size: .88rem; line-height: 1.5; }
+    .dark-section { background: var(--ink); color: var(--paper); }
+    .dark-section .section-label { color: var(--orange-soft); }
+    .dark-section h2 { max-width: 800px; }
+    .dark-section h2 em { color: var(--orange-soft); font-style: normal; }
+    .offer-intro { display: flex; justify-content: space-between; gap: 2rem; align-items: end; }
+    .offer-intro .body-copy { color: rgba(255,253,248,.68); }
+    .offers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; margin-top: 3.2rem; }
+    .offer { position: relative; display: flex; flex-direction: column; min-height: 635px; padding: 2rem; border: 1px solid var(--line); border-radius: 22px; background: var(--paper); color: var(--ink); box-shadow: var(--shadow); overflow: hidden; transition: transform .35s var(--ease), box-shadow .35s ease; }
+    .offer:hover { transform: translateY(-8px); box-shadow: 0 30px 80px rgba(0,0,0,.28); }
+    .offer.featured { background: var(--sand); }
+    .offer::before { content: ""; position: absolute; width: 170px; height: 170px; border-radius: 50%; background: rgba(143,45,36,.11); top: -90px; right: -50px; }
+    .offer.featured::before { background: rgba(104,114,75,.2); }
+    .offer-top { display: flex; flex-direction: column; justify-content: center; gap: .35rem; align-items: center; }
+    .offer-kicker { color: var(--orange); font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .featured .offer-kicker { color: var(--olive); }
+    .offer-price { margin-top: 1.3rem; font-family: var(--font-display); font-size: 3.5rem; line-height: 1; }
+    .offer-price small { display: inline-block; margin-left: .3rem; color: var(--muted); font-family: var(--font-body); font-size: .76rem; font-weight: 700; letter-spacing: .04em; }
+    .offer h3 { max-width: 350px; margin-top: .9rem; font-size: 2.35rem; line-height: .98; }
+    .offer-description { margin-top: .9rem; color: var(--muted); font-size: .9rem; line-height: 1.55; }
+    .offer-list { display: grid; gap: .7rem; max-width: 470px; margin: 1.7rem auto 2rem; padding: 0; list-style: none; }
+    .offer-list li { display: grid; grid-template-columns: 1.2rem 1fr; gap: .55rem; color: var(--ink); font-size: .86rem; line-height: 1.4; }
+    .offer-list li::before { content: "✓"; color: var(--orange); font-weight: 800; }
+    .featured .offer-list li::before { color: var(--olive); }
+    .offer-note { margin-top: auto; padding-top: 1.1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .74rem; line-height: 1.45; }
+    .whatsapp { display: flex; justify-content: center; align-items: center; gap: .55rem; margin-top: 1.15rem; padding: 1rem 1.1rem; border-radius: 99px; background: var(--orange); color: white; font-size: .82rem; font-weight: 800; transition: background .2s ease, transform .2s ease; }
+    .whatsapp:hover { background: var(--orange-soft); transform: translateY(-2px); }
+    .whatsapp svg { width: 17px; height: 17px; fill: currentColor; }
+    .quality { display: grid; grid-template-columns: .8fr 1.2fr; gap: 7vw; align-items: center; }
+    .quality h2 { margin-top: 0; }
+    .quality h2 span { color: var(--orange); }
+    .quality-copy { color: var(--muted); line-height: 1.7; }
+    .quality-copy strong { color: var(--ink); }
+    .specs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .spec { padding: 1.35rem; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,253,248,.48); }
+    .spec-number { color: var(--orange); font-family: var(--font-display); font-size: 2.2rem; line-height: 1; }
+    .spec h3 { margin-top: .65rem; font-family: var(--font-body); font-size: .87rem; font-weight: 800; }
+    .spec p { margin-top: .35rem; color: var(--muted); font-size: .8rem; line-height: 1.45; }
+    .transformation { padding-top: 0; }
+    .transformation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 3rem; }
+    .transform-card { min-height: 390px; padding: 2rem; border-radius: 20px; background: var(--sand); }
+    .transform-card.after { background: var(--orange); color: white; }
+    .transform-card .label { font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .transform-card h3 { max-width: 400px; margin-top: 2.2rem; font-size: 3rem; line-height: .96; }
+    .transform-card ul { margin: 1.8rem 0 0; padding-left: 1.1rem; }
+    .transform-card li { margin: .6rem 0; font-size: .9rem; line-height: 1.4; }
+    .final { position: relative; padding: 7rem 0 3rem; background: var(--ink); color: var(--paper); overflow: hidden; }
+    .final::before { content: ""; position: absolute; width: 34rem; height: 34rem; border: 1px solid rgba(143,45,36,.38); border-radius: 50%; top: -16rem; right: -8rem; }
+    .final-inner { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 3rem; align-items: end; }
+    .final h2 { max-width: 720px; margin-top: .7rem; }
+    .final h2 .line { display: block; }
+    .final h2 .final-em { color: var(--orange); font-size: 1.15em; white-space: nowrap; }
+    .final .body-copy { margin-top: 1.2rem; color: rgba(255,253,248,.65); }
+    .final-actions { display: flex; flex-direction: column; gap: .65rem; min-width: 230px; }
+    .final-actions .whatsapp { margin: 0; }
+    .final-actions .whatsapp.secondary { border: 1px solid rgba(255,255,255,.23); background: transparent; }
+    .final-actions .whatsapp.secondary:hover { background: rgba(255,255,255,.1); }
+    .footer { display: flex; justify-content: space-between; padding-top: 5rem; color: rgba(255,253,248,.43); font-size: .7rem; }
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .75s var(--ease), transform .75s var(--ease); }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+    @keyframes float { 0%, 100% { transform: rotate(2deg) translateY(0); } 50% { transform: rotate(1deg) translateY(-12px); } }
+    @keyframes orbit { to { transform: rotate(360deg); } }
+    @media (max-width: 850px) { .hero { min-height: auto; padding-top: 8rem; } .hero-grid, .intro, .quality { grid-template-columns: 1fr; gap: 3rem; text-align: center; } .hero-copy p, .body-copy, .quality-copy { margin-right: auto; margin-left: auto; } .hero-image { width: min(100%, 430px); min-height: 410px; margin: 0 auto; } .hero-image img { min-height: 410px; } .intro h2 { max-width: 600px; margin-right: auto; margin-left: auto; } .offer-intro, .final-inner { display: block; text-align: center; } .offer-intro .body-copy { margin-top: 1rem; } .offers { max-width: 620px; margin-right: auto; margin-left: auto; } .final-actions { flex-direction: row; justify-content: center; margin-top: 2rem; } }
+    @media (max-width: 620px) { .container { width: min(100% - 2rem, 500px); } .site-header { padding-top: 1.1rem; } .nav { justify-content: center; } .nav-link { display: none; } .hero { padding: 7rem 0 4rem; } h1 { max-width: 100%; font-size: clamp(2.55rem, 12.2vw, 4.3rem); line-height: .94; overflow-wrap: break-word; } h2 { max-width: 100%; font-size: clamp(2.35rem, 11.5vw, 4rem); overflow-wrap: break-word; } section { padding: 5rem 0; } .hero-image { width: min(100%, 330px); min-height: 360px; border-radius: 180px 180px 22px 22px; } .hero-image img { min-height: 360px; } .idea-media { width: min(100%, 330px); min-height: 390px; margin: 0 auto; } .idea-media img { min-height: 390px; } .signal-grid, .offers, .transformation-grid, .specs { grid-template-columns: 1fr; } .signal, .spec, .transform-card { text-align: center; } .offer { min-height: auto; text-align: center; } .offer-top { flex-direction: column; align-items: center; } .offer-list { max-width: 360px; margin-right: auto; margin-left: auto; } .offer-list li { display: block; text-align: center; } .offer-list li::before { display: inline-block; margin-right: .35rem; } .offer-note { margin-top: 1rem; } .transform-card { min-height: auto; padding: 1.5rem; } .transform-card h3 { margin-top: 1.8rem; font-size: 2.4rem; } .transform-card ul { max-width: 280px; margin-right: auto; margin-left: auto; padding-left: 0; list-style-position: inside; } .final-actions { flex-direction: column; align-items: stretch; } .footer { display: block; padding-top: 3.5rem; text-align: center; } .footer span { display: block; margin-top: .5rem; } .scroll-cue { display: none; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } .reveal { opacity: 1; transform: none; } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="#inicio" aria-label="Daring inicio"><img src="assets/logo daring.webp" alt="Daring"></a>
+      <a class="nav-link" href="#propuestas">Ver propuestas <span aria-hidden="true">↘</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio">
+      <div class="container hero-grid">
+        <div class="hero-copy reveal">
+          <span class="eyebrow">Propuesta de contenido y conversión</span>
+          <h1>Una buena sartén merece una comunicación a la <em>altura.</em></h1>
+          <p>Una propuesta para mostrar mejor todo lo que Daring puede hacer: contenido que conecta con las personas y una página que las ayuda a decidir.</p>
+          <div class="hero-foot" aria-label="Características de producción"><span class="pill">4K · 30 FPS</span><span class="pill">Tomas en cámara lenta</span><span class="pill">Dos caminos posibles</span></div>
+        </div>
+        <div class="hero-image reveal"><img src="https://daring.com.uy/wp-content/uploads/2026/03/hero.jpeg" alt="Sartén Daring en uso" loading="eager"></div>
+      </div>
+      <span class="scroll-cue">Deslizá para ver la idea</span>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="intro reveal">
+          <div class="idea-media"><span class="section-label">La idea</span><img src="assets/1786107757252.webp" alt="Pizza casera preparada en una sartén Daring" loading="lazy"></div>
+          <div>
+            <h2>No se trata solo de mostrar el producto. Se trata de mostrar <span>por qué elegir Daring.</span></h2>
+            <p class="body-copy" style="margin-top:1.5rem">Vamos a detectar los principales problemas, deseos y motivaciones de las personas que podrían comprarlo. A partir de eso se van a crear ideas de contenido que hablen de lo que realmente les importa.</p>
+            <p class="body-copy">Porque una pizza dorándose no solo se ve bien: demuestra que se puede cocinar rico, rápido y sin prender el horno.</p>
+          </div>
+        </div>
+        <div class="signal-grid reveal">
+          <div class="signal"><strong>Dolores reales</strong><p>Qué complica hoy la vida de quien quiere cocinar algo rico en casa.</p></div>
+          <div class="signal"><strong>Deseos concretos</strong><p>Qué quiere sentir y lograr: practicidad, sabor, rapidez y libertad.</p></div>
+          <div class="signal"><strong>Una diferencia clara</strong><p>Por qué Daring es una elección distinta frente a otras formas de cocinar.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dark-section" id="propuestas">
+      <div class="container">
+        <div class="offer-intro reveal">
+          <div><span class="section-label">Dos formas de avanzar</span><h2>Elegí el nivel de transformación que necesita Daring.</h2></div>
+          <p class="body-copy">Las dos propuestas parten de la misma estrategia: entender qué mueve al cliente y comunicarlo de forma visual, simple y profesional.</p>
+        </div>
+        <div class="offers">
+          <article class="offer reveal">
+            <div class="offer-top"><span class="offer-kicker">Opción 01 · Contenido</span><span class="offer-kicker">$6.000</span></div>
+            <div class="offer-price">$6.000 <small>precio final</small></div>
+            <h3>Contenido para vender mejor.</h3>
+            <p class="offer-description">Una jornada de producción para crear anuncios que muestren los beneficios de Daring desde distintos ángulos de comunicación.</p>
+            <ul class="offer-list">
+              <li>Investigación de dolores, deseos y motivaciones del cliente.</li>
+              <li>Ideas y guiones para 4 anuncios de 30 a 45 segundos.</li>
+              <li>Grabación profesional en 4K a 30 FPS.</li>
+              <li>Tomas especiales en cámara lenta cuando la escena lo requiera.</li>
+              <li>Edición de los 4 anuncios.</li>
+              <li>Copy o descripción para cada anuncio.</li>
+              <li>2 piezas gráficas para redes o campañas.</li>
+              <li>2 rondas de cambios por video y pieza gráfica.</li>
+            </ul>
+            <p class="offer-note">No incluye contratación de modelos, locaciones ni elementos especiales. Se puede colaborar en la búsqueda, pero no se asume esa responsabilidad.</p>
+            <a class="whatsapp" href="https://wa.me/59898468354?text=Hola%2C%20quiero%20contratar%20la%20propuesta%20de%20contenido%20para%20vender%20por%20%246.000." target="_blank" rel="noopener">Elegir esta propuesta <span aria-hidden="true">↗</span></a>
+          </article>
+          <article class="offer featured reveal">
+            <div class="offer-top"><span class="offer-kicker">Opción 02 · Transformación</span><span class="offer-kicker">$12.000</span></div>
+            <div class="offer-price">$12.000 <small>precio final</small></div>
+            <h3>Contenido + página que convierte.</h3>
+            <p class="offer-description">Todo lo anterior, más una optimización de la experiencia digital para que la persona entienda, confíe y sepa cómo comprar.</p>
+            <ul class="offer-list">
+              <li>Todo lo incluido en la propuesta de contenido.</li>
+              <li>Video inicial con escenas grabadas profesionalmente.</li>
+              <li>Beneficios principales y problemas que resuelve.</li>
+              <li>Sección visual de características y atributos del producto.</li>
+              <li>Espacio para testimonios reales de clientes.</li>
+              <li>Recomendaciones para conseguir mensajes, audios o videos.</li>
+              <li>Mejora de la sección de compra y llamados a la acción.</li>
+              <li>2 rondas de cambios en los contenidos incluidos.</li>
+            </ul>
+            <p class="offer-note">Daring se encarga de conseguir y facilitar los testimonios de sus clientes. La propuesta incluye la estructura y las recomendaciones para usarlos.</p>
+            <a class="whatsapp" href="https://wa.me/59898468354?text=Hola%2C%20quiero%20consultar%20por%20la%20propuesta%20de%20contenido%20%2B%20optimizaci%C3%B3n%20de%20p%C3%A1gina%20por%20%2412.000." target="_blank" rel="noopener">Elegir esta propuesta <span aria-hidden="true">↗</span></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container quality">
+        <div class="reveal"><span class="section-label">La calidad también comunica</span><h2>Que se vea tan bien como <span>se siente.</span></h2></div>
+        <div class="reveal"><p class="quality-copy">Daring es un producto visual. Por eso la producción busca mostrar texturas, procesos y resultados con una calidad que haga visible la diferencia. El objetivo no es sumar tecnología por sumar: es usarla para que el producto se entienda y se desee.</p><div class="specs" style="margin-top:2rem"><div class="spec"><div class="spec-number">4K</div><h3>Imagen profesional</h3><p>Más detalle y una presentación a la altura de la marca.</p></div><div class="spec"><div class="spec-number">30</div><h3>Cuadros por segundo</h3><p>Movimiento natural para recetas y escenas de uso.</p></div><div class="spec"><div class="spec-number">↘</div><h3>Cámara lenta</h3><p>Para detenerse en lo que abre el apetito y genera deseo.</p></div><div class="spec"><div class="spec-number">02</div><h3>Rondas de cambios</h3><p>Una instancia clara para ajustar cada entrega.</p></div></div></div>
+      </div>
+    </section>
+
+    <section class="transformation">
+      <div class="container">
+        <div class="reveal"><span class="section-label">La transformación</span><h2>De una página que informa a una página que <span style="color:var(--orange)">acompaña la compra.</span></h2></div>
+        <div class="transformation-grid">
+          <div class="transform-card reveal"><span class="label">Hoy</span><h3>La persona ve una sartén y tiene que imaginar todo lo que puede hacer con ella.</h3><ul><li>Beneficios dispersos.</li><li>Pocas pruebas visibles.</li><li>Dudas que terminan en WhatsApp.</li></ul></div>
+          <div class="transform-card after reveal"><span class="label">Con la propuesta 02</span><h3>La persona entiende el valor, confía y sabe exactamente cómo comprar.</h3><ul><li>Un video que demuestra el producto.</li><li>Beneficios y atributos ordenados.</li><li>Testimonios que reducen dudas.</li><li>Un camino de compra más claro.</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="final">
+      <div class="container final-inner">
+        <div class="reveal"><span class="eyebrow">El próximo paso</span><h2><span class="line">Que Daring no solo</span><span class="line">se vea bien.</span><span class="line">Que se entienda,</span><span class="line">se recuerde</span><span class="line final-em">y se elija.</span></h2><p class="body-copy">Elegí la propuesta que mejor se adapte a este momento de la marca y conversemos sobre cómo llevarla adelante.</p></div>
+        <div class="final-actions reveal"><a class="whatsapp" href="https://wa.me/59898468354?text=Hola%2C%20quiero%20contratar%20la%20propuesta%20de%20contenido%20para%20vender%20por%20%246.000." target="_blank" rel="noopener">Contenido · $6.000 <span aria-hidden="true">↗</span></a><a class="whatsapp secondary" href="https://wa.me/59898468354?text=Hola%2C%20quiero%20consultar%20por%20la%20propuesta%20de%20contenido%20%2B%20optimizaci%C3%B3n%20de%20p%C3%A1gina%20por%20%2412.000." target="_blank" rel="noopener">Contenido + página · $12.000 <span aria-hidden="true">↗</span></a></div>
+      </div>
+      <div class="container footer"><span>DARING / PROPUESTA DE CONTENIDO</span><span>Preparado para conversar</span></div>
+    </section>
+  </main>
+
+  <script>
+    const revealItems = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: .13 });
+    revealItems.forEach((item, index) => { item.style.transitionDelay = `${Math.min(index % 4, 3) * 70}ms`; revealObserver.observe(item); });
+  </script>
+</body>
+</html>
