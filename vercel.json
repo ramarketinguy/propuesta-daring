@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/daring-propuesta.html" }
+  ]
+}
