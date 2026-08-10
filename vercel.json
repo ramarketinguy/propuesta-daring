@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/daring-propuesta.html" }
+    { "source": "/", "destination": "/daring-auditoria.html" }
   ]
 }

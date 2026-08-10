@@ -3,303 +3,92 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Auditoría de la experiencia digital y oportunidades de mejora para Daring.">
-  <title>Daring | Auditoría de la experiencia digital</title>
-  <link rel="stylesheet" href="assets/design-tokens.css">
+  <meta name="description" content="Una sartén práctica y versátil para cocinar verduras, tortillas, carnes, panes y pizza.">
+  <title>Daring | Una sartén para cada idea que tengas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; }
-    body { background: var(--color-charcoal); color: var(--color-charcoal); font-family: var(--font-body); overflow: hidden; }
-    button { font: inherit; }
-    .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-    .slide { position: absolute; inset: 0; display: grid; place-items: center; padding: 5.5rem 7vw 5rem; background: var(--color-cream); opacity: 0; visibility: hidden; transform: translateX(24px); transition: opacity .45s var(--ease-out), transform .45s var(--ease-out); overflow: hidden; }
-    .slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
-    .slide::before { content: ""; position: absolute; width: 30vw; height: 30vw; border-radius: 50%; background: rgba(199,68,47,.08); top: -16vw; right: -8vw; }
-    .slide.dark { background: var(--color-charcoal); color: var(--color-white); }
-    .slide.dark::before { background: rgba(199,68,47,.16); }
-    .content { position: relative; z-index: 1; width: min(1160px, 100%); max-height: 100%; }
-    .eyebrow { display: inline-flex; align-items: center; gap: .6rem; color: var(--color-tomato); font-size: .76rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
-    .eyebrow::before { content: ""; width: 28px; height: 2px; background: currentColor; }
-    .dark .eyebrow { color: #f18a70; }
-    h1, h2, h3, p { margin: 0; }
-    h1, h2 { font-family: var(--font-display); font-weight: 400; letter-spacing: -.025em; }
-    h1 { font-size: clamp(3.6rem, 8vw, 8.5rem); line-height: .91; max-width: 800px; }
-    h2 { font-size: clamp(2.3rem, 5vw, 5rem); line-height: .98; max-width: 870px; }
-    h3 { font-size: 1.05rem; line-height: 1.25; }
-    p, li { font-size: clamp(.9rem, 1.35vw, 1.1rem); line-height: 1.55; }
-    .lead { max-width: 650px; color: var(--color-muted); margin-top: 1.3rem; }
-    .dark .lead, .dark p { color: rgba(255,253,248,.72); }
-    .accent { color: var(--color-tomato); }
-    .tag { display: inline-block; padding: .45rem .7rem; border-radius: 99px; background: rgba(199,68,47,.11); color: var(--color-tomato-dark); font-size: .76rem; font-weight: 800; }
-    .dark .tag { background: rgba(255,255,255,.1); color: #ffd2c4; }
-    .cover { display: grid; grid-template-columns: 1.05fr .95fr; gap: 4vw; align-items: center; }
-    .cover h1 { margin-top: 1rem; font-size: clamp(3.35rem, 6.2vw, 6.6rem); max-width: 570px; }
-    .cover-art { position: relative; min-height: 440px; border-radius: var(--radius-lg); overflow: hidden; background: #c96a4e; box-shadow: var(--shadow-soft); }
-    .cover-art img { width: 100%; height: 100%; min-height: 440px; object-fit: cover; display: block; }
-    .cover-art::after { content: "DARING / EXPERIENCIA DIGITAL"; position: absolute; bottom: 1.2rem; left: 1.2rem; color: white; font-size: .68rem; font-weight: 800; letter-spacing: .14em; }
-    .brand-mark { display: flex; align-items: center; gap: .75rem; font-weight: 800; letter-spacing: .12em; }
-    .brand-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--color-tomato); }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2.3rem; }
-    .stat { padding: 1.1rem 1.2rem; border-top: 2px solid var(--color-tomato); background: rgba(255,255,255,.34); }
-    .stat strong { display: block; font-size: 1.5rem; }
-    .stat span { display: block; color: var(--color-muted); font-size: .78rem; line-height: 1.35; margin-top: .25rem; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; margin-top: 2rem; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 2.2rem; }
-    .card { padding: 1.35rem; border: 1px solid var(--color-line); border-radius: var(--radius-md); background: rgba(255,253,248,.63); box-shadow: var(--shadow-card); }
-    .card h3 { margin: .7rem 0 .5rem; }
-    .card p { color: var(--color-muted); font-size: .9rem; line-height: 1.42; }
-    .icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--color-tomato); color: white; font-weight: 800; }
-    .dark .card { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.12); box-shadow: none; }
-    .dark .card p { color: rgba(255,253,248,.65); }
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 2.1rem; }
-    .panel { border-radius: var(--radius-lg); padding: 1.8rem; min-height: 265px; }
-    .panel.today { background: #e7d9c6; }
-    .panel.ideal { background: var(--color-charcoal); color: var(--color-white); }
-    .panel h3 { font-size: 1.5rem; margin-bottom: 1.15rem; font-family: var(--font-display); font-weight: 400; }
-    .panel ul { padding-left: 1.2rem; margin: 0; }
-    .panel li { margin: .55rem 0; font-size: .95rem; }
-    .panel.ideal li::marker { color: #f18a70; }
-    .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 2.5rem; }
-    .flow-step { position: relative; padding: 1rem 1.15rem 1.25rem; border-top: 2px solid var(--color-tomato); }
-    .flow-step:not(:last-child)::after { content: "→"; position: absolute; right: -.2rem; top: .6rem; color: var(--color-tomato); font-size: 1.5rem; }
-    .flow-step b { display: block; color: var(--color-tomato); font-size: .75rem; letter-spacing: .1em; }
-    .flow-step strong { display: block; margin: .45rem 0; }
-    .flow-step p { color: var(--color-muted); font-size: .85rem; line-height: 1.35; }
-    .hero-wireframe { display: grid; grid-template-columns: 1.1fr .9fr; gap: 1.2rem; height: 300px; margin-top: 1.4rem; padding: 1rem; border: 1px solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-paper); box-shadow: var(--shadow-card); }
-    .wire-copy { display: flex; flex-direction: column; justify-content: center; padding: 1rem; }
-    .wire-copy h3 { font-family: var(--font-display); font-weight: 400; font-size: 2rem; line-height: .98; }
-    .wire-copy p { margin: .65rem 0 .8rem; color: var(--color-muted); font-size: .83rem; line-height: 1.35; }
-    .cta { display: inline-flex; width: fit-content; padding: .8rem 1rem; border-radius: 99px; background: var(--color-tomato); color: white; font-size: .8rem; font-weight: 800; }
-    .wire-image { min-height: 0; border-radius: var(--radius-md); overflow: hidden; background: #d38266; }
-    .wire-image img { width: 100%; height: 100%; min-height: 0; display: block; object-fit: cover; }
-    .checklist { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; margin-top: 2rem; }
-    .check { display: flex; gap: .7rem; align-items: flex-start; padding: 1rem; background: rgba(255,255,255,.56); border-radius: var(--radius-sm); }
-    .check b { color: var(--color-tomato); }
-    .check span { font-size: .9rem; line-height: 1.4; }
-    .timeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2rem; }
-    .phase { padding: 1.5rem; border-radius: var(--radius-md); background: var(--color-paper); border-bottom: 5px solid var(--color-tomato); box-shadow: var(--shadow-card); }
-    .phase:nth-child(2) { border-color: var(--color-olive); }
-    .phase:nth-child(3) { border-color: var(--color-charcoal); }
-    .phase span { color: var(--color-tomato); font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
-    .phase h3 { margin: .65rem 0 .75rem; font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; }
-    .phase ul { padding-left: 1rem; margin: 0; }
-    .phase li { font-size: .86rem; margin: .45rem 0; }
-    .quote { max-width: 900px; margin: 2rem 0 0; padding: 1.5rem 0 0 1.5rem; border-left: 3px solid var(--color-tomato); font-family: var(--font-display); font-size: clamp(1.8rem, 3.5vw, 3.5rem); line-height: 1; }
-    .source { margin-top: 1.5rem; color: var(--color-muted); font-size: .78rem; }
-    .dark .source { color: rgba(255,253,248,.52); }
-    .progress { position: fixed; z-index: 20; top: 0; left: 0; height: 4px; width: 0; background: var(--color-tomato); transition: width .3s ease; }
-    .controls { position: fixed; z-index: 20; right: 2rem; bottom: 1.5rem; display: flex; align-items: center; gap: .65rem; }
-    .nav-btn { width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; background: rgba(30,36,33,.86); color: white; cursor: pointer; transition: transform .2s ease, background .2s ease; }
-    .nav-btn:hover { background: var(--color-tomato); transform: translateY(-2px); }
-    .counter { min-width: 48px; color: rgba(255,255,255,.72); font-size: .78rem; text-align: center; }
-    .hint { position: fixed; z-index: 20; left: 2rem; bottom: 1.65rem; color: rgba(255,255,255,.55); font-size: .7rem; }
-    @media (max-width: 800px) {
-      body { overflow: auto; }
-      .deck { height: auto; min-height: 100vh; overflow: visible; }
-      .slide { position: relative; min-height: 100vh; opacity: 1; visibility: visible; transform: none; display: block; padding: 4.5rem 1.4rem 5.5rem; }
-      .slide:not(:first-child) { display: none; }
-      .slide.active { display: block; }
-      .cover, .split, .hero-wireframe { grid-template-columns: 1fr; }
-      .hero-wireframe { height: auto; }
-      .cover-art { min-height: 280px; }
-      .cover-art img { min-height: 280px; }
-      .grid-3, .grid-4, .timeline { grid-template-columns: 1fr 1fr; }
-      .flow { grid-template-columns: 1fr 1fr; }
-      .flow-step:nth-child(2)::after { display: none; }
-      .hint { display: none; }
+    :root { --black:#000; --white:#fff; --wine:#963f45; --wine-light:#d06a70; --line:rgba(255,255,255,.18); --muted:#fff; --max:1180px; font-family:"DM Sans",sans-serif; color:#fff; background:#000; }
+    * { box-sizing:border-box; }
+    html { background:#000; scroll-behavior:smooth; }
+    body { margin:0; min-width:320px; overflow-x:hidden; background:#000; }
+    a { color:inherit; text-decoration:none; }
+    :focus-visible { outline:2px solid var(--wine-light); outline-offset:4px; }
+    .site-header { position:fixed; z-index:20; top:0; width:100%; padding:22px 32px; background:#000; }
+    .nav { display:flex; align-items:center; justify-content:space-between; width:min(var(--max),100%); margin:auto; }
+    .wordmark { font-size:.88rem; font-weight:700; letter-spacing:.28em; }
+    .nav-links { display:flex; align-items:center; gap:28px; color:var(--muted); font-size:.75rem; }
+    .nav-links a { transition:color .2s ease; }.nav-links a:hover { color:#fff; }
+    .nav-cta, .button { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background:var(--wine); color:#fff; font-weight:700; transition:background .2s ease, transform .2s ease; }
+    .nav-cta { padding:11px 18px; }.button { min-height:48px; padding:0 22px; font-size:.83rem; }
+    .nav-cta:hover, .button:hover { background:var(--wine-light); transform:translateY(-2px); }
+
+    .story-layout { position:relative; min-height:100vh; margin:auto; background:#000; }
+    .video-rail { position:fixed; z-index:0; inset:0; width:100vw; height:100svh; background:#000; }
+    .video-frame { position:relative; width:100%; height:100%; overflow:hidden; background:#000; }
+    .video-frame::after { content:""; position:absolute; z-index:1; inset:0; pointer-events:none; background:rgba(0,0,0,.34); }
+    #scroll-canvas { position:absolute; inset:0; display:block; width:100%; height:100%; background:#000; }
+    .video-label { position:absolute; z-index:2; right:24px; bottom:26px; display:flex; align-items:center; gap:10px; color:#fff; font-size:.65rem; letter-spacing:.12em; text-transform:uppercase; }
+    .video-label::before { content:""; width:30px; height:1px; background:var(--wine-light); }
+    .story-content { position:relative; z-index:2; width:min(var(--max),100%); min-width:0; margin:auto; padding:0 32px 100px; }
+    .story-section { min-height:88vh; display:flex; flex-direction:column; justify-content:center; padding:90px 0; opacity:.34; transform:translateY(22px); text-shadow:0 3px 22px rgba(0,0,0,.92); transition:opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1); }
+    .story-section.is-visible { opacity:1; transform:translateY(0); }
+    .story-section:first-child { min-height:100svh; padding-top:140px; align-items:flex-end; }
+    .story-section:last-child { min-height:80vh; }
+    .eyebrow, .section-kicker { color:var(--wine-light); font-size:.68rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; }
+    .eyebrow { display:inline-flex; align-items:center; gap:10px; }.eyebrow::before { content:""; width:28px; height:1px; background:currentColor; }
+    h1,h2,h3,p { margin:0; }
+    h1 { max-width:700px; margin-top:18px; font-size:clamp(3.8rem,6.4vw,7.6rem); font-weight:600; letter-spacing:-.075em; line-height:.92; }
+    h2 { max-width:680px; margin-top:18px; font-size:clamp(2.8rem,4.8vw,5.8rem); font-weight:600; letter-spacing:-.07em; line-height:.95; }
+    .story-section p { max-width:520px; margin-top:24px; color:#fff; font-size:1rem; line-height:1.62; }
+    .hero-actions { display:flex; align-items:center; gap:18px; margin-top:32px; }.price-note { color:#fff; font-size:.72rem; line-height:1.3; }.price-note strong { color:#fff; font-size:1rem; }
+
+    .benefit-list { width:min(700px,100%); margin-top:52px; border-top:1px solid var(--line); }.benefit-row { display:grid; grid-template-columns:70px 1fr; gap:20px; padding:24px 0; border-bottom:1px solid var(--line); }.benefit-row small { color:var(--wine-light); font-size:.68rem; font-weight:700; letter-spacing:.1em; }.benefit-row h3 { font-size:1.35rem; font-weight:600; letter-spacing:-.04em; }.benefit-row p { margin-top:7px; font-size:.86rem; }
+    .use-list { width:min(700px,100%); display:grid; grid-template-columns:repeat(2,1fr); gap:0 24px; margin-top:48px; border-top:1px solid var(--line); }.use-item { display:flex; align-items:center; justify-content:space-between; padding:18px 0; border-bottom:1px solid var(--line); }.use-item span { color:var(--wine-light); font-size:.68rem; font-weight:700; }.use-item strong { font-size:1.15rem; font-weight:500; }
+    .editorial-block { display:flex; min-height:390px; flex-direction:column; justify-content:space-between; margin-top:44px; padding:28px; border:1px solid var(--wine-light); background:var(--wine); }.editorial-block strong { max-width:500px; font-size:clamp(2.6rem,4.5vw,5rem); letter-spacing:-.07em; line-height:.95; }.editorial-block span { color:#fff; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; }
+    .offer-block { margin-top:50px; padding-top:32px; border-top:1px solid var(--line); }.offer-line { display:flex; align-items:end; gap:24px; margin-top:28px; }.offer-price { font-size:2.8rem; font-weight:600; letter-spacing:-.07em; }.offer-meta { color:#fff; font-size:.72rem; line-height:1.35; }
+    footer { padding:28px 32px 34px; border-top:1px solid var(--line); background:#000; }.footer-inner { display:flex; align-items:center; justify-content:space-between; width:min(var(--max),100%); margin:auto; color:#fff; font-size:.72rem; }.footer-links { display:flex; gap:24px; }.footer-links a:hover { color:#fff; }
+
+    @media (max-width:900px) {
+      .site-header { padding:18px 20px; }.nav-links a:not(.nav-cta) { display:none; }
+      .story-layout { display:block; padding:0; }.video-rail { position:fixed; width:100vw; height:100svh; min-height:0; }.story-content { width:100%; padding:0 20px 70px; }
+      .story-section, .story-section:first-child, .story-section:last-child { min-height:100svh; padding:110px 0 80px; opacity:1; transform:none; }.story-section:first-child { align-items:flex-start; padding-top:140px; }
+      h1 { font-size:clamp(3.3rem,13vw,5.5rem); }.story-section p { font-size:.95rem; }.benefit-list { margin-top:38px; }.benefit-row { grid-template-columns:54px 1fr; }.use-list { margin-top:34px; }
+      .video-label { right:18px; bottom:18px; }.editorial-block { min-height:280px; }.offer-line { align-items:flex-start; flex-direction:column; gap:18px; }
+      footer { padding:24px 20px; }.footer-inner { align-items:flex-start; flex-direction:column; gap:18px; }
     }
-    @media (max-width: 520px) {
-      h1 { font-size: 3.6rem; }
-      h2 { font-size: 2.65rem; }
-      .stats, .grid-3, .grid-4, .timeline, .checklist, .flow { grid-template-columns: 1fr; }
-      .flow-step:not(:last-child)::after { display: none; }
-      .panel { min-height: auto; }
-      .controls { right: 1rem; bottom: 1rem; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .slide, .progress, .nav-btn { transition: none; }
-    }
-    @media print {
-      body { overflow: visible; background: white; }
-      .deck { height: auto; overflow: visible; }
-      .slide, .slide:not(:first-child) { position: relative; display: grid; min-height: 100vh; opacity: 1; visibility: visible; transform: none; page-break-after: always; }
-      .controls, .progress, .hint { display: none; }
-    }
+    @media (max-width:520px) { .hero-actions { align-items:flex-start; flex-direction:column; gap:12px; }.use-list { grid-template-columns:1fr; }.story-section { padding:76px 0; } }
+    @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; }.story-section { transition:none; } }
   </style>
 </head>
 <body>
-  <div class="progress" id="progress"></div>
-  <main class="deck" aria-label="Presentación de auditoría de Daring">
-    <section class="slide active dark" aria-label="Portada">
-      <div class="content cover">
-        <div>
-          <div class="brand-mark"><span class="brand-dot"></span> DARING</div>
-          <div class="eyebrow" style="margin-top:2.2rem">Auditoría de experiencia digital</div>
-          <h1>Una buena idea necesita una página que la <span class="accent">venda.</span></h1>
-          <p class="lead">Diagnóstico claro y propuesta de mejora para convertir la web de Daring en una herramienta comercial.</p>
-        </div>
-        <div class="cover-art"><img src="https://daring.com.uy/wp-content/uploads/2026/03/hero.jpeg" alt="Sartén Daring en uso para cocinar" loading="eager"></div>
-      </div>
-    </section>
-
-    <section class="slide" aria-label="Diagnóstico ejecutivo">
-      <div class="content">
-        <div class="eyebrow">01 / Diagnóstico ejecutivo</div>
-        <h2 style="margin-top:1rem">El producto tiene potencial. La página todavía no lo demuestra.</h2>
-        <p class="lead">Hoy Daring explica qué es la sartén, pero no responde con suficiente fuerza por qué comprarla ahora, por qué confiar en la marca y cómo hacerlo sin dudas.</p>
-        <div class="stats">
-          <div class="stat"><strong>Producto claro</strong><span>La sartén y sus usos se entienden.</span></div>
-          <div class="stat"><strong>Venta con fricción</strong><span>El cliente debe resolver casi todo por WhatsApp.</span></div>
-          <div class="stat"><strong>Confianza incompleta</strong><span>Faltan pruebas, especificaciones y garantías.</span></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="slide dark" aria-label="Primera impresión">
-      <div class="content">
-        <div class="eyebrow">02 / Primera impresión</div>
-        <h2 style="margin-top:1rem">En los primeros segundos, el visitante debería pensar: <span class="accent">“Esto es para mí”.</span></h2>
-        <div class="split">
-          <div class="panel today"><h3>Hoy</h3><ul><li>El mensaje principal es atractivo, pero abstracto.</li><li>El beneficio aparece mezclado con información secundaria.</li><li>La imagen no lidera la propuesta comercial.</li></ul></div>
-          <div class="panel ideal"><h3>Ideal</h3><ul><li>Una promesa concreta: pizza crocante sin prender el horno.</li><li>Precio y forma de compra visibles de inmediato.</li><li>Una foto o video que demuestre el resultado.</li></ul></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="slide" aria-label="Fortalezas actuales">
-      <div class="content">
-        <div class="eyebrow">03 / Lo que sí funciona</div>
-        <h2 style="margin-top:1rem">No hay que empezar de cero: hay activos valiosos para aprovechar.</h2>
-        <div class="grid-4">
-          <div class="card"><div class="icon">01</div><h3>Una idea diferenciadora</h3><p>Cocinar pizza y otras comidas sin depender del horno.</p></div>
-          <div class="card"><div class="icon">02</div><h3>Un producto demostrable</h3><p>La preparación de pizza permite mostrar el resultado de forma visual.</p></div>
-          <div class="card"><div class="icon">03</div><h3>Un canal directo</h3><p>WhatsApp permite conversar y cerrar pedidos rápidamente.</p></div>
-          <div class="card"><div class="icon">04</div><h3>Una identidad propia</h3><p>Libertad, cocina casera y practicidad son conceptos con potencial.</p></div>
-        </div>
-        <p class="source">La oportunidad no es cambiar la esencia: es ordenar y demostrar mejor el valor.</p>
-      </div>
-    </section>
-
-    <section class="slide" aria-label="Bloqueos de conversión">
-      <div class="content">
-        <div class="eyebrow">04 / Qué está frenando la venta</div>
-        <h2 style="margin-top:1rem">La página pide confianza antes de haberla construido.</h2>
-        <div class="grid-3">
-          <div class="card"><span class="tag">Claridad</span><h3>El beneficio queda diluido</h3><p>El visitante necesita interpretar demasiado antes de entender la ventaja principal.</p></div>
-          <div class="card"><span class="tag">Confianza</span><h3>Faltan respuestas</h3><p>No aparecen con suficiente destaque materiales, compatibilidad, garantía, colores o costo de envío.</p></div>
-          <div class="card"><span class="tag">Fricción</span><h3>Comprar requiere preguntar</h3><p>WhatsApp es válido, pero sin información previa puede sentirse como un paso extra.</p></div>
-        </div>
-        <div class="quote">Si el cliente tiene que investigar demasiado, posterga la compra o se va a comparar.</div>
-      </div>
-    </section>
-
-    <section class="slide dark" aria-label="Recorrido actual del cliente">
-      <div class="content">
-        <div class="eyebrow">05 / El recorrido actual</div>
-        <h2 style="margin-top:1rem">Cada duda sin respuesta es una oportunidad de venta que se enfría.</h2>
-        <div class="flow">
-          <div class="flow-step"><b>01 / ENTRA</b><strong>Ve una propuesta general</strong><p>“Crocante, casero y libertad” comunica estilo, pero no todo el beneficio.</p></div>
-          <div class="flow-step"><b>02 / DUDA</b><strong>Busca detalles</strong><p>Material, envío, colores, garantía y formas de pago no están suficientemente visibles.</p></div>
-          <div class="flow-step"><b>03 / ESCRIBE</b><strong>Va a WhatsApp</strong><p>El canal es directo, pero la conversación empieza con dudas básicas.</p></div>
-          <div class="flow-step"><b>04 / SE FRENA</b><strong>La decisión pierde impulso</strong><p>Cuantos más pasos necesita, más probable es que la persona lo deje para después.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="slide" aria-label="Portada ideal">
-      <div class="content">
-        <div class="eyebrow">06 / Cómo debería empezar la página</div>
-        <h2 style="margin-top:1rem">Una portada que explique, entusiasme y habilite la compra.</h2>
-        <div class="hero-wireframe">
-          <div class="wire-copy"><span class="tag">Edición fundador · $1.590</span><h3>Pizza crocante y casera, sin prender el horno.</h3><p>Sartén Daring de 28 cm para pizza, fainá, tortillas y mucho más. Liviana, práctica y pensada para cocinar todos los días.</p><span class="cta">Comprar mi Sartén Daring</span></div>
-          <div class="wire-image"><img src="https://daring.com.uy/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-07-at-11.20.40-AM-768x1024.jpeg" alt="Pizza casera preparada en Sartén Daring" loading="lazy"></div>
-        </div>
-        <p class="source">La propuesta mantiene el tono de la marca, pero transforma una frase inspiracional en una razón concreta para comprar.</p>
-      </div>
-    </section>
-
-    <section class="slide dark" aria-label="Sistema de confianza">
-      <div class="content">
-        <div class="eyebrow">07 / Qué hay que agregar</div>
-        <h2 style="margin-top:1rem">La confianza se diseña: se construye con información y pruebas.</h2>
-        <div class="checklist">
-          <div class="check"><b>✓</b><span><strong>Demostración</strong><br>Video corto preparando una pizza, mostrando el proceso y el resultado.</span></div>
-          <div class="check"><b>✓</b><span><strong>Especificaciones</strong><br>Material, recubrimiento, medidas, peso y cocinas compatibles.</span></div>
-          <div class="check"><b>✓</b><span><strong>Compra clara</strong><br>Envíos, medios de pago, colores, stock, garantía y cambios.</span></div>
-          <div class="check"><b>✓</b><span><strong>Prueba social</strong><br>Testimonios reales, fotos de clientes y recetas hechas por la comunidad.</span></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="slide" aria-label="SEO y medición">
-      <div class="content">
-        <div class="eyebrow">08 / Lo técnico también afecta las ventas</div>
-        <h2 style="margin-top:1rem">SEO y medición no son “detalles de programador”: ayudan a que la marca sea encontrada y mejorada.</h2>
-        <div class="split">
-          <div class="panel today"><h3>Problemas actuales</h3><ul><li>El inicio tiene como título solamente “daring.com.uy”.</li><li>Falta una descripción para Google y para compartir en redes.</li><li>No hay H1, schema ni textos alternativos en imágenes.</li><li>La página de tienda dice que está en obras.</li><li>No se detecta medición visible de clics ni ventas.</li></ul></div>
-          <div class="panel ideal"><h3>Corrección ideal</h3><ul><li>Mostrar en Google qué vende Daring y para quién.</li><li>Compartir enlaces con una imagen y mensaje atractivos.</li><li>Medir visitas, clics en WhatsApp, consultas y compras.</li><li>Ocultar páginas incompletas hasta que estén listas.</li></ul></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="slide" aria-label="Plan de acción">
-      <div class="content">
-        <div class="eyebrow">09 / Plan de acción</div>
-        <h2 style="margin-top:1rem">Primero claridad. Después confianza. Luego crecimiento.</h2>
-        <div class="timeline">
-          <div class="phase"><span>FASE 1 · IMPACTO RÁPIDO</span><h3>Ordenar la portada</h3><ul><li>Nuevo mensaje principal.</li><li>Precio y CTA visibles.</li><li>Fotos, beneficios y compra en una secuencia clara.</li><li>Corregir textos y páginas incompletas.</li></ul></div>
-          <div class="phase"><span>FASE 2 · MÁS CONFIANZA</span><h3>Demostrar el producto</h3><ul><li>Video de uso.</li><li>Especificaciones completas.</li><li>Envíos, pagos, garantía y preguntas frecuentes.</li><li>Testimonios reales.</li></ul></div>
-          <div class="phase"><span>FASE 3 · CRECER CON DATOS</span><h3>Medir y optimizar</h3><ul><li>Analytics, Pixel y eventos.</li><li>Seguimiento de clics y pedidos.</li><li>Pruebas de titulares, imágenes y llamados a la acción.</li></ul></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="slide dark" aria-label="Cierre">
-      <div class="content">
-        <div class="eyebrow">10 / El objetivo</div>
-        <h2 style="margin-top:1rem; max-width:950px">Que la persona entre por curiosidad, entienda el valor, confíe en Daring y sepa exactamente cómo comprar.</h2>
-        <div class="quote">Daring no necesita parecer otra marca. Necesita explicar y demostrar mejor por qué la gente debería elegirla.</div>
-        <p class="lead" style="margin-top:2rem">La página ideal no solo se ve más linda: reduce dudas, acorta el camino de compra y permite tomar decisiones con información real.</p>
-      </div>
-    </section>
+  <header class="site-header"><nav class="nav" aria-label="Navegación principal"><a class="wordmark" href="#inicio">DARING</a><div class="nav-links"><a href="#versatilidad">Versatilidad</a><a href="#usos">Qué cocinar</a><a href="#comprar">Cómo comprar</a><a class="nav-cta" href="https://wa.me/59899695118?text=Hola,%20quiero%20comprar%20la%20sart%C3%A9n%20Daring">Quiero la mía</a></div></nav></header>
+  <main class="story-layout" id="inicio">
+    <aside class="video-rail" aria-label="Demostración visual de la Sartén Daring"><div class="video-frame"><canvas id="scroll-canvas"></canvas><span class="video-label">Daring / Cocina real</span></div></aside>
+    <div class="story-content">
+      <section class="story-section is-visible"><span class="eyebrow">Edición fundador · 28 cm</span><h1>Una sartén para cada idea que tengas.</h1><p>Verduras, tortillas, carnes, panes o pizza. Cociná más, resolvé rápido y usá una sola sartén para todo lo que te den ganas.</p><div class="hero-actions"><a class="button" href="https://wa.me/59899695118?text=Hola,%20quiero%20comprar%20la%20sart%C3%A9n%20Daring">Quiero mi Sartén Daring</a><span class="price-note">Precio lanzamiento<br><strong>$1590</strong></span></div></section>
+      <section class="story-section" id="versatilidad"><span class="section-kicker">Una herramienta, muchas comidas</span><h2>La cocina cambia. La sartén se queda.</h2><p>Daring está pensada para acompañarte en lo cotidiano: una comida rápida, una receta improvisada o esa pizza que querés compartir. Menos vueltas, más posibilidades.</p><div class="benefit-list"><article class="benefit-row"><small>01</small><div><h3>De verduras a pizza</h3><p>Salteá, dorá, mezclá y cociná distintas preparaciones sin cambiar de sartén.</p></div></article><article class="benefit-row"><small>02</small><div><h3>Para todos los días</h3><p>Liviana, cómoda de manejar y con el tamaño justo para cocinar y compartir.</p></div></article><article class="benefit-row"><small>03</small><div><h3>Más comida, menos complicación</h3><p>Calentá a fuego medio, cociná a tu manera y limpiá con una esponja suave.</p></div></article></div></section>
+      <section class="story-section" id="usos"><span class="section-kicker">Qué podés cocinar</span><h2>Una para cada antojo.</h2><p>Una sartén versátil no te dice qué cocinar. Te da más opciones para elegir.</p><div class="use-list"><div class="use-item"><span>01</span><strong>Verduras</strong></div><div class="use-item"><span>02</span><strong>Tortillas</strong></div><div class="use-item"><span>03</span><strong>Carnes</strong></div><div class="use-item"><span>04</span><strong>Panes chatos</strong></div><div class="use-item"><span>05</span><strong>Pizza</strong></div></div></section>
+      <section class="story-section"><span class="section-kicker">Para cocinar sin pensarlo tanto</span><div class="editorial-block"><span>La idea es tuya</span><strong>La sartén se adapta.</strong><span>Daring / Cocina real</span></div><p>Una comida rápida, una receta improvisada o esa pizza que querés compartir. No hace falta esperar una ocasión especial para cocinar algo rico.</p></section>
+      <section class="story-section" id="comprar"><span class="section-kicker">Edición fundador</span><h2>Tu próxima sartén puede resolver mucho más.</h2><p>Sartén Daring de 28 cm para cocinar todos los días. Incluye la receta completa de la Pizza Daring, con técnica simple y tiempos sugeridos.</p><div class="offer-block"><div class="offer-line"><strong class="offer-price">$1590</strong><span class="offer-meta">Precio de lanzamiento<br>Envíos a todo el país</span><a class="button" href="https://wa.me/59899695118?text=Hola,%20quiero%20comprar%20la%20sart%C3%A9n%20Daring">Comprar por WhatsApp</a></div></div></section>
+    </div>
   </main>
-  <p class="hint">Usá ← → o hacé clic para avanzar</p>
-  <nav class="controls" aria-label="Controles de presentación">
-    <button class="nav-btn" id="prev" aria-label="Diapositiva anterior">←</button>
-    <span class="counter"><span id="current">1</span> / <span id="total">11</span></span>
-    <button class="nav-btn" id="next" aria-label="Siguiente diapositiva">→</button>
-  </nav>
+  <footer><div class="footer-inner"><span class="wordmark">DARING</span><div class="footer-links"><a href="#versatilidad">Versatilidad</a><a href="#usos">Qué cocinar</a><a href="https://wa.me/59899695118">Contacto</a></div><span>© 2026 Daring</span></div></footer>
   <script>
-    const slides = [...document.querySelectorAll('.slide')];
-    const progress = document.getElementById('progress');
-    const current = document.getElementById('current');
-    const total = document.getElementById('total');
-    let index = 0;
-    total.textContent = slides.length;
-
-    function showSlide(nextIndex) {
-      index = Math.max(0, Math.min(nextIndex, slides.length - 1));
-      slides.forEach((slide, slideIndex) => slide.classList.toggle('active', slideIndex === index));
-      current.textContent = index + 1;
-      progress.style.width = `${((index + 1) / slides.length) * 100}%`;
-    }
-    function nextSlide() { showSlide(index + 1); }
-    function previousSlide() { showSlide(index - 1); }
-    document.getElementById('next').addEventListener('click', nextSlide);
-    document.getElementById('prev').addEventListener('click', previousSlide);
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'ArrowRight' || event.key === ' ') { event.preventDefault(); nextSlide(); }
-      if (event.key === 'ArrowLeft') { event.preventDefault(); previousSlide(); }
-      if (event.key === 'Home') showSlide(0);
-      if (event.key === 'End') showSlide(slides.length - 1);
-    });
-    document.querySelector('.deck').addEventListener('click', (event) => {
-      if (!event.target.closest('a, button')) nextSlide();
-    });
-    showSlide(0);
+    (() => {
+      const layout=document.querySelector('.story-layout'); const canvas=document.getElementById('scroll-canvas'); const context=canvas.getContext('2d',{alpha:false}); const sections=[...document.querySelectorAll('.story-section')];
+      const mobile=matchMedia('(max-width: 767px)').matches; const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches; const sequence=mobile?{folder:'mobile',count:188,width:1440,height:2560}:{folder:'desktop',count:204,width:2560,height:1440};
+      let frames=[]; let currentFrame=-1; let requestedFrame=0; let raf=0;
+      function frameUrl(index){return `assets/video-frames/${sequence.folder}/frame-${String(index+1).padStart(4,'0')}.webp`;}
+      function resizeCanvas(){const ratio=Math.min(devicePixelRatio||1,2); canvas.width=Math.round(canvas.clientWidth*ratio); canvas.height=Math.round(canvas.clientHeight*ratio); context.setTransform(ratio,0,0,ratio,0,0); if(currentFrame>=0) drawFrame(currentFrame);}
+      function drawFrame(index){const image=frames[index]; if(!image||!image.complete||!image.naturalWidth)return; const width=canvas.clientWidth; const height=canvas.clientHeight; const scale=Math.max(width/sequence.width,height/sequence.height); const imageWidth=sequence.width*scale; const imageHeight=sequence.height*scale; context.fillStyle='#000'; context.fillRect(0,0,width,height); context.drawImage(image,(width-imageWidth)/2,(height-imageHeight)/2,imageWidth,imageHeight); currentFrame=index;}
+      function scheduleFrame(index){requestedFrame=Math.max(0,Math.min(index,sequence.count-1)); if(raf)return; raf=requestAnimationFrame(()=>{raf=0;if(requestedFrame!==currentFrame)drawFrame(requestedFrame);});}
+      function updateFrameFromPage(){const top=layout.offsetTop; const range=Math.max(1,layout.offsetHeight-innerHeight); const progress=Math.max(0,Math.min(1,(scrollY-top)/range)); scheduleFrame(Math.round(progress*(sequence.count-1)));}
+      function revealSections(){sections.forEach((section,index)=>{if(index===0)return; const bounds=section.getBoundingClientRect(); section.classList.toggle('is-visible',bounds.top<innerHeight*.78&&bounds.bottom>innerHeight*.18);});}
+      async function loadSequence(){frames=Array.from({length:sequence.count},(_,index)=>{const image=new Image();image.decoding='async';image.src=frameUrl(index);return image;}); await frames[0].decode(); resizeCanvas(); drawFrame(0); if(reducedMotion)return; for(let start=1;start<frames.length;start+=8)await Promise.all(frames.slice(start,start+8).map((image)=>image.decode().catch(()=>undefined)));}
+      addEventListener('scroll',()=>{updateFrameFromPage();revealSections();},{passive:true}); addEventListener('resize',resizeCanvas,{passive:true}); loadSequence().then(()=>{updateFrameFromPage();revealSections();}).catch(()=>undefined);
+    })();
   </script>
 </body>
 </html>
