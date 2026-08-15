@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "daring-landing",
+  "compatibility_date": "2026-08-13",
+  "pages_build_output_dir": ".",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "daring-production",
+      "database_id": "0fc7b22e-3b0d-479b-a9c7-c9e38f11b0e3",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

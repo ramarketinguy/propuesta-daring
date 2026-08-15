@@ -1,0 +1,4 @@
+# Local development only. Never commit a real .dev.vars file.
+ADMIN_SESSION_SECRET=replace-with-a-local-random-value
+MERCADOPAGO_ACCESS_TOKEN=replace-with-test-token
+RESEND_API_KEY=replace-with-test-key
