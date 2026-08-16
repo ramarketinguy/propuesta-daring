@@ -1,4 +1,6 @@
 # Local development only. Never commit a real .dev.vars file.
 ADMIN_SESSION_SECRET=replace-with-a-local-random-value
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD_HASH=pbkdf2$iterations$salt$hash
 MERCADOPAGO_ACCESS_TOKEN=replace-with-test-token
 RESEND_API_KEY=replace-with-test-key
