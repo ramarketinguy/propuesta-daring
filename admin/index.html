@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel de Daring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-header">
+      <div class="brand">Daring <span>Admin</span></div>
+      <button id="logout" type="button">Cerrar sesión</button>
+    </header>
+    <section aria-labelledby="admin-title">
+      <h1 id="admin-title">Panel de Daring</h1>
+      <p class="lead">Acá vas a poder entender cómo está funcionando la página y qué conviene mirar primero.</p>
+    </section>
+    <section class="status-card" aria-live="polite">
+      <span class="status-dot" id="status-dot"></span>
+      <div class="status-copy"><strong id="status-title">Verificando conexión...</strong><span id="status-copy">Comprobando la sesión y la API de Daring.</span></div>
+    </section>
+    <section class="empty-card" aria-labelledby="metrics-title">
+      <div><h2 id="metrics-title">Las métricas aparecerán acá</h2><p>Todavía no hay datos cargados. Cuando conectemos el seguimiento, vas a ver visitas, consultas, formularios, compras y recomendaciones explicadas en lenguaje simple.</p></div>
+    </section>
+  </main>
+  <script src="/admin/admin.js" type="module"></script>
+</body>
+</html>

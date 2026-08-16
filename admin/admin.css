@@ -1,0 +1,47 @@
+:root {
+  --bg: #0d080a;
+  --panel: #1a0f13;
+  --panel-strong: #241419;
+  --line: rgba(255, 255, 255, .14);
+  --text: #fff;
+  --muted: #d5c6ca;
+  --accent: #e58a95;
+  --danger: #f09aa4;
+  --display: "Sora", system-ui, sans-serif;
+  --body: "DM Sans", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { min-width: 320px; margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); }
+button, input { font: inherit; }
+button { cursor: pointer; }
+.admin-shell { width: min(1180px, 92%); margin: 0 auto; padding: 2rem 0 4rem; }
+.admin-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; }
+.brand { color: var(--text); font-family: var(--display); font-size: 1.2rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.brand span { color: var(--accent); }
+.admin-header button, .button { border: 1px solid var(--line); border-radius: 999px; padding: .7rem 1rem; background: rgba(255, 255, 255, .05); color: var(--text); font-weight: 700; }
+.admin-header button:hover, .button:hover { border-color: var(--accent); }
+h1, h2 { font-family: var(--display); line-height: 1.05; letter-spacing: -.04em; }
+h1 { max-width: 720px; margin: 0; font-size: clamp(2.3rem, 7vw, 5rem); }
+h2 { margin: 0 0 .65rem; font-size: 1.35rem; }
+.lead { max-width: 620px; margin: 1rem 0 2rem; color: var(--muted); font-size: 1.05rem; }
+.status-card, .empty-card { border: 1px solid var(--line); border-radius: 22px; padding: 1.4rem; background: linear-gradient(160deg, var(--panel-strong), var(--panel)); }
+.status-card { display: flex; align-items: center; gap: .8rem; margin-bottom: 1rem; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 14px var(--accent); }
+.status-dot.error { background: var(--danger); box-shadow: 0 0 14px var(--danger); }
+.status-copy { display: grid; gap: .15rem; }
+.status-copy strong { font-family: var(--display); font-size: .9rem; }
+.status-copy span { color: var(--muted); font-size: .85rem; }
+.empty-card { min-height: 190px; display: grid; place-content: center; text-align: center; }
+.empty-card p { max-width: 540px; margin: 0 auto; color: var(--muted); }
+.login-page { min-height: 100svh; display: grid; place-items: center; padding: 1rem; background: radial-gradient(60% 50% at 50% 0, rgba(181, 45, 66, .2), transparent 70%), var(--bg); }
+.login-card { width: min(440px, 100%); border: 1px solid var(--line); border-radius: 24px; padding: clamp(1.5rem, 5vw, 2.5rem); background: linear-gradient(160deg, var(--panel-strong), var(--panel)); box-shadow: 0 30px 80px rgba(0, 0, 0, .35); }
+.login-card h1 { font-size: clamp(2rem, 8vw, 3rem); }
+.login-card p { color: var(--muted); }
+.login-form { display: grid; gap: .9rem; margin-top: 1.5rem; }
+.login-form label { display: grid; gap: .35rem; color: var(--accent); font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.login-form input { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: .85rem .9rem; background: rgba(255, 255, 255, .06); color: var(--text); }
+.login-form input:focus { border-color: var(--accent); outline: 2px solid rgba(229, 138, 149, .2); }
+.login-form .button { border-color: transparent; background: linear-gradient(135deg, #c93a4e, #8f1626 62%, #5f0d1a); }
+.message { min-height: 1.25rem; margin: .8rem 0 0; color: var(--danger); font-size: .85rem; }
+@media (max-width: 620px) { .admin-header { align-items: flex-start; flex-direction: column; } }

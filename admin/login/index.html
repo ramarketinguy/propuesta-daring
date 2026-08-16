@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingresar | Daring Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body class="login-page">
+  <main class="login-card">
+    <div class="brand">Daring <span>Admin</span></div>
+    <h1>Ingresar al panel.</h1>
+    <p>Usá tus credenciales para ver el estado de la página.</p>
+    <form class="login-form" id="login-form">
+      <label>Correo electrónico<input name="email" type="email" autocomplete="username" required></label>
+      <label>Contraseña<input name="password" type="password" autocomplete="current-password" required></label>
+      <button class="button" type="submit">Ingresar</button>
+      <p class="message" id="login-message" role="alert" aria-live="polite"></p>
+    </form>
+  </main>
+  <script type="module">
+    const form = document.querySelector('#login-form');
+    const message = document.querySelector('#login-message');
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      message.textContent = '';
+      const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+      const result = await response.json();
+      if (!response.ok) { message.textContent = result.error || 'No se pudo iniciar sesión.'; return; }
+      window.location.replace('/admin/');
+    });
+  </script>
+</body>
+</html>
