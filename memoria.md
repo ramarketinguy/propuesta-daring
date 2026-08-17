@@ -104,3 +104,51 @@
 - Conectar el formulario con el backend o servicio que recibirá los datos de envío.
 - Revisar visualmente en dispositivos reales después de cada cambio importante.
 - Mantener este archivo actualizado al finalizar cada sesión de trabajo.
+
+## Primera Etapa Del Panel Admin
+
+- Se creó la especificación en `docs/superpowers/specs/2026-08-16-daring-admin-panel-design.md`.
+- Se creó el plan en `docs/superpowers/plans/2026-08-16-daring-admin-foundation.md`.
+- Se creó la documentación de provisioning en `docs/superpowers/runbooks/admin-provisioning.md`.
+- Se agregaron primitivas de autenticación en `functions/api/_lib/auth.ts`.
+- Se agregaron respuestas JSON comunes en `functions/api/_lib/response.ts`.
+- Se implementó PBKDF2 con salt aleatorio para hash de contraseñas.
+- Se implementaron sesiones D1 con cookies `HttpOnly`, `Secure`, `SameSite=Lax` y expiración de 7 días.
+- Se agregaron rutas `POST /api/auth/login`, `POST /api/auth/logout` y `GET /api/auth/session`.
+- Se agregó `GET /api/admin/health`, protegido contra acceso sin sesión.
+- Se creó el panel inicial en `admin/index.html`.
+- Se creó el estilo del panel en `admin/admin.css`.
+- Se creó la lógica del panel en `admin/admin.js`.
+- Se creó el login en `admin/login/index.html`.
+- El panel verifica sesión y API antes de mostrar su estado.
+- El panel no muestra métricas inventadas; indica que todavía no hay datos conectados.
+- Se creó `scripts/create-admin-hash.mjs` para generar hashes sin guardar contraseñas.
+- Se creó `tests/auth-contract.mjs` para validar cookies y contratos básicos.
+- La migración D1 local fue aplicada correctamente.
+- Sin sesión, `/api/auth/session` devuelve `authenticated:false`.
+- Sin sesión, `/api/admin/health` devuelve HTTP 401.
+- `/admin` y `/admin/login` responden HTTP 200 en Wrangler local.
+- Commits de esta etapa: `72ca034`, `dda2b9c`, `4130d23`, `4aa6ecd`, `feee1bd`.
+- Pendiente: provisionar el usuario administrador real en D1 con correo y hash seguros.
+
+## Segunda Etapa: Analítica Y Dashboard
+
+- Se creó el plan en `docs/superpowers/plans/2026-08-16-daring-analytics-dashboard.md`.
+- Se creó la migración `migrations/0002_analytics_events.sql`.
+- Se creó el helper de normalización y agregación en `functions/api/metrics/_lib.ts`.
+- Se creó el contrato `tests/metrics-contract.mjs`.
+- Se agregó `POST /api/metrics/events`.
+- El endpoint acepta únicamente eventos definidos y rechaza payloads desconocidos o demasiado grandes.
+- La landing registra page view, clics de compra, ver en acción, apertura/completado del checkout y consultas por WhatsApp.
+- No se envían nombres, correos, teléfonos, direcciones ni valores del formulario a la analítica.
+- Los identificadores de visitante y sesión son anónimos y se generan localmente.
+- Se agregó `GET /api/metrics/summary`, protegido por sesión.
+- Se agregó `GET /api/alerts`, protegido por sesión.
+- El panel muestra visitas, clics de compra, formularios abiertos y formularios completados.
+- El panel permite elegir 7 días, 30 días o todo el período.
+- El panel muestra alertas explicadas en lenguaje simple cuando hay suficiente información.
+- Los pagos aprobados y la conversión de pago permanecen como no disponibles hasta conectar Mercado Pago.
+- La migración local de analítica fue aplicada correctamente.
+- Eventos válidos devuelven HTTP 202 y eventos inválidos HTTP 400.
+- Endpoints protegidos sin sesión devuelven HTTP 401.
+- Commits de esta etapa: `8f15aa7`, `51a0e35`, `7bf7c26`, `68a2d2f`.
