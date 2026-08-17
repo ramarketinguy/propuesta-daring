@@ -23,9 +23,12 @@
       <span class="status-dot" id="status-dot"></span>
       <div class="status-copy"><strong id="status-title">Verificando conexión...</strong><span id="status-copy">Comprobando la sesión y la API de Daring.</span></div>
     </section>
-    <section class="empty-card" aria-labelledby="metrics-title">
-      <div><h2 id="metrics-title">Las métricas aparecerán acá</h2><p>Todavía no hay datos cargados. Cuando conectemos el seguimiento, vas a ver visitas, consultas, formularios, compras y recomendaciones explicadas en lenguaje simple.</p></div>
+    <section id="dashboard" class="hidden" aria-labelledby="metrics-title">
+      <div class="dashboard-toolbar"><h2 id="metrics-title">Resumen de la página</h2><label>Período<select id="period"><option value="7d">Últimos 7 días</option><option value="30d">Últimos 30 días</option><option value="all">Todo el período</option></select></label></div>
+      <div class="metric-grid"><article class="metric-card"><span>Visitas</span><strong id="metric-page-views">—</strong></article><article class="metric-card"><span>Clics en comprar</span><strong id="metric-buy-clicks">—</strong></article><article class="metric-card"><span>Formularios abiertos</span><strong id="metric-checkout-opens">—</strong></article><article class="metric-card"><span>Formularios completados</span><strong id="metric-checkout-submits">—</strong></article></div>
+      <div class="status-card" id="alerts-status"><div class="status-copy"><strong>Qué conviene mirar</strong><span>Estas indicaciones aparecen cuando hay suficientes datos.</span></div></div><div class="alert-list" id="alert-list"></div>
     </section>
+    <section class="empty-card" id="metrics-empty" aria-labelledby="empty-title"><div><h2 id="empty-title">Las métricas aparecerán acá</h2><p>Todavía no hay datos cargados. Cuando conectemos el seguimiento, vas a ver visitas, consultas, formularios, compras y recomendaciones explicadas en lenguaje simple.</p></div></section>
   </main>
   <script src="/admin/admin.js" type="module"></script>
 </body>
