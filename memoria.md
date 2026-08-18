@@ -152,3 +152,54 @@
 - Eventos válidos devuelven HTTP 202 y eventos inválidos HTTP 400.
 - Endpoints protegidos sin sesión devuelven HTTP 401.
 - Commits de esta etapa: `8f15aa7`, `51a0e35`, `7bf7c26`, `68a2d2f`.
+
+## Avances Recientes Del Panel
+
+- Se creó el plan de analítica en `docs/superpowers/plans/2026-08-16-daring-analytics-dashboard.md`.
+- Se agregó la tabla D1 `analytics_events` mediante la migración `0002_analytics_events.sql`.
+- Se creó el endpoint público `POST /api/metrics/events`.
+- Se validan eventos permitidos, tamaño de payload y tipo de dispositivo.
+- La landing registra visitas, clics de compra, ver en acción, apertura/completado del checkout y consultas por WhatsApp.
+- Los eventos no incluyen datos personales del formulario.
+- Se creó `GET /api/metrics/summary` para el panel.
+- Se creó `GET /api/alerts` con recomendaciones en lenguaje simple.
+- El panel muestra visitas, clics, formularios y períodos de 7 días, 30 días o todo el período.
+- El panel diferencia estados sin datos, errores y métricas todavía no disponibles.
+- Se verificó que eventos inválidos devuelven HTTP 400 y endpoints protegidos sin sesión HTTP 401.
+- Commits adicionales de analítica: `eaa73dd`, `8f15aa7`, `51a0e35`, `7bf7c26`, `68a2d2f`, `25a8658`.
+
+## Optimización De Animación
+
+- Se reemplazó la animación activa de frames por videos optimizados controlados automáticamente.
+- Videos generados: `assets/story-scroll-mobile.mp4` y `assets/story-scroll-desktop.mp4`.
+- El video móvil pesa aproximadamente 2,61 MB y el desktop 3,13 MB.
+- La sección precarga el video al acercarse y empieza cuando el 60% está visible.
+- La reproducción continúa aunque la persona siga desplazándose.
+- Los textos se sincronizan con el tiempo del video.
+- Se eliminaron los subtítulos y se mantienen solamente los títulos grandes.
+- El cuarto título es “Lista en menos de 15 minutos.”.
+- El video queda en el último frame durante 2 segundos antes de reiniciar.
+- La sección móvil ocupa `100svh`, evitando espacios negros vacíos.
+- Se generó una versión desktop y móvil del intro del logo con nombres simples y bajo peso.
+- La landing fue validada con JavaScript correcto y HTTP 200 local.
+
+## R2
+
+- Se verificó autenticación de Wrangler con la cuenta `irineomadrid.daring@gmail.com`.
+- Account ID detectado: `279493ad9c175d0a242f41a62789e83d`.
+- Se intentó consultar y preparar el bucket R2 `daring-media`.
+- Cloudflare respondió error `10042`: R2 está deshabilitado en la cuenta.
+- No se creó el bucket ni se modificó la configuración de R2.
+- Pendiente: activar R2 desde Cloudflare Dashboard y luego crear/conectar `daring-media`.
+
+## R2 Activado
+
+- R2 fue habilitado en la cuenta de Cloudflare.
+- Se creó el bucket `daring-media`.
+- Account ID: `279493ad9c175d0a242f41a62789e83d`.
+- Ubicación reportada por Cloudflare: `ENAM`.
+- Clase de almacenamiento: `Standard`.
+- Estado inicial: 0 objetos y 0 B.
+- Se agregó el binding `MEDIA` a `wrangler.jsonc`.
+- Wrangler local confirma `env.MEDIA (daring-media) R2 Bucket`.
+- El bucket todavía no contiene imágenes ni videos.
