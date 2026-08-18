@@ -75,7 +75,7 @@ async function loadMedia() {
     preview.controls = item.media_type === 'video';
     if (item.media_type === 'image') preview.alt = item.alt_text || item.file_name;
     const copy = document.createElement('div');
-    copy.innerHTML = `<strong>${item.title || item.file_name}</strong><span>${item.placement} · ${item.published ? 'Publicado' : 'Sin publicar'}</span><input class="media-order" data-order-id="${item.id}" type="number" min="0" value="${item.sort_order || 0}" aria-label="Orden de ${item.file_name}"><button class="button media-save-order" data-id="${item.id}">Guardar orden</button><button class="button media-publish" data-id="${item.id}" data-published="${item.published ? 'false' : 'true'}">${item.published ? 'Ocultar' : 'Publicar'}</button>`;
+    copy.innerHTML = `<strong>${item.title || item.file_name}</strong><span>${item.placement} · ${item.published ? 'Publicado' : 'Sin publicar'}</span><input class="media-order" data-order-id="${item.id}" type="number" min="0" value="${item.sort_order || 0}" aria-label="Orden de ${item.file_name}"><button class="button media-save-order" data-id="${item.id}">Guardar orden</button><button class="button media-publish" data-id="${item.id}" data-published="${item.published ? 'false' : 'true'}">${item.published ? 'Ocultar' : 'Publicar'}</button><button class="button media-delete" data-id="${item.id}">Eliminar</button>`;
     card.append(preview, copy);
     mediaList.append(card);
   });
@@ -88,6 +88,11 @@ async function loadMedia() {
     const input = mediaList.querySelector(`[data-order-id="${button.dataset.id}"]`);
     const response = await fetch('/api/media/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id: button.dataset.id, sort_order: Number(input.value) }) });
     button.textContent = response.ok ? 'Guardado' : 'Error';
+  }));
+  mediaList.querySelectorAll('.media-delete').forEach((button) => button.addEventListener('click', async () => {
+    if (!window.confirm('¿Eliminar este recurso?')) return;
+    const response = await fetch(`/api/media?id=${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE', credentials: 'same-origin' });
+    if (response.ok) await loadMedia();
   }));
 }
 

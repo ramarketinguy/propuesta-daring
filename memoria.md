@@ -232,3 +232,15 @@
 - Las imágenes se comprimen en el navegador a WebP antes de subirlas.
 - Los videos se validan con límite de 60 MB; la compresión avanzada de video queda pendiente de un procesador compatible con Cloudflare.
 - Tests y sintaxis de media, panel y endpoints validados.
+
+## Integración Pública De Medios
+
+- Se creó `GET /api/media/public?placement=...` para recursos publicados.
+- La landing puede reemplazar dinámicamente los carruseles de pizza y testimonios con recursos publicados en R2.
+- Si no hay recursos publicados, se mantiene el contenido estático actual como respaldo.
+- Se agregó eliminación de archivos desde `DELETE /api/media?id=...`.
+- Se agregó edición de metadatos y publicación mediante `PATCH /api/media`.
+- Se agregó `POST /api/media/reorder` para ordenar los recursos.
+- El panel ahora permite guardar orden y eliminar recursos.
+- Los datos dinámicos se escapan antes de insertarse en la landing.
+- El endpoint público solo entrega archivos con `published = 1`.
