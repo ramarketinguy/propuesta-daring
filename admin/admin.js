@@ -5,6 +5,9 @@ const logoutButton = document.querySelector('#logout');
 const dashboard = document.querySelector('#dashboard');
 const metricsEmpty = document.querySelector('#metrics-empty');
 const period = document.querySelector('#period');
+const mediaForm = document.querySelector('#media-form');
+const mediaStatus = document.querySelector('#media-status');
+const mediaList = document.querySelector('#media-list');
 
 async function getSession() {
   const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
@@ -54,6 +57,47 @@ async function loadDashboard() {
   metricsEmpty.classList.toggle('hidden', summary.page_views > 0 || summary.buy_clicks > 0 || summary.checkout_opens > 0 || summary.checkout_submits > 0);
 }
 
+async function loadMedia() {
+  const response = await fetch('/api/media', { credentials: 'same-origin' });
+  if (!response.ok) throw new Error('media');
+  const result = await response.json();
+  mediaList.replaceChildren();
+  result.media.forEach((item) => {
+    const card = document.createElement('article');
+    card.className = 'media-card';
+    const preview = item.media_type === 'video' ? document.createElement('video') : document.createElement('img');
+    preview.src = item.url;
+    preview.controls = item.media_type === 'video';
+    if (item.media_type === 'image') preview.alt = item.alt_text || item.file_name;
+    const copy = document.createElement('div');
+    copy.innerHTML = `<strong>${item.title || item.file_name}</strong><span>${item.placement} · ${item.published ? 'Publicado' : 'Sin publicar'}</span><button class="button media-publish" data-id="${item.id}" data-published="${item.published ? 'false' : 'true'}">${item.published ? 'Ocultar' : 'Publicar'}</button>`;
+    card.append(preview, copy);
+    mediaList.append(card);
+  });
+  if (!result.media.length) mediaList.innerHTML = '<p class="muted">Todavía no hay recursos cargados.</p>';
+  mediaList.querySelectorAll('.media-publish').forEach((button) => button.addEventListener('click', async () => {
+    const response = await fetch('/api/media/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id: button.dataset.id, published: button.dataset.published === 'true' }) });
+    if (response.ok) await loadMedia();
+  }));
+}
+
+async function compressImage(file) {
+  if (!file.type.startsWith('image/') || file.type === 'image/webp') return file;
+  const image = new Image();
+  const url = URL.createObjectURL(file);
+  try {
+    image.src = url;
+    await image.decode();
+    const scale = Math.min(1, 1600 / image.width);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(image.width * scale);
+    canvas.height = Math.round(image.height * scale);
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', .82));
+    return blob ? new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp' }) : file;
+  } finally { URL.revokeObjectURL(url); }
+}
+
 async function boot() {
   try {
     const session = await getSession();
@@ -65,6 +109,7 @@ async function boot() {
     statusTitle.textContent = 'Panel conectado';
     statusCopy.textContent = `Sesión activa para ${session.admin.email}.`;
     await loadDashboard();
+    await loadMedia();
   } catch {
     statusDot.classList.add('error');
     statusTitle.textContent = 'No se pudo verificar la conexión';
@@ -78,5 +123,18 @@ logoutButton.addEventListener('click', async () => {
 });
 
 period.addEventListener('change', () => loadDashboard().catch(() => undefined));
+mediaForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  mediaStatus.textContent = 'Subiendo y validando archivo...';
+  const formData = new FormData(mediaForm);
+  const selectedFile = formData.get('file');
+  if (!(selectedFile instanceof File)) { mediaStatus.textContent = 'Elegí un archivo.'; return; }
+  if (selectedFile.type.startsWith('video/') && selectedFile.size > 60 * 1024 * 1024) { mediaStatus.textContent = 'El video supera el límite de 60 MB.'; return; }
+  formData.set('file', await compressImage(selectedFile));
+  const response = await fetch('/api/media', { method: 'POST', credentials: 'same-origin', body: formData });
+  const result = await response.json();
+  mediaStatus.textContent = response.ok ? 'Archivo cargado y pendiente de publicación.' : (result.error || 'No se pudo cargar el archivo.');
+  if (response.ok) { mediaForm.reset(); await loadMedia(); }
+});
 
 boot();

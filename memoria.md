@@ -203,3 +203,20 @@
 - Se agregó el binding `MEDIA` a `wrangler.jsonc`.
 - Wrangler local confirma `env.MEDIA (daring-media) R2 Bucket`.
 - El bucket todavía no contiene imágenes ni videos.
+
+## Gestión De Medios R2
+
+- Se creó la migración `migrations/0003_media_content.sql`.
+- `media_assets` ahora guarda ubicación, orden, publicación, título y texto alternativo.
+- Se creó `functions/api/media/_lib.ts` con validación de MIME, tamaño y ubicación.
+- Se creó `GET/POST /api/media` para listar y cargar archivos.
+- Se creó `POST /api/media/publish` para publicar u ocultar recursos.
+- Se creó `GET /api/media/file` para servir únicamente recursos publicados.
+- El panel permite seleccionar ubicación, orden, título, texto alternativo y archivo.
+- Las imágenes se convierten a WebP en el navegador antes de subirlas.
+- Los videos se validan con un límite de 60 MB antes de enviarlos.
+- Los archivos se cargan a R2 como no publicados hasta revisión.
+- El panel muestra una vista previa y estado de publicación.
+- El contrato `tests/media-contract.mjs` valida formatos, límites y claves de objetos.
+- La migración `0003` fue aplicada correctamente en D1 local.
+- Los endpoints de medios sin sesión responden HTTP 401.
