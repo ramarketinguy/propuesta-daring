@@ -220,3 +220,15 @@
 - El contrato `tests/media-contract.mjs` valida formatos, límites y claves de objetos.
 - La migración `0003` fue aplicada correctamente en D1 local.
 - Los endpoints de medios sin sesión responden HTTP 401.
+
+## Gestión De Medios Y Uso Cloudflare
+
+- Se agregó `POST /api/media/reorder` para cambiar el orden de los recursos.
+- El panel muestra un campo de orden y botón “Guardar orden” para cada archivo.
+- Se agregó `GET /api/cloudflare/usage` protegido por sesión.
+- El panel muestra cantidad y peso de objetos en R2.
+- El panel muestra cantidad de eventos almacenados en D1.
+- El panel informa cuando los límites exactos del plan no están disponibles por falta de API configurada.
+- Las imágenes se comprimen en el navegador a WebP antes de subirlas.
+- Los videos se validan con límite de 60 MB; la compresión avanzada de video queda pendiente de un procesador compatible con Cloudflare.
+- Tests y sintaxis de media, panel y endpoints validados.

@@ -8,6 +8,11 @@ const period = document.querySelector('#period');
 const mediaForm = document.querySelector('#media-form');
 const mediaStatus = document.querySelector('#media-status');
 const mediaList = document.querySelector('#media-list');
+const usageR2 = document.querySelector('#usage-r2');
+const usageR2Copy = document.querySelector('#usage-r2-copy');
+const usageD1 = document.querySelector('#usage-d1');
+const usagePlan = document.querySelector('#usage-plan');
+const usagePlanCopy = document.querySelector('#usage-plan-copy');
 
 async function getSession() {
   const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
@@ -70,7 +75,7 @@ async function loadMedia() {
     preview.controls = item.media_type === 'video';
     if (item.media_type === 'image') preview.alt = item.alt_text || item.file_name;
     const copy = document.createElement('div');
-    copy.innerHTML = `<strong>${item.title || item.file_name}</strong><span>${item.placement} · ${item.published ? 'Publicado' : 'Sin publicar'}</span><button class="button media-publish" data-id="${item.id}" data-published="${item.published ? 'false' : 'true'}">${item.published ? 'Ocultar' : 'Publicar'}</button>`;
+    copy.innerHTML = `<strong>${item.title || item.file_name}</strong><span>${item.placement} · ${item.published ? 'Publicado' : 'Sin publicar'}</span><input class="media-order" data-order-id="${item.id}" type="number" min="0" value="${item.sort_order || 0}" aria-label="Orden de ${item.file_name}"><button class="button media-save-order" data-id="${item.id}">Guardar orden</button><button class="button media-publish" data-id="${item.id}" data-published="${item.published ? 'false' : 'true'}">${item.published ? 'Ocultar' : 'Publicar'}</button>`;
     card.append(preview, copy);
     mediaList.append(card);
   });
@@ -79,6 +84,22 @@ async function loadMedia() {
     const response = await fetch('/api/media/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id: button.dataset.id, published: button.dataset.published === 'true' }) });
     if (response.ok) await loadMedia();
   }));
+  mediaList.querySelectorAll('.media-save-order').forEach((button) => button.addEventListener('click', async () => {
+    const input = mediaList.querySelector(`[data-order-id="${button.dataset.id}"]`);
+    const response = await fetch('/api/media/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id: button.dataset.id, sort_order: Number(input.value) }) });
+    button.textContent = response.ok ? 'Guardado' : 'Error';
+  }));
+}
+
+async function loadUsage() {
+  const response = await fetch('/api/cloudflare/usage', { credentials: 'same-origin' });
+  if (!response.ok) throw new Error('usage');
+  const result = await response.json();
+  usageR2.textContent = number(result.r2.object_count);
+  usageR2Copy.textContent = `${(result.r2.size_bytes / 1024 / 1024).toFixed(2)} MB usados`;
+  usageD1.textContent = number(result.d1.analytics_events);
+  usagePlan.textContent = result.cloudflare_plan_limits.status === 'api_configured' ? 'API lista' : 'No disponible';
+  usagePlanCopy.textContent = result.cloudflare_plan_limits.message;
 }
 
 async function compressImage(file) {
@@ -110,6 +131,7 @@ async function boot() {
     statusCopy.textContent = `Sesión activa para ${session.admin.email}.`;
     await loadDashboard();
     await loadMedia();
+    await loadUsage();
   } catch {
     statusDot.classList.add('error');
     statusTitle.textContent = 'No se pudo verificar la conexión';
