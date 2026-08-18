@@ -214,7 +214,7 @@
 - Se creó `GET /api/media/file` para servir únicamente recursos publicados.
 - El panel permite seleccionar ubicación, orden, título, texto alternativo y archivo.
 - Las imágenes se convierten a WebP en el navegador antes de subirlas.
-- Los videos se validan con un límite de 60 MB antes de enviarlos.
+- Los videos se validan con un límite de 12 MB antes de enviarlos.
 - Los archivos se cargan a R2 como no publicados hasta revisión.
 - El panel muestra una vista previa y estado de publicación.
 - El contrato `tests/media-contract.mjs` valida formatos, límites y claves de objetos.
@@ -230,7 +230,7 @@
 - El panel muestra cantidad de eventos almacenados en D1.
 - El panel informa cuando los límites exactos del plan no están disponibles por falta de API configurada.
 - Las imágenes se comprimen en el navegador a WebP antes de subirlas.
-- Los videos se validan con límite de 60 MB; la compresión avanzada de video queda pendiente de un procesador compatible con Cloudflare.
+- Los videos se validan con límite de 12 MB; no se agrega un compresor pesado al panel para proteger la velocidad de la web.
 - Tests y sintaxis de media, panel y endpoints validados.
 
 ## Integración Pública De Medios

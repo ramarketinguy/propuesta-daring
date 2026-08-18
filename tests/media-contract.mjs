@@ -3,7 +3,8 @@ import { mediaKey, validMedia, validPlacement } from '../functions/api/media/_li
 
 assert.equal(validMedia('image/jpeg', 1024), true);
 assert.equal(validMedia('application/pdf', 1024), false);
-assert.equal(validMedia('video/mp4', 61 * 1024 * 1024), false);
+assert.equal(validMedia('video/mp4', 12 * 1024 * 1024), true);
+assert.equal(validMedia('video/mp4', 12 * 1024 * 1024 + 1), false);
 assert.equal(validPlacement('pizza'), true);
 assert.equal(validPlacement('unknown'), false);
 assert.match(mediaKey('pizza', 'foto con espacios.jpg'), /^pizza\/[0-9a-f-]+-foto-con-espacios\.jpg$/);

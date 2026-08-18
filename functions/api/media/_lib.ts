@@ -1,5 +1,5 @@
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-const MAX_VIDEO_BYTES = 60 * 1024 * 1024;
+export const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
 const ALLOWED_PLACEMENTS = new Set(['pizza', 'testimonials', 'history', 'product']);
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm']);
 

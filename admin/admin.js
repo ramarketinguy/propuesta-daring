@@ -156,7 +156,7 @@ mediaForm.addEventListener('submit', async (event) => {
   const formData = new FormData(mediaForm);
   const selectedFile = formData.get('file');
   if (!(selectedFile instanceof File)) { mediaStatus.textContent = 'Elegí un archivo.'; return; }
-  if (selectedFile.type.startsWith('video/') && selectedFile.size > 60 * 1024 * 1024) { mediaStatus.textContent = 'El video supera el límite de 60 MB.'; return; }
+  if (selectedFile.type.startsWith('video/') && selectedFile.size > 12 * 1024 * 1024) { mediaStatus.textContent = 'El video supera el límite de 12 MB.'; return; }
   formData.set('file', await compressImage(selectedFile));
   const response = await fetch('/api/media', { method: 'POST', credentials: 'same-origin', body: formData });
   const result = await response.json();
