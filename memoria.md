@@ -233,6 +233,17 @@
 - Los videos se validan con límite de 12 MB; no se agrega un compresor pesado al panel para proteger la velocidad de la web.
 - Tests y sintaxis de media, panel y endpoints validados.
 
+## Cierre De Etapa De Medios
+
+- Los recursos publicados de R2 pueden reemplazar los carruseles públicos de pizza y testimonios.
+- Si no existen recursos publicados, la landing conserva el contenido estático de respaldo.
+- Se agregó orden manual, publicación/ocultamiento y eliminación de recursos.
+- Se agregó consulta de uso de R2 y cantidad de eventos D1 en el panel.
+- El límite definitivo para videos subidos al panel es de 12 MB.
+- La validación de video ocurre en el navegador y en el endpoint del servidor.
+- Se evitó incorporar `ffmpeg.wasm` para no hacer pesado el panel.
+- Commits recientes: `303e0b5`, `6fa8023`.
+
 ## Integración Pública De Medios
 
 - Se creó `GET /api/media/public?placement=...` para recursos publicados.
