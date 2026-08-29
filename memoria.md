@@ -406,3 +406,12 @@
 - gh CLI autenticado con la cuenta ramarketinguy (29-ago-2026) y configurado como credential helper de git (gh auth setup-git). La cuenta redulcerecetas sigue agregada pero inactiva.
 - El push de todo el proyecto se realizo correctamente (6f0fc27..9e8afc4).
 - Fix importante: admin.js tenia loadUso duplicado (vieja + nueva) -> SyntaxError que rompia TODO el modulo JS del panel (sin navegacion ni datos). El chequeo con new Function no lo detectaba (modo no estricto permite redeclaracion); usar node --check con .mjs para validar como modulo.
+
+## Panel - Ajustes de usabilidad (29-ago-2026, segunda pasada)
+
+- Tabs en la seccion Contenido: Textos / Imagenes / Preguntas frecuentes (antes las imagenes quedaban al final de un scroll largo).
+- Hero unificado: los 4 slots separados (fondo, sarten, pizza, logo) se reemplazaron por un unico slot hero.animacion que acepta imagen O video de la biblioteca; si no tiene asignacion, la landing usa la animacion original de capas. La landing reemplaza el contenido de .hero-layered cuando hay asignacion (img o video autoplay muted loop, object-fit contain).
+- Se quito el campo Texto alternativo de las cards de imagenes (el usuario no quiere editar alt en imagenes decorativas); el backend preserva el alt existente si no se envia.
+- Fix de inputs blancos: los inputs sin atributo type no matcheaban selectores input[type=text] -> ahora .faq-admin-card input:not([type=checkbox]) y .settings-group textarea tambien tienen estilo oscuro.
+- Secciones Contenido y Medios unificadas: la biblioteca (subir + archivos guardados) vive dentro de Contenido; la seccion Medios se elimino del sidebar.
+- Migracion 0007_hero_unico.sql.
