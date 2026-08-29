@@ -28,10 +28,19 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
     }
   }
 
-  let stock: { available: number; total: number } | null = null;
+  let stock: { available: number; total: number; per_color: Record<string, number> } | null = null;
   try {
-    const product = await env.DB.prepare('SELECT stock_total, stock_reserved, stock_sold FROM products WHERE id = ?').bind('sarten-daring-28').first<{ stock_total: number; stock_reserved: number; stock_sold: number }>();
-    if (product) stock = { available: Math.max(0, product.stock_total - product.stock_reserved - product.stock_sold), total: product.stock_total };
+    const colors = await env.DB.prepare('SELECT color, stock_total, stock_reserved, stock_sold FROM product_colors WHERE product_id = ?').bind('sarten-daring-28').all<{ color: string; stock_total: number; stock_reserved: number; stock_sold: number }>();
+    let available = 0;
+    let total = 0;
+    const perColor: Record<string, number> = {};
+    for (const c of colors.results) {
+      const avail = Math.max(0, c.stock_total - c.stock_reserved - c.stock_sold);
+      available += avail;
+      total += c.stock_total;
+      perColor[c.color] = avail;
+    }
+    if (colors.results.length) stock = { available, total, per_color: perColor };
   } catch { stock = null; }
 
   let priceCents: number | null = null;

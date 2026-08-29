@@ -197,12 +197,12 @@ async function registrarEmail(env: Env, orderId: string, provider: string, resul
 
 const PRODUCT_ID = 'sarten-daring-28';
 
-async function ajustarStock(env: Env, campo: 'stock_reserved' | 'stock_sold', delta: number, reason: string, orderId: string): Promise<void> {
+async function ajustarStock(env: Env, color: string, campo: 'stock_reserved' | 'stock_sold', delta: number, reason: string, orderId: string): Promise<void> {
   try {
     if (campo === 'stock_reserved') {
-      await env.DB.prepare('UPDATE products SET stock_reserved = MAX(0, stock_reserved + ?), updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(delta, PRODUCT_ID).run();
+      await env.DB.prepare('UPDATE product_colors SET stock_reserved = MAX(0, stock_reserved + ?) WHERE product_id = ? AND color = ?').bind(delta, PRODUCT_ID, color).run();
     } else {
-      await env.DB.prepare('UPDATE products SET stock_sold = MAX(0, stock_sold + ?), updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(delta, PRODUCT_ID).run();
+      await env.DB.prepare('UPDATE product_colors SET stock_sold = MAX(0, stock_sold + ?) WHERE product_id = ? AND color = ?').bind(delta, PRODUCT_ID, color).run();
     }
     await env.DB.prepare('INSERT INTO stock_movements (id, product_id, quantity, reason, order_id) VALUES (?, ?, ?, ?, ?)')
       .bind(crypto.randomUUID(), PRODUCT_ID, delta, reason, orderId)
@@ -212,18 +212,19 @@ async function ajustarStock(env: Env, campo: 'stock_reserved' | 'stock_sold', de
   }
 }
 
-async function aplicarMovimientoStock(env: Env, orderId: string, oldStatus: string, newStatus: string): Promise<void> {
+async function aplicarMovimientoStock(env: Env, orderId: string, color: string, oldStatus: string, newStatus: string): Promise<void> {
+  if (!color) return;
   if (newStatus === 'approved' && oldStatus !== 'approved') {
-    await ajustarStock(env, 'stock_reserved', -1, 'venta aprobada: reserva convertida en venta', orderId);
-    await ajustarStock(env, 'stock_sold', 1, 'venta aprobada', orderId);
+    await ajustarStock(env, color, 'stock_reserved', -1, `venta aprobada: reserva convertida en venta (${color})`, orderId);
+    await ajustarStock(env, color, 'stock_sold', 1, `venta aprobada (${color})`, orderId);
     return;
   }
   if (newStatus === 'refunded' && oldStatus === 'approved') {
-    await ajustarStock(env, 'stock_sold', -1, 'reembolso: venta devuelta al stock', orderId);
+    await ajustarStock(env, color, 'stock_sold', -1, `reembolso: venta devuelta al stock (${color})`, orderId);
     return;
   }
   if ((newStatus === 'rejected' || newStatus === 'cancelled') && (oldStatus === 'checkout_started' || oldStatus === 'pending')) {
-    await ajustarStock(env, 'stock_reserved', -1, 'reserva liberada: pago no concretado', orderId);
+    await ajustarStock(env, color, 'stock_reserved', -1, `reserva liberada: pago no concretado (${color})`, orderId);
   }
 }
 
@@ -261,7 +262,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const origin = new URL(request.url).origin;
 
   try {
-    const previous = await env.DB.prepare('SELECT id, status FROM orders WHERE external_reference = ?').bind(reference).first<{ id: string; status: string }>();
+    const previous = await env.DB.prepare('SELECT id, status, color FROM orders WHERE external_reference = ?').bind(reference).first<{ id: string; status: string; color: string }>();
     const oldStatus = previous?.status ?? '';
 
     await env.DB.prepare('UPDATE orders SET status = ?, payment_id = ?, updated_at = CURRENT_TIMESTAMP, approved_at = CASE WHEN ? = ? THEN CURRENT_TIMESTAMP ELSE approved_at END WHERE external_reference = ?')
@@ -269,7 +270,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       .run();
 
     if (previous && oldStatus !== status) {
-      await aplicarMovimientoStock(env, previous.id, oldStatus, status);
+      await aplicarMovimientoStock(env, previous.id, previous.color, oldStatus, status);
     }
 
     const order = await env.DB.prepare('SELECT id, customer_name, customer_email, customer_phone, shipping_department, shipping_city, shipping_address, color, amount_cents FROM orders WHERE external_reference = ?').bind(reference).first<OrderRow>();

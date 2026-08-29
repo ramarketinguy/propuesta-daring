@@ -247,15 +247,6 @@
              if (media.alt) el.setAttribute('alt', media.alt);
            }
          });
-         const heroAnim = data.images && data.images['hero.animacion'];
-         if (heroAnim && heroAnim.url) {
-           const layered = document.querySelector('.hero-layered');
-           if (layered) {
-             layered.innerHTML = heroAnim.url.indexOf('.mp4') !== -1
-               ? '<video src="' + heroAnim.url + '" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:contain"></video>'
-               : '<img src="' + heroAnim.url + '" alt="Sartén Daring" style="width:100%;height:100%;object-fit:contain">';
-           }
-         }
          if (data.price_cents) {
            const priceText = '$ ' + Math.round(data.price_cents / 100).toLocaleString('es-UY');
            const chip = document.querySelector('.price-chip strong');

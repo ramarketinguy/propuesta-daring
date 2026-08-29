@@ -48,9 +48,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const isLocalOrigin = origin.startsWith('http://');
   const publicOrigin = isLocalOrigin ? 'https://example.com' : origin;
 
-  const stockRow = await env.DB.prepare('SELECT stock_total - stock_sold - stock_reserved AS available FROM products WHERE id = ?').bind('sarten-daring-28').first<{ available: number }>();
+  const stockRow = await env.DB.prepare('SELECT stock_total - stock_sold - stock_reserved AS available FROM product_colors WHERE product_id = ? AND color = ?').bind('sarten-daring-28', color).first<{ available: number }>();
   if (stockRow && stockRow.available <= 0) {
-    return json({ error: 'Nos quedamos sin stock de esta tanda. Escribinos por WhatsApp y te anotamos para la próxima.' }, 409);
+    return json({ error: `Nos quedamos sin stock del color ${color}. Escribinos por WhatsApp y te anotamos para la próxima.` }, 409);
   }
 
   try {
@@ -110,9 +110,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   try {
-    await env.DB.prepare('UPDATE products SET stock_reserved = stock_reserved + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind('sarten-daring-28').run();
+    await env.DB.prepare('UPDATE product_colors SET stock_reserved = stock_reserved + 1 WHERE product_id = ? AND color = ?').bind('sarten-daring-28', color).run();
     await env.DB.prepare('INSERT INTO stock_movements (id, product_id, quantity, reason, order_id) VALUES (?, ?, ?, ?, ?)')
-      .bind(crypto.randomUUID(), 'sarten-daring-28', 1, 'reserva: checkout iniciado', orderId)
+      .bind(crypto.randomUUID(), 'sarten-daring-28', 1, `reserva: checkout iniciado (${color})`, orderId)
       .run();
   } catch {
     return json({ init_point: initPoint }, 201);

@@ -376,7 +376,9 @@ async function saveSettings(event) {
 
 async function loadContenido() {
   await loadContenidoTextos();
-  await loadContenidoImagenes();
+  await loadCarouselManager('pizza', 'manager-pizza', 'hint-pizza', 'el carrusel de platos');
+  await loadCarouselManager('testimonials', 'manager-testimonials', 'hint-testimonials', 'el carrusel de testimonios');
+  await loadHistoria();
   await loadFaq();
   await loadMedios();
 }
@@ -419,7 +421,6 @@ async function loadContenidoTextos() {
     });
     container.append(group);
   }
-  state._contenidoFlat = data.flat ?? {};
 }
 
 async function saveContenido() {
@@ -436,59 +437,138 @@ async function saveContenido() {
   toast('Contenido actualizado', 'success');
 }
 
-async function loadContenidoImagenes() {
-  const container = document.querySelector('#images-list');
-  const response = await api('/api/images');
+async function loadCarouselManager(placement, containerId, hintId, nombre) {
+  const container = document.querySelector('#' + containerId);
+  const hint = document.querySelector('#' + hintId);
+  const response = await api('/api/media');
   const data = await response.json();
-  if (!response.ok) { container.innerHTML = '<p class="empty-state">No se pudieron cargar las posiciones.</p>'; return; }
+  if (!response.ok) { container.innerHTML = '<p class="empty-state">No se pudieron cargar los archivos.</p>'; return; }
+  const items = (data.media ?? []).filter((m) => m.placement === placement && m.published === 1).sort((a, b) => a.sort_order - b.sort_order);
+  if (!items.length) {
+    container.innerHTML = `<p class="empty-state">Todavía no agregaste archivos: la página muestra ${escapeHTML(nombre)} las imágenes originales.</p>`;
+    return;
+  }
+  hint.textContent = `${items.length} en la página · ordená con las flechas`;
   container.replaceChildren();
-  const SECTION_LABELS = { hero: 'Hero', platos: 'Carrusel de platos', diseno: 'Diseño e Ingeniería', oferta: 'Oferta', historia: 'Nuestra historia', cierre: 'Cierre', voces: 'Testimonios en video' };
-  if (!data.images.length) { container.innerHTML = '<p class="empty-state">Sin posiciones configuradas.</p>'; return; }
-  let currentSection = '';
-  data.images.forEach((slot) => {
-    if (slot.section !== currentSection) {
-      currentSection = slot.section;
-      const title = document.createElement('h3');
-      title.className = 'images-section-title';
-      title.textContent = SECTION_LABELS[slot.section] ?? slot.section;
-      container.append(title);
-    }
-    const defaultUrl = slot.default_path.startsWith('/') || slot.default_path.startsWith('http') ? slot.default_path : '/' + slot.default_path;
-    const currentUrl = slot.media_id && slot.media_published === 1 ? `/api/media/file?id=${slot.media_id}` : defaultUrl;
-    const isVideo = slot.media_id ? slot.media_type === 'video' : slot.slot.startsWith('voces.');
-    const usando = slot.media_id ? 'Usando archivo de la biblioteca' : (slot.slot === 'hero.animacion' ? 'Animación original (secuencia de imágenes)' : 'Imagen original del código');
-    const permitidos = slot.slot === 'hero.animacion' ? ['image', 'video'] : (slot.slot.startsWith('voces.') ? ['video'] : ['image']);
+  items.forEach((item, index) => {
     const card = document.createElement('article');
-    card.className = 'image-slot-card';
-    card.dataset.slot = slot.slot;
+    card.className = 'carousel-item-card';
+    card.dataset.id = item.id;
+    const preview = item.media_type === 'video'
+      ? `<video src="${escapeHTML(item.url)}" muted preload="metadata"></video>`
+      : `<img src="${escapeHTML(item.url)}" alt="${escapeHTML(item.alt_text || item.title || item.file_name)}">`;
     card.innerHTML = `
-      <div class="image-slot-preview">${isVideo
-        ? `<video src="${escapeHTML(currentUrl)}" muted preload="metadata"></video>`
-        : `<img src="${escapeHTML(currentUrl)}" alt="${escapeHTML(slot.label)}">`}</div>
-      <div class="image-slot-copy">
-        <strong>${escapeHTML(slot.label)}</strong>
-        <span class="text-muted">${escapeHTML(usando)}</span>
-        <select data-field="media_id" class="input">
-          <option value="">${slot.slot === 'hero.animacion' ? 'Animación original' : 'Imagen original'}</option>
-          ${(data.options ?? []).filter((o) => permitidos.includes(o.media_type)).map((o) => `<option value="${escapeHTML(o.id)}" ${o.id === slot.media_id ? 'selected' : ''}>${escapeHTML(o.title || o.file_name)} (${escapeHTML(o.placement)})</option>`).join('')}
-        </select>
-        <div class="form-actions"><button class="button-secondary" type="button" data-action="guardar">Guardar</button><span data-feedback class="form-status"></span></div>
+      ${preview}
+      <div class="carousel-item-actions">
+        <button class="button-secondary" type="button" data-move="-1" ${index === 0 ? 'disabled' : ''} aria-label="Mover antes">←</button>
+        <button class="button-secondary" type="button" data-move="1" ${index === items.length - 1 ? 'disabled' : ''} aria-label="Mover después">→</button>
+        <button class="button-secondary" type="button" data-action="eliminar">Eliminar</button>
       </div>`;
     container.append(card);
   });
-  container.querySelectorAll('.image-slot-card').forEach((card) => {
-    const feedback = card.querySelector('[data-feedback]');
-    card.querySelector('[data-action="guardar"]').addEventListener('click', async () => {
-      feedback.textContent = 'Guardando...';
-      feedback.classList.remove('success', 'error');
-      const response = await api('/api/images', { method: 'PUT', body: JSON.stringify({ slot: card.dataset.slot, media_id: card.querySelector('[data-field="media_id"]').value || null, alt_text: card.querySelector('[data-field="alt_text"]').value }) });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) { feedback.classList.add('error'); feedback.textContent = result.error ?? 'No se pudo guardar.'; return; }
-      feedback.classList.add('success');
-      feedback.textContent = 'Guardado. Ya está publicado en la página.';
-      toast('Imagen actualizada', 'success');
-      await loadContenidoImagenes();
+  container.querySelectorAll('.carousel-item-card').forEach((card) => {
+    const index = items.findIndex((m) => m.id === card.dataset.id);
+    card.querySelectorAll('[data-move]').forEach((button) => button.addEventListener('click', async () => {
+      const target = items[index + Number(button.dataset.move)];
+      if (!target) return;
+      await api('/api/media/reorder', { method: 'POST', body: JSON.stringify({ id: card.dataset.id, sort_order: target.sort_order }) });
+      await api('/api/media/reorder', { method: 'POST', body: JSON.stringify({ id: target.id, sort_order: items[index].sort_order }) });
+      await loadCarouselManager(placement, containerId, hintId, nombre);
+    }));
+    card.querySelector('[data-action="eliminar"]').addEventListener('click', async () => {
+      if (!window.confirm('¿Eliminar este archivo del carrusel? También desaparece de la biblioteca.')) return;
+      const response = await api(`/api/media?id=${encodeURIComponent(card.dataset.id)}`, { method: 'DELETE' });
+      if (response.ok) await loadCarouselManager(placement, containerId, hintId, nombre);
     });
+  });
+}
+
+async function subirArchivo(placement, file) {
+  const formData = new FormData();
+  formData.set('placement', placement);
+  formData.set('file', await compressImage(file));
+  formData.set('title', file.name.replace(/\.[^.]+$/, ''));
+  const response = await api('/api/media', { method: 'POST', body: formData });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error ?? 'No se pudo subir el archivo.');
+  await api('/api/media/publish', { method: 'POST', body: JSON.stringify({ id: data.id, published: true }) });
+  return data.id;
+}
+
+async function wireCarouselUpload(placement, buttonSelector, inputSelector, containerId, hintId, nombre) {
+  const button = document.querySelector(buttonSelector);
+  const input = document.querySelector(inputSelector);
+  if (!button || !input) return;
+  button.addEventListener('click', () => input.click());
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    button.disabled = true;
+    button.textContent = 'Subiendo…';
+    try {
+      await subirArchivo(placement, file);
+      toast('Archivo agregado y publicado', 'success');
+      await loadCarouselManager(placement, containerId, hintId, nombre);
+      await loadMedios();
+    } catch (error) {
+      toast(error.message ?? 'No se pudo subir el archivo.', 'error');
+    } finally {
+      button.disabled = false;
+      button.textContent = placement === 'pizza' ? '＋ Agregar imagen' : '＋ Agregar video';
+      input.value = '';
+    }
+  });
+}
+
+async function loadHistoria() {
+  const container = document.querySelector('#manager-historia');
+  const input = document.querySelector('#file-historia');
+  const [imagesRes, mediaRes] = await Promise.all([api('/api/images'), api('/api/media')]);
+  const imagesData = await imagesRes.json();
+  const mediaData = await mediaRes.json();
+  const slot = (imagesData.images ?? []).find((s) => s.slot === 'historia.foto');
+  if (!slot) { container.innerHTML = '<p class="empty-state">Posición no disponible.</p>'; return; }
+  const defaultUrl = slot.default_path.startsWith('/') ? slot.default_path : '/' + slot.default_path;
+  const currentUrl = slot.media_id && slot.media_published === 1 ? `/api/media/file?id=${slot.media_id}` : defaultUrl;
+  const opciones = (mediaData.media ?? []).filter((m) => m.placement === 'history' && m.published === 1);
+  container.innerHTML = `
+    <div class="image-slot-card">
+      <div class="image-slot-preview"><img src="${escapeHTML(currentUrl)}" alt="Foto del dueño"></div>
+      <div class="image-slot-copy">
+        <strong>Foto de Irineo en "Nuestra historia"</strong>
+        <span class="text-muted">${slot.media_id ? 'Usando archivo de la biblioteca' : 'Usando la foto original'}</span>
+        <div class="form-actions">
+          <button class="button-secondary" type="button" data-action="cambiar">Cambiar imagen</button>
+          ${slot.media_id ? '<button class="button-secondary" type="button" data-action="original">Volver a la original</button>' : ''}
+          <span data-feedback class="form-status"></span>
+        </div>
+      </div>
+    </div>`;
+  container.querySelector('[data-action="cambiar"]').addEventListener('click', () => input.click());
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    const feedback = container.querySelector('[data-feedback]');
+    feedback.textContent = 'Subiendo...';
+    try {
+      const id = await subirArchivo('history', file);
+      await api('/api/images', { method: 'PUT', body: JSON.stringify({ slot: 'historia.foto', media_id: id }) });
+      feedback.textContent = 'Actualizada.';
+      toast('Foto del dueño actualizada', 'success');
+      await loadHistoria();
+      await loadMedios();
+    } catch (error) {
+      feedback.textContent = error.message ?? 'No se pudo subir.';
+    } finally {
+      input.value = '';
+    }
+  };
+  const originalButton = container.querySelector('[data-action="original"]');
+  if (originalButton) originalButton.addEventListener('click', async () => {
+    await api('/api/images', { method: 'PUT', body: JSON.stringify({ slot: 'historia.foto', media_id: null }) });
+    toast('Volviste a la foto original', 'success');
+    await loadHistoria();
+    await loadMedios();
   });
 }
 
@@ -656,15 +736,20 @@ async function loadStock() {
   const response = await api('/api/stock');
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'stock');
-  const p = data.product;
-  document.querySelector('#stock-available').textContent = number(p.available);
-  document.querySelector('#stock-reserved').textContent = number(p.stock_reserved);
-  document.querySelector('#stock-sold').textContent = number(p.stock_sold);
-  document.querySelector('#stock-total').textContent = number(p.stock_total);
-  document.querySelector('#stock-updated').textContent = `Actualizado ${formatDate(p.updated_at)}`;
-  document.querySelector('#stock-product-name').textContent = `${p.name} (${p.sku})`;
+  document.querySelector('#stock-available').textContent = number(data.totals.available);
+  document.querySelector('#stock-sold').textContent = number(data.totals.sold);
+  const porColor = {};
+  data.colors.forEach((c) => { porColor[c.color] = c; });
+  const rojo = porColor.rojo;
+  const negro = porColor.negro;
+  document.querySelector('#stock-rojo').textContent = number(rojo?.available ?? 0);
+  document.querySelector('#stock-rojo-copy').textContent = `${number(rojo?.stock_sold ?? 0)} vendidas · ${number(rojo?.stock_reserved ?? 0)} reservadas`;
+  document.querySelector('#stock-negro').textContent = number(negro?.available ?? 0);
+  document.querySelector('#stock-negro-copy').textContent = `${number(negro?.stock_sold ?? 0)} vendidas · ${number(negro?.stock_reserved ?? 0)} reservadas`;
   const form = document.querySelector('#stock-form');
-  if (document.activeElement?.name !== 'stock_total') form.stock_total.value = p.stock_total;
+  const colorElegido = form.color.value;
+  const fila = porColor[colorElegido];
+  if (fila && document.activeElement?.name !== 'stock_total') form.stock_total.value = fila.stock_total;
   const tbody = document.querySelector('#stock-movements');
   tbody.replaceChildren();
   if (!data.movements.length) {
@@ -688,7 +773,7 @@ async function saveStock(event) {
   const status = form.querySelector('#stock-status');
   status.classList.remove('success', 'error');
   status.textContent = 'Guardando...';
-  const response = await api('/api/stock', { method: 'PATCH', body: JSON.stringify({ stock_total: Number(form.stock_total.value), reason: form.reason.value }) });
+  const response = await api('/api/stock', { method: 'PATCH', body: JSON.stringify({ color: form.color.value, stock_total: Number(form.stock_total.value), reason: form.reason.value }) });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) { status.classList.add('error'); status.textContent = data.error ?? 'No se pudo guardar.'; return; }
   status.classList.add('success');
