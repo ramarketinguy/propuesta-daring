@@ -1,167 +1,788 @@
-const statusDot = document.querySelector('#status-dot');
-const statusTitle = document.querySelector('#status-title');
-const statusCopy = document.querySelector('#status-copy');
-const logoutButton = document.querySelector('#logout');
-const dashboard = document.querySelector('#dashboard');
-const metricsEmpty = document.querySelector('#metrics-empty');
-const period = document.querySelector('#period');
-const mediaForm = document.querySelector('#media-form');
-const mediaStatus = document.querySelector('#media-status');
-const mediaList = document.querySelector('#media-list');
-const usageR2 = document.querySelector('#usage-r2');
-const usageR2Copy = document.querySelector('#usage-r2-copy');
-const usageD1 = document.querySelector('#usage-d1');
-const usagePlan = document.querySelector('#usage-plan');
-const usagePlanCopy = document.querySelector('#usage-plan-copy');
+const state = {
+  session: null,
+  ventas: { data: null, page: 1, limit: 20, filters: { q: '', status: '', period: 'all' } },
+  emails: { data: null, page: 1, limit: 20, filters: { status: '', provider: '', period: 'all' } },
+  settings: null,
+  theme: 'dark'
+};
 
-async function getSession() {
-  const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
-  return response.json();
+const SECTIONS = {
+  resumen: { title: 'Resumen', subtitle: 'Vista general del estado de la página.', loader: 'resumen' },
+  ventas: { title: 'Ventas', subtitle: 'Revisá los checkouts iniciados, las ventas concluidas y las rechazadas.', loader: 'ventas' },
+  stock: { title: 'Stock', subtitle: 'Control de unidades disponibles, reservadas y vendidas.', loader: 'stock' },
+  contenido: { title: 'Contenido', subtitle: 'Editá los textos, preguntas e imágenes de la landing.', loader: 'contenido' },
+  configuracion: { title: 'Configuración', subtitle: 'Precio, contacto y remitentes de mail.', loader: 'configuracion' },
+  emails: { title: 'Emails enviados', subtitle: 'Bitácora de los mails automáticos al comprador y al dueño.', loader: 'emails' },
+  medios: { title: 'Medios', subtitle: 'Biblioteca de imágenes y videos para los carruseles.', loader: 'medios' },
+  uso: { title: 'Uso de Cloudflare', subtitle: 'Espacio ocupado y límites del plan.', loader: 'uso' }
+};
+
+const escapeHTML = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const number = (value) => value === null || value === undefined ? '—' : new Intl.NumberFormat('es-UY').format(value);
+const money = (cents) => cents === null || cents === undefined ? '—' : `$ ${(cents / 100).toLocaleString('es-UY', { minimumFractionDigits: 0 })}`;
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  try {
+    const date = new Date(iso.replace(' ', 'T') + 'Z');
+    return date.toLocaleString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } catch { return iso; }
+};
+const formatDateShort = (iso) => {
+  if (!iso) return '—';
+  try {
+    const date = new Date(iso.replace(' ', 'T') + 'Z');
+    return date.toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  } catch { return iso; }
+};
+
+function toast(message, type = 'success') {
+  const container = document.querySelector('#toast-container');
+  const node = document.createElement('div');
+  node.className = `toast ${type}`;
+  node.textContent = message;
+  container.append(node);
+  setTimeout(() => node.remove(), 4500);
 }
 
-async function checkHealth() {
-  const response = await fetch('/api/admin/health', { credentials: 'same-origin' });
-  if (!response.ok) throw new Error('health');
-  return response.json();
+async function api(path, options = {}) {
+  const response = await fetch(path, { credentials: 'same-origin', headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) }, ...options });
+  if (response.status === 401) { window.location.replace('/admin/login/'); throw new Error('auth'); }
+  return response;
 }
 
-function number(value) {
-  return value === null || value === undefined ? '—' : new Intl.NumberFormat('es-UY').format(value);
+function showPage(section) {
+  document.querySelectorAll('[data-page]').forEach((el) => el.classList.toggle('hidden', el.dataset.page !== section));
+  document.querySelectorAll('.sidebar-nav a').forEach((a) => a.classList.toggle('active', a.dataset.section === section));
+  const meta = SECTIONS[section];
+  document.querySelector('#page-title').textContent = meta.title;
+  document.querySelector('#page-subtitle').textContent = meta.subtitle;
+}
+
+async function loadResumen() {
+  const period = state.ventas.filters.period;
+  const query = `?period=${period}`;
+  const [summaryRes, alertsRes] = await Promise.all([fetch(`/api/metrics/summary${query}`, { credentials: 'same-origin' }), fetch(`/api/alerts${query}`, { credentials: 'same-origin' })]);
+  if (!summaryRes.ok || !alertsRes.ok) throw new Error('resumen');
+  const summary = await summaryRes.json();
+  const alerts = await alertsRes.json();
+  document.querySelector('#kpi-visits').textContent = number(summary.page_views);
+  document.querySelector('#kpi-buy-clicks').textContent = number(summary.buy_clicks);
+  document.querySelector('#kpi-checkout-opens').textContent = number(summary.checkout_opens);
+  document.querySelector('#kpi-checkout-submits').textContent = number(summary.checkout_submits);
+  renderAlerts(alerts.alerts || []);
 }
 
 function renderAlerts(alerts) {
-  const list = document.querySelector('#alert-list');
+  const list = document.querySelector('#alerts-list');
   list.replaceChildren();
   if (!alerts.length) {
     const empty = document.createElement('p');
-    empty.className = 'muted';
-    empty.textContent = 'No hay alertas para este período.';
+    empty.className = 'alert-empty';
+    empty.textContent = 'Sin alertas por ahora. Con más actividad vas a ver recomendaciones acá.';
     list.append(empty);
     return;
   }
   alerts.forEach((alert) => {
     const card = document.createElement('article');
-    card.className = 'alert-card';
-    card.innerHTML = `<strong>${alert.title}</strong><p>${alert.explanation}</p><small>Qué hacer: ${alert.action}</small>`;
+    card.className = `alert-card ${alert.severity ?? 'review'}`;
+    card.innerHTML = `<strong>${escapeHTML(alert.title)}</strong><p>${escapeHTML(alert.explanation)}</p><small>${escapeHTML(alert.action)}</small>`;
     list.append(card);
   });
 }
 
-async function loadDashboard() {
-  const query = `?period=${encodeURIComponent(period.value)}`;
-  const [summaryResponse, alertsResponse] = await Promise.all([fetch(`/api/metrics/summary${query}`), fetch(`/api/alerts${query}`)]);
-  if (!summaryResponse.ok || !alertsResponse.ok) throw new Error('metrics');
-  const summary = await summaryResponse.json();
-  const alerts = await alertsResponse.json();
-  document.querySelector('#metric-page-views').textContent = number(summary.page_views);
-  document.querySelector('#metric-buy-clicks').textContent = number(summary.buy_clicks);
-  document.querySelector('#metric-checkout-opens').textContent = number(summary.checkout_opens);
-  document.querySelector('#metric-checkout-submits').textContent = number(summary.checkout_submits);
-  renderAlerts(alerts.alerts || []);
-  dashboard.classList.remove('hidden');
-  metricsEmpty.classList.toggle('hidden', summary.page_views > 0 || summary.buy_clicks > 0 || summary.checkout_opens > 0 || summary.checkout_submits > 0);
+async function loadVentas() {
+  const { data, page, limit, filters } = state.ventas;
+  const tbody = document.querySelector('#ventas-table tbody');
+  const hint = document.querySelector('#ventas-hint');
+  const errorBanner = document.querySelector('#ventas-error');
+  errorBanner.classList.add('hidden');
+  tbody.replaceChildren();
+  hint.textContent = 'Cargando...';
+  const params = new URLSearchParams({ page: String(page), limit: String(limit), period: filters.period });
+  if (filters.q) params.set('q', filters.q);
+  if (filters.status) params.set('status', filters.status);
+  const response = await api(`/api/orders?${params.toString()}`);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || 'ventas');
+  state.ventas.data = result;
+  document.querySelector('#kpi-initiated').textContent = number(result.counts.initiated);
+  document.querySelector('#kpi-completed').textContent = number(result.counts.completed);
+  document.querySelector('#kpi-rejected').textContent = number(result.counts.rejected);
+  document.querySelector('#kpi-revenue').textContent = money(result.revenue_cents);
+  hint.textContent = `${number(result.total)} resultados en total`;
+  if (!result.orders.length) {
+    const empty = document.createElement('tr');
+    empty.innerHTML = '<td colspan="7" class="empty-state">Todavía no hay ventas con esos filtros.</td>';
+    tbody.append(empty);
+  } else {
+    result.orders.forEach((order) => {
+      const row = document.createElement('tr');
+      row.dataset.orderId = order.id;
+      row.innerHTML = `
+        <td>${escapeHTML(formatDateShort(order.created_at))}</td>
+        <td><strong>${escapeHTML(order.customer_name)}</strong><div class="text-muted">${escapeHTML(order.customer_email)}</div></td>
+        <td>${escapeHTML(order.color)}</td>
+        <td>${money(order.amount_cents)}</td>
+        <td><span class="status-pill s-${escapeHTML(order.status)}">${statusLabel(order.status)}</span></td>
+        <td><span class="status-pill s-${escapeHTML(order.shipping_status ?? 'pending')}">${shippingLabel(order.shipping_status)}</span></td>
+        <td class="row-actions"><button class="button-secondary" data-action="detalle">Ver detalle</button></td>`;
+      tbody.append(row);
+    });
+    tbody.querySelectorAll('button[data-action="detalle"]').forEach((button) => button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const id = button.closest('tr').dataset.orderId;
+      openOrderDetail(id);
+    }));
+  }
+  renderPagination('ventas-pagination', result.total, page, limit, (p) => { state.ventas.page = p; loadVentas(); });
 }
 
-async function loadMedia() {
-  const response = await fetch('/api/media', { credentials: 'same-origin' });
-  if (!response.ok) throw new Error('media');
-  const result = await response.json();
-  mediaList.replaceChildren();
-  result.media.forEach((item) => {
+function statusLabel(status) {
+  return { checkout_started: 'Iniciado', pending: 'Pendiente', approved: 'Concluida', rejected: 'Rechazada', cancelled: 'Cancelada', refunded: 'Reembolsada' }[status] ?? status;
+}
+function shippingLabel(status) {
+  return { preparing: 'Preparando', shipped: 'Despachado', delivered: 'Entregado', returned: 'Devuelto' }[status] ?? 'Sin estado';
+}
+
+function renderPagination(elementId, total, page, limit, onChange) {
+  const container = document.querySelector('#' + elementId);
+  container.replaceChildren();
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const info = document.createElement('span');
+  info.textContent = `Página ${page} de ${totalPages}`;
+  const prev = document.createElement('button');
+  prev.textContent = 'Anterior';
+  prev.disabled = page <= 1;
+  prev.addEventListener('click', () => onChange(page - 1));
+  const next = document.createElement('button');
+  next.textContent = 'Siguiente';
+  next.disabled = page >= totalPages;
+  next.addEventListener('click', () => onChange(page + 1));
+  container.append(prev, info, next);
+}
+
+async function openOrderDetail(id) {
+  const container = document.querySelector('#venta-detail');
+  container.classList.remove('hidden');
+  container.innerHTML = '<p class="empty-state">Cargando...</p>';
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const response = await api(`/api/orders/${id}`);
+  const data = await response.json();
+  if (!response.ok) { container.innerHTML = `<p class="empty-state">${escapeHTML(data.error || 'No se pudo cargar la venta.')}</p>`; return; }
+  renderOrderDetail(data.order, data.timeline, data.emails);
+}
+
+function renderOrderDetail(order, timeline, emails) {
+  const container = document.querySelector('#venta-detail');
+  container.innerHTML = `
+    <header class="venta-detail-header">
+      <h2>Venta <code>${escapeHTML(order.id)}</code></h2>
+      <button class="button-secondary" type="button" data-action="cerrar-detalle">Cerrar</button>
+    </header>
+    <div class="venta-detail-body">
+      <section>
+        <h3>Datos del comprador</h3>
+        <dl>
+          <dt>Nombre</dt><dd>${escapeHTML(order.customer_name)}</dd>
+          <dt>Email</dt><dd>${escapeHTML(order.customer_email)}</dd>
+          <dt>Teléfono</dt><dd>${escapeHTML(order.customer_phone ?? '—')}</dd>
+          <dt>Departamento</dt><dd>${escapeHTML(order.shipping_department ?? '—')}</dd>
+          <dt>Localidad</dt><dd>${escapeHTML(order.shipping_city ?? '—')}</dd>
+          <dt>Dirección</dt><dd>${escapeHTML(order.shipping_address ?? '—')}</dd>
+          <dt>Color</dt><dd>${escapeHTML(order.color)}</dd>
+          <dt>Cantidad</dt><dd>${escapeHTML(order.quantity)}</dd>
+          <dt>Total</dt><dd>${money(order.amount_cents)}</dd>
+          <dt>Estado de pago</dt><dd><span class="status-pill s-${escapeHTML(order.status)}">${statusLabel(order.status)}</span></dd>
+          <dt>Pago Mercado Pago</dt><dd>${escapeHTML(order.payment_id ?? '—')}</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>Envío y seguimiento</h3>
+        <form data-action="update-order" class="venta-update">
+          <label>Estado de envío
+            <select name="shipping_status">
+              <option value="">Sin estado</option>
+              <option value="preparing" ${order.shipping_status === 'preparing' ? 'selected' : ''}>Preparando</option>
+              <option value="shipped" ${order.shipping_status === 'shipped' ? 'selected' : ''}>Despachado</option>
+              <option value="delivered" ${order.shipping_status === 'delivered' ? 'selected' : ''}>Entregado</option>
+              <option value="returned" ${order.shipping_status === 'returned' ? 'selected' : ''}>Devuelto</option>
+            </select>
+          </label>
+          <label>Número de seguimiento
+            <input type="text" name="tracking_number" maxlength="80" value="${escapeHTML(order.tracking_number ?? '')}" placeholder="Opcional">
+          </label>
+          <label style="flex:1 1 100%">Notas internas
+            <textarea name="admin_notes" maxlength="1000" rows="2" placeholder="Anotaciones privadas sobre esta venta">${escapeHTML(order.admin_notes ?? '')}</textarea>
+          </label>
+          <button class="button-primary" type="submit">Guardar cambios</button>
+          <span data-feedback class="form-status"></span>
+        </form>
+        <h3 style="margin-top:1.25rem">Timeline</h3>
+        <div class="timeline">
+          ${timeline.length ? timeline.map((event) => `
+            <div class="timeline-item">
+              <strong>${escapeHTML(statusLabel(event.event_type.replace('payment_', '').replace('checkout_started', 'Iniciado')))}</strong>
+              <time>${escapeHTML(formatDate(event.created_at))}</time>
+              ${event.payment_id ? `<div class="text-muted">Pago ${escapeHTML(event.payment_id)}</div>` : ''}
+            </div>`).join('') : '<div class="text-muted">Sin eventos todavía.</div>'}
+        </div>
+        <h3 style="margin-top:1.25rem">Emails enviados</h3>
+        ${emails.length ? emails.map((email) => `
+          <div class="timeline-item">
+            <strong>${escapeHTML(email.provider === 'resend-buyer' ? 'Al comprador' : 'Al dueño')}</strong>
+            <span class="status-pill s-${escapeHTML(email.status)}">${escapeHTML(email.status)}</span>
+            <time>${escapeHTML(formatDate(email.created_at))}</time>
+            ${email.error_message ? `<div class="text-muted">${escapeHTML(email.error_message)}</div>` : ''}
+          </div>`).join('') : '<div class="text-muted">Todavía no se enviaron mails automáticos.</div>'}
+      </section>
+    </div>`;
+  container.querySelector('[data-action="cerrar-detalle"]').addEventListener('click', () => {
+    container.classList.add('hidden');
+    container.innerHTML = '';
+  });
+  const form = container.querySelector('form[data-action="update-order"]');
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const feedback = form.querySelector('[data-feedback]');
+    feedback.textContent = 'Guardando...';
+    feedback.classList.remove('success', 'error');
+    const body = {
+      shipping_status: form.shipping_status.value || null,
+      tracking_number: form.tracking_number.value.trim() || null,
+      admin_notes: form.admin_notes.value.trim() || null
+    };
+    const response = await api(`/api/orders/${order.id}`, { method: 'PATCH', body: JSON.stringify(body) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) { feedback.classList.add('error'); feedback.textContent = result.error ?? 'No se pudo guardar.'; return; }
+    feedback.classList.add('success');
+    feedback.textContent = 'Cambios guardados.';
+    toast('Venta actualizada', 'success');
+    await loadVentas();
+  });
+}
+
+function exportVentasCSV() {
+  if (!state.ventas.data?.orders?.length) { toast('No hay datos para exportar.', 'error'); return; }
+  const rows = state.ventas.data.orders;
+  const headers = ['id', 'fecha', 'cliente', 'email', 'telefono', 'departamento', 'localidad', 'direccion', 'color', 'monto_cents', 'estado_pago', 'estado_envio'];
+  const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+  const lines = [headers.join(',')];
+  rows.forEach((order) => {
+    lines.push([
+      order.id,
+      order.created_at,
+      order.customer_name,
+      order.customer_email,
+      order.customer_phone ?? '',
+      order.shipping_department ?? '',
+      order.shipping_city ?? '',
+      order.shipping_address ?? '',
+      order.color,
+      order.amount_cents,
+      order.status,
+      order.shipping_status ?? ''
+    ].map(escape).join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `ventas-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function loadEmails() {
+  const { page, limit, filters } = state.emails;
+  const tbody = document.querySelector('#emails-table tbody');
+  tbody.replaceChildren();
+  const params = new URLSearchParams({ page: String(page), limit: String(limit), period: filters.period });
+  if (filters.status) params.set('status', filters.status);
+  if (filters.provider) params.set('provider', filters.provider);
+  const response = await api(`/api/emails?${params.toString()}`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'emails');
+  state.emails.data = data;
+  document.querySelector('#email-buyer-total').textContent = number(data.counts.buyer_total);
+  document.querySelector('#email-buyer-sent').textContent = number(data.counts.buyer_sent);
+  document.querySelector('#email-buyer-failed').textContent = number(data.counts.buyer_failed);
+  document.querySelector('#email-owner-total').textContent = number(data.counts.owner_total);
+  document.querySelector('#email-owner-sent').textContent = number(data.counts.owner_sent);
+  document.querySelector('#email-owner-failed').textContent = number(data.counts.owner_failed);
+  if (!data.emails.length) {
+    const empty = document.createElement('tr');
+    empty.innerHTML = '<td colspan="5" class="empty-state">Sin envíos todavía.</td>';
+    tbody.append(empty);
+  } else {
+    data.emails.forEach((email) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${escapeHTML(formatDate(email.created_at))}</td>
+        <td><code class="text-muted">${escapeHTML(email.order_id.slice(0, 8))}</code></td>
+        <td>${escapeHTML(email.provider === 'resend-buyer' ? 'Al comprador' : 'Al dueño')}</td>
+        <td><span class="status-pill s-${escapeHTML(email.status)}">${escapeHTML(email.status)}</span></td>
+        <td class="text-muted">${escapeHTML(email.error_message ?? email.provider_message_id ?? 'OK')}</td>`;
+      tbody.append(row);
+    });
+  }
+  renderPagination('emails-pagination', data.total, page, limit, (p) => { state.emails.page = p; loadEmails(); });
+}
+
+async function loadConfiguracion() {
+  if (state.settings) {
+    populateSettings(state.settings);
+    return;
+  }
+  const response = await api('/api/settings');
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'settings');
+  state.settings = data.flat;
+  populateSettings(state.settings);
+}
+
+function populateSettings(flat) {
+  const form = document.querySelector('#settings-form');
+  form.querySelectorAll('[name]').forEach((input) => {
+    let value = flat[input.name] ?? '';
+    if (input.name === 'price') {
+      const cents = Number(flat.price_cents ?? 0);
+      value = cents ? Math.round(cents / 100) : '';
+    }
+    if (input.type === 'checkbox') input.checked = value === 'true' || value === true;
+    else input.value = value;
+  });
+}
+
+async function saveSettings(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const status = form.querySelector('#settings-status');
+  status.classList.remove('success', 'error');
+  status.textContent = 'Guardando...';
+  const values = {};
+  form.querySelectorAll('[name]').forEach((input) => {
+    if (input.type === 'checkbox') values[input.name] = input.checked ? 'true' : 'false';
+    else if (input.name === 'price') values.price_cents = String(Math.max(0, Math.round(Number(input.value) * 100)));
+    else values[input.name] = input.value;
+  });
+  const response = await api('/api/settings', { method: 'PUT', body: JSON.stringify({ values }) });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) { status.classList.add('error'); status.textContent = data.error ?? 'No se pudo guardar.'; return; }
+  status.classList.add('success');
+  status.textContent = 'Cambios guardados.';
+  toast('Configuración guardada', 'success');
+  state.settings = null;
+  await loadConfiguracion();
+}
+
+async function loadContenido() {
+  await loadContenidoTextos();
+  await loadContenidoImagenes();
+  await loadFaq();
+}
+
+async function loadContenidoTextos() {
+  const container = document.querySelector('#contenido-fields');
+  const status = document.querySelector('#contenido-status');
+  status.textContent = '';
+  status.classList.remove('success', 'error');
+  const response = await api('/api/content');
+  if (!response.ok) { container.innerHTML = '<p class="empty-state">No se pudo cargar el contenido.</p>'; return; }
+  const data = await response.json();
+  const sections = data.sections ?? {};
+  container.replaceChildren();
+  const SECTION_LABELS = { hero: 'Hero (parte superior de la página)', platos: 'Sección Versatilidad', diseno: 'Sección Diseño e Ingeniería', oferta: 'Sección Oferta', cierre: 'Cierre de la página' };
+  for (const [section, fields] of Object.entries(sections)) {
+    const group = document.createElement('fieldset');
+    group.className = 'settings-group';
+    group.style.gridTemplateColumns = '1fr';
+    const legend = document.createElement('legend');
+    legend.textContent = SECTION_LABELS[section] ?? section;
+    group.append(legend);
+    fields.forEach((field) => {
+      const wrap = document.createElement('label');
+      wrap.textContent = field.label;
+      let input;
+      if (field.type === 'textarea') {
+        input = document.createElement('textarea');
+        input.rows = 3;
+        input.value = field.value ?? '';
+      } else {
+        input = document.createElement('input');
+        input.type = 'text';
+        input.value = field.value ?? '';
+      }
+      input.dataset.key = field.key;
+      input.maxLength = field.type === 'textarea' ? 2000 : 500;
+      wrap.append(input);
+      group.append(wrap);
+    });
+    container.append(group);
+  }
+  state._contenidoFlat = data.flat ?? {};
+}
+
+async function saveContenido() {
+  const status = document.querySelector('#contenido-status');
+  const inputs = document.querySelectorAll('#contenido-fields [data-key]');
+  const values = {};
+  inputs.forEach((input) => { values[input.dataset.key] = input.value; });
+  status.textContent = 'Guardando...';
+  status.classList.remove('success', 'error');
+  const response = await api('/api/content', { method: 'PUT', body: JSON.stringify({ values }) });
+  if (!response.ok) { status.classList.add('error'); status.textContent = 'No se pudo guardar.'; return; }
+  status.classList.add('success');
+  status.textContent = 'Cambios guardados. Ya están publicados en la página.';
+  toast('Contenido actualizado', 'success');
+}
+
+async function loadContenidoImagenes() {
+  const container = document.querySelector('#images-list');
+  const response = await api('/api/images');
+  const data = await response.json();
+  if (!response.ok) { container.innerHTML = '<p class="empty-state">No se pudieron cargar las posiciones.</p>'; return; }
+  container.replaceChildren();
+  const SECTION_LABELS = { hero: 'Hero', platos: 'Carrusel de platos', diseno: 'Diseño e Ingeniería', oferta: 'Oferta', historia: 'Nuestra historia', cierre: 'Cierre', voces: 'Testimonios en video' };
+  if (!data.images.length) { container.innerHTML = '<p class="empty-state">Sin posiciones configuradas.</p>'; return; }
+  let currentSection = '';
+  data.images.forEach((slot) => {
+    if (slot.section !== currentSection) {
+      currentSection = slot.section;
+      const title = document.createElement('h3');
+      title.className = 'images-section-title';
+      title.textContent = SECTION_LABELS[slot.section] ?? slot.section;
+      container.append(title);
+    }
+    const currentUrl = slot.media_id && slot.media_published === 1 ? `/api/media/file?id=${slot.media_id}` : slot.default_path;
+    const isVideo = slot.slot.startsWith('voces.') || (slot.media_type === 'video');
+    const card = document.createElement('article');
+    card.className = 'image-slot-card';
+    card.dataset.slot = slot.slot;
+    card.innerHTML = `
+      <div class="image-slot-preview">${isVideo
+        ? `<video src="${escapeHTML(currentUrl)}" muted preload="metadata"></video>`
+        : `<img src="${escapeHTML(currentUrl)}" alt="${escapeHTML(slot.alt_text ?? slot.label)}">`}</div>
+      <div class="image-slot-copy">
+        <strong>${escapeHTML(slot.label)}</strong>
+        <span class="text-muted">${slot.media_id ? 'Usando archivo de la biblioteca' : 'Usando imagen original del código'}</span>
+        <select data-field="media_id" class="input">
+          <option value="">Imagen original</option>
+          ${(data.options ?? []).filter((o) => (slot.slot.startsWith('voces.') ? o.media_type === 'video' : o.media_type === 'image')).map((o) => `<option value="${escapeHTML(o.id)}" ${o.id === slot.media_id ? 'selected' : ''}>${escapeHTML(o.title || o.file_name)} (${escapeHTML(o.placement)})</option>`).join('')}
+        </select>
+        <label>Texto alternativo<input type="text" data-field="alt_text" maxlength="240" value="${escapeHTML(slot.alt_text ?? '')}" placeholder="Descripción para accesibilidad"></label>
+        <div class="form-actions"><button class="button-secondary" type="button" data-action="guardar">Guardar</button><span data-feedback class="form-status"></span></div>
+      </div>`;
+    container.append(card);
+  });
+  container.querySelectorAll('.image-slot-card').forEach((card) => {
+    const feedback = card.querySelector('[data-feedback]');
+    card.querySelector('[data-action="guardar"]').addEventListener('click', async () => {
+      feedback.textContent = 'Guardando...';
+      feedback.classList.remove('success', 'error');
+      const response = await api('/api/images', { method: 'PUT', body: JSON.stringify({ slot: card.dataset.slot, media_id: card.querySelector('[data-field="media_id"]').value || null, alt_text: card.querySelector('[data-field="alt_text"]').value }) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) { feedback.classList.add('error'); feedback.textContent = result.error ?? 'No se pudo guardar.'; return; }
+      feedback.classList.add('success');
+      feedback.textContent = 'Guardado. Ya está publicado en la página.';
+      toast('Imagen actualizada', 'success');
+      await loadContenidoImagenes();
+    });
+  });
+}
+
+async function loadFaq() {
+  const list = document.querySelector('#faq-list');
+  list.innerHTML = '<p class="empty-state">Cargando preguntas…</p>';
+  const response = await api('/api/faq');
+  if (!response.ok) { list.innerHTML = '<p class="empty-state">No se pudieron cargar las preguntas.</p>'; return; }
+  const data = await response.json();
+  const items = data.faq ?? [];
+  if (!items.length) { list.innerHTML = '<p class="empty-state">Todavía no hay preguntas frecuentes.</p>'; return; }
+  list.replaceChildren();
+  items.forEach((item) => {
+    const card = document.createElement('article');
+    card.className = 'faq-admin-card';
+    card.dataset.id = item.id;
+    card.innerHTML = `
+      <div class="faq-admin-body">
+        <label>Pregunta<input data-field="question" maxlength="240" value="${escapeHTML(item.question)}"></label>
+        <label>Respuesta<textarea data-field="answer" rows="3" maxlength="2000">${escapeHTML(item.answer)}</textarea></label>
+        <label>Orden<input data-field="sort_order" type="number" min="0" value="${item.sort_order}"></label>
+        <label class="settings-toggle"><input type="checkbox" data-field="published" ${item.published === 1 ? 'checked' : ''}>Publicada</label>
+      </div>
+      <div class="form-actions"><button class="button-secondary" type="button" data-action="guardar">Guardar</button><button class="button-secondary" type="button" data-action="eliminar">Eliminar</button><span data-feedback class="form-status"></span></div>`;
+    list.append(card);
+  });
+  list.querySelectorAll('.faq-admin-card').forEach((card) => listItem => null);
+  list.querySelectorAll('.faq-admin-card').forEach((card) => wireFaqCard(card));
+}
+
+function wireFaqCard(card) {
+  const id = card.dataset.id;
+  const feedback = card.querySelector('[data-feedback]');
+  card.querySelector('[data-action="guardar"]').addEventListener('click', async () => {
+    const body = {
+      question: card.querySelector('[data-field="question"]').value,
+      answer: card.querySelector('[data-field="answer"]').value,
+      sort_order: Number(card.querySelector('[data-field="sort_order"]').value),
+      published: card.querySelector('[data-field="published"]').checked
+    };
+    feedback.textContent = 'Guardando...';
+    feedback.classList.remove('success', 'error');
+    const response = await api(`/api/faq/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
+    if (!response.ok) { feedback.classList.add('error'); feedback.textContent = 'No se pudo guardar.'; return; }
+    feedback.classList.add('success');
+    feedback.textContent = 'Guardado.';
+    toast('Pregunta actualizada', 'success');
+  });
+  card.querySelector('[data-action="eliminar"]').addEventListener('click', async () => {
+    if (!window.confirm('¿Eliminar esta pregunta?')) return;
+    const response = await api(`/api/faq/${id}`, { method: 'DELETE' });
+    if (response.ok) { toast('Pregunta eliminada', 'success'); await loadFaq(); }
+  });
+}
+
+async function createFaq(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const body = {
+    question: form.question.value.trim(),
+    answer: form.answer.value.trim(),
+    sort_order: 0
+  };
+  if (!body.question || !body.answer) return;
+  const response = await api('/api/faq', { method: 'POST', body: JSON.stringify(body) });
+  if (!response.ok) { toast('No se pudo crear.', 'error'); return; }
+  form.reset();
+  toast('Pregunta agregada', 'success');
+  await loadFaq();
+}
+
+async function loadUso() {
+  const response = await api('/api/cloudflare/usage');
+  const data = await response.json();
+  document.querySelector('#usage-plan').textContent = data.plan_label ?? data.plan ?? 'Cloudflare Free';
+  document.querySelector('#usage-r2').textContent = number(data.r2?.object_count);
+  document.querySelector('#usage-r2-copy').textContent = `${((data.r2?.size_bytes ?? 0) / 1024 / 1024).toFixed(2)} MB usados · ${data.r2?.limit_label ?? ''} (${data.r2?.used_percent ?? 0}%)`;
+  document.querySelector('#usage-d1').textContent = number(data.d1?.analytics_events ?? 0);
+  renderUsageLimits(data);
+}
+
+function renderUsageLimits(data) {
+  const container = document.querySelector('#usage-limits');
+  container.replaceChildren();
+  const groups = [
+    { title: 'R2 (almacenamiento de medios)', items: [
+      { label: 'Objetos almacenados', current: `${number(data.r2?.object_count)} objetos`, limit: 'ilimitado (pago por uso)' },
+      { label: 'Espacio ocupado', current: `${((data.r2?.size_bytes ?? 0) / 1024 / 1024).toFixed(2)} MB`, limit: data.r2?.limit_label ?? '10 GB' },
+      { label: 'Lecturas por mes', current: '— (no se mide)', limit: '10.000.000' },
+      { label: 'Escrituras por mes', current: '— (no se mide)', limit: '1.000.000' }
+    ]},
+    { title: 'D1 (base de datos)', items: [
+      { label: 'Filas estimadas en uso', current: `${number(data.d1?.estimate_rows ?? 0)} filas`, limit: 'millones' },
+      { label: 'Almacenamiento de base', current: '— (no se mide)', limit: data.d1?.limit_label ?? '5 GB' },
+      { label: 'Lecturas por día', current: '— (no se mide)', limit: '5.000.000' },
+      { label: 'Escrituras por día', current: '— (no se mide)', limit: '100.000' }
+    ]},
+    { title: 'Pages (la página en sí)', items: [
+      { label: 'Deploys por mes', current: '— (no se mide)', limit: '500' },
+      { label: 'Dominios personalizados', current: '1 conectado', limit: '100' },
+      { label: 'Archivos por proyecto', current: '— (no se mide)', limit: '20.000' }
+    ]},
+    { title: 'Workers (funciones)', items: [
+      { label: 'Requests por día', current: '— (no se mide)', limit: '100.000' },
+      { label: 'CPU por request', current: '—', limit: '10 ms' }
+    ]}
+  ];
+  groups.forEach((group) => {
+    const section = document.createElement('section');
+    section.innerHTML = `<h3>${escapeHTML(group.title)}</h3>`;
+    const table = document.createElement('div');
+    table.className = 'limits-table';
+    group.items.forEach((item) => {
+      const row = document.createElement('div');
+      row.className = 'limits-row';
+      row.innerHTML = `<span class="limits-label">${escapeHTML(item.label)}</span><span class="limits-current">${escapeHTML(item.current)}</span><span class="limits-limit">Límite: ${escapeHTML(item.limit)}</span>`;
+      table.append(row);
+    });
+    section.append(table);
+    container.append(section);
+  });
+}
+
+async function loadMedios() {
+  const response = await api('/api/media');
+  const data = await response.json();
+  const list = document.querySelector('#media-list');
+  list.replaceChildren();
+  if (!data.media?.length) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-state';
+    empty.textContent = 'Todavía no hay recursos cargados.';
+    list.append(empty);
+    return;
+  }
+  data.media.forEach((item) => {
     const card = document.createElement('article');
     card.className = 'media-card';
     const preview = item.media_type === 'video' ? document.createElement('video') : document.createElement('img');
     preview.src = item.url;
-    preview.controls = item.media_type === 'video';
-    if (item.media_type === 'image') preview.alt = item.alt_text || item.file_name;
-    const copy = document.createElement('div');
-    copy.innerHTML = `<strong>${item.title || item.file_name}</strong><span>${item.placement} · ${item.published ? 'Publicado' : 'Sin publicar'}</span><input class="media-order" data-order-id="${item.id}" type="number" min="0" value="${item.sort_order || 0}" aria-label="Orden de ${item.file_name}"><button class="button media-save-order" data-id="${item.id}">Guardar orden</button><button class="button media-publish" data-id="${item.id}" data-published="${item.published ? 'false' : 'true'}">${item.published ? 'Ocultar' : 'Publicar'}</button><button class="button media-delete" data-id="${item.id}">Eliminar</button>`;
-    card.append(preview, copy);
-    mediaList.append(card);
+    if (item.media_type === 'video') preview.controls = true;
+    else preview.alt = item.alt_text || item.file_name;
+    const meta = document.createElement('div');
+    meta.innerHTML = `<strong>${escapeHTML(item.title || item.file_name)}</strong><span>${escapeHTML(item.placement)} · ${item.published ? 'Publicado' : 'Sin publicar'}</span><input class="media-order input" data-order-id="${escapeHTML(item.id)}" type="number" min="0" value="${escapeHTML(item.sort_order || 0)}" aria-label="Orden"><button class="button-secondary" data-action="guardar-orden" data-id="${escapeHTML(item.id)}">Guardar orden</button><button class="button-secondary" data-action="publicar" data-id="${escapeHTML(item.id)}" data-published="${item.published ? 'false' : 'true'}">${item.published ? 'Ocultar' : 'Publicar'}</button><button class="button-secondary" data-action="eliminar" data-id="${escapeHTML(item.id)}">Eliminar</button>`;
+    card.append(preview, meta);
+    list.append(card);
   });
-  if (!result.media.length) mediaList.innerHTML = '<p class="muted">Todavía no hay recursos cargados.</p>';
-  mediaList.querySelectorAll('.media-publish').forEach((button) => button.addEventListener('click', async () => {
-    const response = await fetch('/api/media/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id: button.dataset.id, published: button.dataset.published === 'true' }) });
-    if (response.ok) await loadMedia();
-  }));
-  mediaList.querySelectorAll('.media-save-order').forEach((button) => button.addEventListener('click', async () => {
-    const input = mediaList.querySelector(`[data-order-id="${button.dataset.id}"]`);
-    const response = await fetch('/api/media/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ id: button.dataset.id, sort_order: Number(input.value) }) });
+  list.querySelectorAll('button[data-action="guardar-orden"]').forEach((button) => button.addEventListener('click', async () => {
+    const input = list.querySelector(`[data-order-id="${button.dataset.id}"]`);
+    const response = await api('/api/media/reorder', { method: 'POST', body: JSON.stringify({ id: button.dataset.id, sort_order: Number(input.value) }) });
     button.textContent = response.ok ? 'Guardado' : 'Error';
   }));
-  mediaList.querySelectorAll('.media-delete').forEach((button) => button.addEventListener('click', async () => {
+  list.querySelectorAll('button[data-action="publicar"]').forEach((button) => button.addEventListener('click', async () => {
+    const response = await api('/api/media/publish', { method: 'POST', body: JSON.stringify({ id: button.dataset.id, published: button.dataset.published === 'true' }) });
+    if (response.ok) await loadMedios();
+  }));
+  list.querySelectorAll('button[data-action="eliminar"]').forEach((button) => button.addEventListener('click', async () => {
     if (!window.confirm('¿Eliminar este recurso?')) return;
-    const response = await fetch(`/api/media?id=${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE', credentials: 'same-origin' });
-    if (response.ok) await loadMedia();
+    const response = await api(`/api/media?id=${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE' });
+    if (response.ok) await loadMedios();
   }));
 }
 
-async function loadUsage() {
-  const response = await fetch('/api/cloudflare/usage', { credentials: 'same-origin' });
-  if (!response.ok) throw new Error('usage');
-  const result = await response.json();
-  usageR2.textContent = number(result.r2.object_count);
-  usageR2Copy.textContent = `${(result.r2.size_bytes / 1024 / 1024).toFixed(2)} MB usados`;
-  usageD1.textContent = number(result.d1.analytics_events);
-  usagePlan.textContent = result.cloudflare_plan_limits.status === 'api_configured' ? 'API lista' : 'No disponible';
-  usagePlanCopy.textContent = result.cloudflare_plan_limits.message;
+async function loadUso() {
+  const response = await api('/api/cloudflare/usage');
+  const data = await response.json();
+  document.querySelector('#usage-r2').textContent = number(data.r2?.object_count);
+  document.querySelector('#usage-r2-copy').textContent = `${((data.r2?.size_bytes ?? 0) / 1024 / 1024).toFixed(2)} MB usados`;
+  document.querySelector('#usage-d1').textContent = number(data.d1?.analytics_events);
+  document.querySelector('#usage-plan').textContent = data.cloudflare_plan_limits?.status === 'api_configured' ? 'API lista' : 'No disponible';
+  document.querySelector('#usage-plan-copy').textContent = data.cloudflare_plan_limits?.message ?? '';
 }
 
-async function compressImage(file) {
-  if (!file.type.startsWith('image/') || file.type === 'image/webp') return file;
-  const image = new Image();
-  const url = URL.createObjectURL(file);
-  try {
-    image.src = url;
-    await image.decode();
-    const scale = Math.min(1, 1600 / image.width);
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(image.width * scale);
-    canvas.height = Math.round(image.height * scale);
-    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', .82));
-    return blob ? new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp' }) : file;
-  } finally { URL.revokeObjectURL(url); }
+async function loadStock() {
+  const response = await api('/api/stock');
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'stock');
+  const p = data.product;
+  document.querySelector('#stock-available').textContent = number(p.available);
+  document.querySelector('#stock-reserved').textContent = number(p.stock_reserved);
+  document.querySelector('#stock-sold').textContent = number(p.stock_sold);
+  document.querySelector('#stock-total').textContent = number(p.stock_total);
+  document.querySelector('#stock-updated').textContent = `Actualizado ${formatDate(p.updated_at)}`;
+  document.querySelector('#stock-product-name').textContent = `${p.name} (${p.sku})`;
+  const form = document.querySelector('#stock-form');
+  if (document.activeElement?.name !== 'stock_total') form.stock_total.value = p.stock_total;
+  const tbody = document.querySelector('#stock-movements');
+  tbody.replaceChildren();
+  if (!data.movements.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Sin movimientos todavía.</td></tr>';
+    return;
+  }
+  data.movements.forEach((m) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${escapeHTML(formatDate(m.created_at))}</td>
+      <td><strong>${m.quantity > 0 ? '+' : ''}${escapeHTML(m.quantity)}</strong></td>
+      <td class="text-muted">${escapeHTML(m.reason)}</td>
+      <td class="text-muted">${m.order_id ? `<code>${escapeHTML(m.order_id.slice(0, 8))}</code>` : '—'}</td>`;
+    tbody.append(row);
+  });
+}
+
+async function saveStock(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const status = form.querySelector('#stock-status');
+  status.classList.remove('success', 'error');
+  status.textContent = 'Guardando...';
+  const response = await api('/api/stock', { method: 'PATCH', body: JSON.stringify({ stock_total: Number(form.stock_total.value), reason: form.reason.value }) });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) { status.classList.add('error'); status.textContent = data.error ?? 'No se pudo guardar.'; return; }
+  status.classList.add('success');
+  status.textContent = 'Stock actualizado.';
+  toast('Stock actualizado', 'success');
+  await loadStock();
+}
+
+const LOADERS = {
+  resumen: loadResumen,
+  ventas: loadVentas,
+  stock: loadStock,
+  contenido: loadContenido,
+  configuracion: loadConfiguracion,
+  emails: loadEmails,
+  medios: loadMedios,
+  uso: loadUso
+};
+
+function navigate() {
+  const hash = window.location.hash.replace('#', '') || 'resumen';
+  const section = SECTIONS[hash] ? hash : 'resumen';
+  showPage(section);
+  const loader = LOADERS[SECTIONS[section].loader];
+  if (loader) loader().catch(() => undefined);
+}
+
+function applyTheme(theme) {
+  state.theme = theme;
+  document.body.classList.toggle('theme-light', theme === 'light');
+  document.body.classList.toggle('theme-dark', theme === 'dark');
+  const label = document.querySelector('#theme-toggle-label');
+  if (label) label.textContent = theme === 'light' ? 'Oscuro' : 'Claro';
+  try { localStorage.setItem('admin-theme', theme); } catch {}
+}
+
+function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem('admin-theme'); } catch {}
+  const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  applyTheme(saved ?? (prefersLight ? 'light' : 'dark'));
 }
 
 async function boot() {
-  try {
-    const session = await getSession();
-    if (!session.authenticated) {
-      window.location.replace('/admin/login/');
-      return;
+  const session = await fetch('/api/auth/session', { credentials: 'same-origin' }).then((r) => r.json()).catch(() => ({ authenticated: false }));
+  if (!session.authenticated) { window.location.replace('/admin/login/'); return; }
+  state.session = session;
+  document.querySelector('#user-email').textContent = session.admin?.email ?? '';
+
+  document.querySelectorAll('.sidebar-nav a').forEach((a) => a.addEventListener('click', (event) => {
+    const section = a.dataset.section;
+    if (window.location.hash !== `#${section}`) {
+      window.location.hash = `#${section}`;
     }
-    await checkHealth();
-    statusTitle.textContent = 'Panel conectado';
-    statusCopy.textContent = `Sesión activa para ${session.admin.email}.`;
-    await loadDashboard();
-    await loadMedia();
-    await loadUsage();
-  } catch {
-    statusDot.classList.add('error');
-    statusTitle.textContent = 'No se pudo verificar la conexión';
-    statusCopy.textContent = 'La landing pública sigue funcionando, pero el panel no pudo consultar la API.';
-  }
+  }));
+  document.querySelector('#logout').addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    window.location.replace('/admin/login/');
+  });
+  document.querySelector('#settings-form').addEventListener('submit', saveSettings);
+  document.querySelector('#theme-toggle').addEventListener('click', () => applyTheme(state.theme === 'light' ? 'dark' : 'light'));
+  document.querySelector('#contenido-save').addEventListener('click', saveContenido);
+  document.querySelector('#faq-form').addEventListener('submit', createFaq);
+  document.querySelector('#stock-form').addEventListener('submit', saveStock);
+
+  const ventasSearch = document.querySelector('#ventas-search');
+  const ventasStatus = document.querySelector('#ventas-status');
+  const ventasPeriod = document.querySelector('#ventas-period');
+  const refreshVentas = () => { state.ventas.page = 1; loadVentas().catch(() => undefined); };
+  let searchTimer;
+  ventasSearch.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(refreshVentas, 250); });
+  ventasStatus.addEventListener('change', () => { state.ventas.filters.status = ventasStatus.value; refreshVentas(); });
+  ventasPeriod.addEventListener('change', () => { state.ventas.filters.period = ventasPeriod.value; refreshVentas(); });
+  document.querySelector('#ventas-export').addEventListener('click', exportVentasCSV);
+
+  const emailsStatus = document.querySelector('#emails-status');
+  const emailsProvider = document.querySelector('#emails-provider');
+  const emailsPeriod = document.querySelector('#emails-period');
+  const refreshEmails = () => { state.emails.page = 1; loadEmails().catch(() => undefined); };
+  emailsStatus.addEventListener('change', () => { state.emails.filters.status = emailsStatus.value; refreshEmails(); });
+  emailsProvider.addEventListener('change', () => { state.emails.filters.provider = emailsProvider.value; refreshEmails(); });
+  emailsPeriod.addEventListener('change', () => { state.emails.filters.period = emailsPeriod.value; refreshEmails(); });
+
+  initTheme();
+  window.addEventListener('hashchange', navigate);
+  navigate();
 }
 
-logoutButton.addEventListener('click', async () => {
-  await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-  window.location.replace('/admin/login/');
-});
-
-period.addEventListener('change', () => loadDashboard().catch(() => undefined));
-mediaForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  mediaStatus.textContent = 'Subiendo y validando archivo...';
-  const formData = new FormData(mediaForm);
-  const selectedFile = formData.get('file');
-  if (!(selectedFile instanceof File)) { mediaStatus.textContent = 'Elegí un archivo.'; return; }
-  if (selectedFile.type.startsWith('video/') && selectedFile.size > 12 * 1024 * 1024) { mediaStatus.textContent = 'El video supera el límite de 12 MB.'; return; }
-  formData.set('file', await compressImage(selectedFile));
-  const response = await fetch('/api/media', { method: 'POST', credentials: 'same-origin', body: formData });
-  const result = await response.json();
-  mediaStatus.textContent = response.ok ? 'Archivo cargado y pendiente de publicación.' : (result.error || 'No se pudo cargar el archivo.');
-  if (response.ok) { mediaForm.reset(); await loadMedia(); }
-});
-
-boot();
+document.addEventListener('DOMContentLoaded', boot);
