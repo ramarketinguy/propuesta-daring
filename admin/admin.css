@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg: #14090c;
   --bg-elev: #1c0f13;
   --panel: #221418;
@@ -158,9 +158,12 @@ body.theme-light .data-table tbody tr:hover { background: rgba(201, 58, 78, .04)
 .settings-group { border: 1px solid var(--line-soft); border-radius: var(--radius-sm); padding: 1rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 0; }
 .settings-group legend { padding: 0 .5rem; color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
 .settings-group label { display: flex; flex-direction: column; gap: .3rem; font-size: 12px; color: var(--muted); }
-.settings-group input, .settings-group textarea { background: var(--bg-elev); border: 1px solid var(--line); color: var(--text); padding: .55rem .7rem; border-radius: var(--radius-sm); }
+.settings-group input, .settings-group textarea, .settings-group select { background: var(--bg-elev); border: 1px solid var(--line); color: var(--text); padding: .55rem .7rem; border-radius: var(--radius-sm); }
+.settings-group select { cursor: pointer; }
+select option, select.input option, .image-slot-copy select option { background: var(--panel); color: var(--text); }
+body.theme-light select option, body.theme-light select.input option, body.theme-light .image-slot-copy select option { background: #fff; color: var(--text); }
 .settings-group input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
-body.theme-light .settings-group input, body.theme-light .settings-group textarea { background: #fff; }
+body.theme-light .settings-group input, body.theme-light .settings-group textarea, body.theme-light .settings-group select { background: #fff; }
 .settings-toggle { grid-column: 1 / -1; flex-direction: row !important; align-items: center; gap: .5rem; color: var(--text) !important; cursor: pointer; }
 .settings-toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
 .form-actions { display: flex; align-items: center; gap: 1rem; }
@@ -209,7 +212,7 @@ body.theme-light .faq-admin-card input:not([type="checkbox"]), body.theme-light 
 .faq-admin-card textarea { min-height: 70px; resize: vertical; }
 .faq-admin-card input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
 
-/* ---------- Imágenes del CMS ---------- */
+/* ---------- ImÃ¡genes del CMS ---------- */
 .content-tabs { display: flex; gap: .25rem; padding: .45rem .6rem 0; flex-wrap: wrap; }
 .content-tab { padding: .6rem 1rem; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: 6px 6px 0 0; transition: color .15s, background .15s; }
 .content-tab:hover { color: var(--text); background: var(--accent-soft); }
@@ -229,7 +232,7 @@ body.theme-light .image-slot-copy select, body.theme-light .image-slot-copy inpu
 .image-slot-copy .form-actions { margin-top: .25rem; }
 @media (max-width: 620px) { .image-slot-card { grid-template-columns: 1fr; } .image-slot-preview img, .image-slot-preview video { width: 100%; height: 160px; } }
 
-/* ---------- Límites del plan ---------- */
+/* ---------- LÃ­mites del plan ---------- */
 .limits-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .limits-grid section h3 { margin: 0 0 .65rem; font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
 .limits-table { display: grid; gap: .25rem; background: var(--bg-elev); border-radius: var(--radius-sm); padding: .65rem .75rem; border: 1px solid var(--line-soft); }

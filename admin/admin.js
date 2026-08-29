@@ -445,7 +445,7 @@ async function loadCarouselManager(placement, containerId, hintId, nombre) {
   if (!response.ok) { container.innerHTML = '<p class="empty-state">No se pudieron cargar los archivos.</p>'; return; }
   const items = (data.media ?? []).filter((m) => m.placement === placement && m.published === 1).sort((a, b) => a.sort_order - b.sort_order);
   if (!items.length) {
-    container.innerHTML = `<p class="empty-state">Todavía no agregaste archivos: la página muestra ${escapeHTML(nombre)} las imágenes originales.</p>`;
+    container.innerHTML = `<p class="empty-state">Todavía no agregaste archivos. La página muestra el contenido original de esta sección.</p>`;
     return;
   }
   hint.textContent = `${items.length} en la página · ordená con las flechas`;
