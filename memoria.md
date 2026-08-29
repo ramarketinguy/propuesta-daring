@@ -424,3 +424,10 @@
 - /api/stock devuelve colores + totales + movimientos; PATCH ajusta el stock_total de un color con motivo y audit_log. Bug corregido: el SELECT pedia columna updated_at que no existia en product_colors (1101).
 - El stock total de la landing (contador) es la suma de los colores; /api/public/content tambien expone per_color por si se quiere mostrar disponibilidad por color cerca de los swatches.
 - Leccion: despues de tocar functions/, SIEMPRE deployar con robocopy completo (no solo Copy-Item de archivos sueltos) para evitar drift entre el repo y staging.
+
+## Fix de encoding de la landing (29-ago-2026)
+
+- Causa: un script de PowerShell (fix-faq.ps1) releyo daring-landing.html con codificacion ANSI en vez de UTF-8 y lo reescribio, corrompiendo los 137 caracteres con acento/simbolos de TODO el archivo (sarten -> sartA(c)n, etc.).
+- Reparacion: script Node (repair-mojibake.mjs en temp) que mapea las secuencias dobles (C3 83 C2 xx -> caracter correcto) y las triples para flechas/simbolos (E2 80 9C, E2 86 92, E2 97 86, etc.). 137 reemplazos, 0 secuencias restantes. Verificado en produccion: 15x sarten acentuado, 2x sartenes (plural correcto), 0 mojibake.
+- Leccion: NUNCA leer/escribir la landing con Get-Content/Set-Content de PowerShell 5.1 sin especificar UTF8 explicito en AMBOS lados; usar Node o -Encoding UTF8 en lectura y escritura.
+- Ademas: selects de formularios ahora oscuros (falta que cubra option nativa, hecho con select option), textos de estado vacio de carruseles corregidos.
