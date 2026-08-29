@@ -400,3 +400,9 @@
 
 - Los cambios estan commiteados localmente en 3 commits (9ecffdd checkout/stock/CMS, e664c89 panel admin, beab690 assets + docs) pero el push a GitHub quedo pendiente: la cuenta de gh autenticada en esta maquina (redulcerecetas) no tiene permiso sobre ramarketinguy/propuesta-daring (403).
 - Para subir: git push origin main desde una terminal donde GitHub pida credenciales de ramarketinguy, o hacer gh auth login con esa cuenta y despues gh auth setup-git.
+
+## Autenticacion GitHub
+
+- gh CLI autenticado con la cuenta ramarketinguy (29-ago-2026) y configurado como credential helper de git (gh auth setup-git). La cuenta redulcerecetas sigue agregada pero inactiva.
+- El push de todo el proyecto se realizo correctamente (6f0fc27..9e8afc4).
+- Fix importante: admin.js tenia loadUso duplicado (vieja + nueva) -> SyntaxError que rompia TODO el modulo JS del panel (sin navegacion ni datos). El chequeo con new Function no lo detectaba (modo no estricto permite redeclaracion); usar node --check con .mjs para validar como modulo.
