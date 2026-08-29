@@ -186,6 +186,8 @@ body.theme-light .media-form input, body.theme-light .media-form select { backgr
 .media-card button:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ---------- CONTENT (editor de textos de la landing) ---------- */
+#contenido-fields .settings-group legend { font-size: 15px; font-weight: 700; color: var(--text); text-transform: none; letter-spacing: .01em; border-left: 3px solid var(--accent); padding: .1rem 0 .1rem .55rem; }
+#contenido-fields .settings-group { border-color: var(--line); }
 #contenido-fields .settings-group { grid-template-columns: 1fr; }
 #contenido-fields label { color: var(--muted); }
 #contenido-fields label input,
@@ -211,7 +213,7 @@ body.theme-light .faq-admin-card input[type="number"] { background: #fff; }
 .faq-admin-card textarea { min-height: 70px; resize: vertical; }
 
 /* ---------- Imágenes del CMS ---------- */
-.images-section-title { margin: 1.25rem 0 .65rem; font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.images-section-title { margin: 1.6rem 0 .8rem; font-size: 15px; font-weight: 700; color: var(--text); border-left: 3px solid var(--accent); padding: .1rem 0 .1rem .55rem; }
 .images-section-title:first-child { margin-top: 0; }
 .image-slot-card { display: grid; grid-template-columns: 120px 1fr; gap: 1rem; padding: .9rem; border: 1px solid var(--line-soft); border-radius: var(--radius-sm); margin-bottom: .65rem; background: var(--bg-elev); }
 body.theme-light .image-slot-card { background: var(--panel-strong); }

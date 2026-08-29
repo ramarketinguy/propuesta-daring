@@ -10,10 +10,9 @@ const SECTIONS = {
   resumen: { title: 'Resumen', subtitle: 'Vista general del estado de la página.', loader: 'resumen' },
   ventas: { title: 'Ventas', subtitle: 'Revisá los checkouts iniciados, las ventas concluidas y las rechazadas.', loader: 'ventas' },
   stock: { title: 'Stock', subtitle: 'Control de unidades disponibles, reservadas y vendidas.', loader: 'stock' },
-  contenido: { title: 'Contenido', subtitle: 'Editá los textos, preguntas e imágenes de la landing.', loader: 'contenido' },
+  contenido: { title: 'Contenido', subtitle: 'Textos, imágenes, archivos y preguntas de la landing, todo en un lugar.', loader: 'contenido' },
   configuracion: { title: 'Configuración', subtitle: 'Precio, contacto y remitentes de mail.', loader: 'configuracion' },
   emails: { title: 'Emails enviados', subtitle: 'Bitácora de los mails automáticos al comprador y al dueño.', loader: 'emails' },
-  medios: { title: 'Medios', subtitle: 'Biblioteca de imágenes y videos para los carruseles.', loader: 'medios' },
   uso: { title: 'Uso de Cloudflare', subtitle: 'Espacio ocupado y límites del plan.', loader: 'uso' }
 };
 
@@ -379,6 +378,7 @@ async function loadContenido() {
   await loadContenidoTextos();
   await loadContenidoImagenes();
   await loadFaq();
+  await loadMedios();
 }
 
 async function loadContenidoTextos() {
@@ -453,7 +453,8 @@ async function loadContenidoImagenes() {
       title.textContent = SECTION_LABELS[slot.section] ?? slot.section;
       container.append(title);
     }
-    const currentUrl = slot.media_id && slot.media_published === 1 ? `/api/media/file?id=${slot.media_id}` : slot.default_path;
+    const defaultUrl = slot.default_path.startsWith('/') || slot.default_path.startsWith('http') ? slot.default_path : '/' + slot.default_path;
+    const currentUrl = slot.media_id && slot.media_published === 1 ? `/api/media/file?id=${slot.media_id}` : defaultUrl;
     const isVideo = slot.slot.startsWith('voces.') || (slot.media_type === 'video');
     const card = document.createElement('article');
     card.className = 'image-slot-card';
@@ -648,16 +649,6 @@ async function loadMedios() {
     const response = await api(`/api/media?id=${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE' });
     if (response.ok) await loadMedios();
   }));
-}
-
-async function loadUso() {
-  const response = await api('/api/cloudflare/usage');
-  const data = await response.json();
-  document.querySelector('#usage-r2').textContent = number(data.r2?.object_count);
-  document.querySelector('#usage-r2-copy').textContent = `${((data.r2?.size_bytes ?? 0) / 1024 / 1024).toFixed(2)} MB usados`;
-  document.querySelector('#usage-d1').textContent = number(data.d1?.analytics_events);
-  document.querySelector('#usage-plan').textContent = data.cloudflare_plan_limits?.status === 'api_configured' ? 'API lista' : 'No disponible';
-  document.querySelector('#usage-plan-copy').textContent = data.cloudflare_plan_limits?.message ?? '';
 }
 
 async function loadStock() {
