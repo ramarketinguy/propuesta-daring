@@ -415,3 +415,12 @@
 - Fix de inputs blancos: los inputs sin atributo type no matcheaban selectores input[type=text] -> ahora .faq-admin-card input:not([type=checkbox]) y .settings-group textarea tambien tienen estilo oscuro.
 - Secciones Contenido y Medios unificadas: la biblioteca (subir + archivos guardados) vive dentro de Contenido; la seccion Medios se elimino del sidebar.
 - Migracion 0007_hero_unico.sql.
+
+## Etapa 2 - Ajustes finales (29-ago-2026, tercera pasada)
+
+- Slots de imagenes simplificados: se eliminaron hero.animacion, cierre.logo, diseno.imagen, oferta.imagen y los 11 slots fijos de carruseles (platos.slide_1-5, voces.video_1-6). Queda solo historia.foto (foto del dueño). La animacion del hero no se modifica desde el panel (solo por codigo).
+- Los carruseles (platos y testimonios) se gestionan directo por placement de media_assets: la pestana Imagenes muestra el carrusel con botones Agregar (sube + publica en un paso), flechas para reordenar (intercambia sort_order) y Eliminar. Si no hay archivos publicados, la landing muestra las imagenes originales.
+- Tabla nueva product_colors (migracion 0008): stock por color (rojo 100, negro 100 sembrados). create-preference chequea y reserva el stock del color elegido; el webhook aplica las transiciones (aprobado/rechazado/cancelado/reembolsado) por color usando el campo color de la orden.
+- /api/stock devuelve colores + totales + movimientos; PATCH ajusta el stock_total de un color con motivo y audit_log. Bug corregido: el SELECT pedia columna updated_at que no existia en product_colors (1101).
+- El stock total de la landing (contador) es la suma de los colores; /api/public/content tambien expone per_color por si se quiere mostrar disponibilidad por color cerca de los swatches.
+- Leccion: despues de tocar functions/, SIEMPRE deployar con robocopy completo (no solo Copy-Item de archivos sueltos) para evitar drift entre el repo y staging.
