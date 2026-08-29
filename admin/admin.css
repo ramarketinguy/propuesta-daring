@@ -212,6 +212,14 @@ body.theme-light .faq-admin-card input:not([type="checkbox"]), body.theme-light 
 .faq-admin-card textarea { min-height: 70px; resize: vertical; }
 .faq-admin-card input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
 
+/* ---------- Gestores de carrusel ---------- */
+.carousel-manager { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .85rem; }
+.carousel-item-card { display: flex; flex-direction: column; gap: .4rem; padding: .55rem; border: 1px solid var(--line-soft); border-radius: var(--radius-sm); background: var(--bg-elev); }
+body.theme-light .carousel-item-card { background: var(--panel-strong); }
+.carousel-item-card img, .carousel-item-card video { display: block; width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: var(--radius-sm); background: #000; }
+.carousel-item-actions { display: flex; gap: .3rem; justify-content: center; }
+.carousel-item-actions .button-secondary { padding: .3rem .55rem; font-size: 12px; }
+
 /* ---------- ImÃ¡genes del CMS ---------- */
 .content-tabs { display: flex; gap: .25rem; padding: .45rem .6rem 0; flex-wrap: wrap; }
 .content-tab { padding: .6rem 1rem; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: 6px 6px 0 0; transition: color .15s, background .15s; }
