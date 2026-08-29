@@ -1,5 +1,5 @@
 const SESSION_COOKIE = 'daring_session';
-const PASSWORD_ITERATIONS = 120000;
+const PASSWORD_ITERATIONS = 100000;
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 
 function base64(bytes: Uint8Array): string {
@@ -25,7 +25,7 @@ export function parseSessionCookie(cookie: string | null): string | null {
 }
 
 export function sessionCookie(id: string, maxAge: number): string {
-  return `${SESSION_COOKIE}=${encodeURIComponent(id)}; Max-Age=${maxAge}; Path=/admin; HttpOnly; Secure; SameSite=Lax`;
+  return `${SESSION_COOKIE}=${encodeURIComponent(id)}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax`;
 }
 
 export function clearSessionCookie(): string {
