@@ -46,3 +46,10 @@ Tests ejecutados ahora:
 - Verificación producción 27-ago-2026: dominio `daring.com.uy` responde, custom domain activo en Pages, webhook dummy OK.
 - Verificación producción 28-ago-2026: login del panel OK, fix de cookie Path y PBKDF2 aplicados.
 - Verificación producción 29-ago-2026: CMS de contenidos cargando 27 campos + 4 FAQ, límites de plan Free OK, precio en pesos, navegación entre secciones del panel funcionando.
+
+## Etapa 2 (29-ago-2026)
+- [x] Stock real: producto sembrado, reserva al iniciar checkout, venta al aprobar, liberacion al rechazar, devolucion al reembolsar. Endpoint /api/stock y seccion Stock en el panel.
+- [x] Mapeo imagen -> posicion: tabla page_images con 19 slots, endpoints /api/images, seccion Contenido con selector de biblioteca, landing aplica con data-cms-img.
+- [x] Landing muestra stock disponible (contador) y precio desde settings.
+- [x] Commits locales creados (9ecffdd, e664c89, beab690).
+- [ ] Push a GitHub: requiere credenciales de ramarketinguy (gh autenticado como redulcerecetas no tiene permiso, 403).

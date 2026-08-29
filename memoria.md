@@ -385,3 +385,18 @@
 - El panel ahora permite guardar orden y eliminar recursos.
 - Los datos dinámicos se escapan antes de insertarse en la landing.
 - El endpoint público solo entrega archivos con `published = 1`.
+
+## Panel Admin - Etapa 2 (stock real + imagenes del CMS)
+
+- Migracion 0006_stock_page_images.sql: producto sembrado (sarten-daring-28, SKU DARING-28, stock_total 200) y tabla page_images con 19 slots (hero fondo/sarten/pizza/logo, 5 slides de platos, diseno, oferta, foto de Irineo, logo de cierre, 6 videos de testimonios). Cada slot guarda default_path (imagen original del codigo) y media_id opcional hacia media_assets.
+- Flujo de stock: create-preference rechaza con 409 si no hay stock disponible; al iniciar checkout reserva (+1 stock_reserved con movimiento); el webhook al aprobar convierte la reserva en venta (reserved -1, sold +1); si el pago se rechaza o cancela libera la reserva; si reembolsa devuelve la venta al stock. Guardia por transicion de estado (compara status previo y nuevo) para no duplicar movimientos si Mercado Pago reenvia el webhook.
+- Endpoints nuevos: GET/PATCH /api/stock (producto + disponible + ultimos 20 movimientos; PATCH ajusta stock_total con motivo y audit_log), GET/PUT /api/images (slots con media asociada + opciones publicadas; PUT valida que el media este publicado, registra audit_log).
+- /api/public/content ahora incluye ademas del contenido y FAQ: images (slot -> URL de /api/media/file?id=... solo si el media esta publicado, si no default), stock (available/total) y price_cents.
+- Landing: 17 elementos con data-cms-img (imagenes y videos), y el script aplica imagenes, precio formateado (.price-chip strong y .price-big) y el contador de unidades (.flip-clock) con el stock disponible real.
+- Panel: nueva seccion Stock con 4 KPIs (disponible/reservado/vendido/total), form de ajuste con motivo y tabla de ultimos movimientos. Seccion Contenido ahora tambien lista las 19 posiciones de imagenes/videos agrupadas por seccion: preview del archivo actual, selector de archivo publicado de la biblioteca (o Imagen original) y texto alternativo, con guardado por slot.
+- Bug encontrado y corregido: imagesRows se iteraba sin .results -> TypeError 1101 en /api/public/content; detectado reproduciendo el error local con wrangler pages dev (importante: lanzar con CurrentDirectory del proyecto, si no intenta crear .wrangler en System32 y da EPERM).
+
+## Cierre De Repositorio
+
+- Los cambios estan commiteados localmente en 3 commits (9ecffdd checkout/stock/CMS, e664c89 panel admin, beab690 assets + docs) pero el push a GitHub quedo pendiente: la cuenta de gh autenticada en esta maquina (redulcerecetas) no tiene permiso sobre ramarketinguy/propuesta-daring (403).
+- Para subir: git push origin main desde una terminal donde GitHub pida credenciales de ramarketinguy, o hacer gh auth login con esa cuenta y despues gh auth setup-git.
