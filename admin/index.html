@@ -23,6 +23,7 @@
       <a href="#contenido" data-section="contenido"><span class="nav-dot"></span>Contenido</a>
       <a href="#configuracion" data-section="configuracion"><span class="nav-dot"></span>Configuración</a>
       <a href="#emails" data-section="emails"><span class="nav-dot"></span>Emails enviados</a>
+      <a href="#auditoria" data-section="auditoria"><span class="nav-dot"></span>Auditoría</a>
       <a href="#uso" data-section="uso"><span class="nav-dot"></span>Uso Cloudflare</a>
     </nav>
     <div class="sidebar-footer">
@@ -108,7 +109,6 @@
           <fieldset class="settings-group"><legend>Producto</legend>
             <label>Precio (pesos uruguayos)<input type="number" min="0" step="1" name="price" required></label>
             <label>Moneda<input type="text" maxlength="8" name="currency" required></label>
-            <label>Stock visible inicial<input type="number" min="0" name="initial_stock_visible" required></label>
           </fieldset>
           <fieldset class="settings-group"><legend>Contacto</legend>
             <label>WhatsApp (con código de país, sin +)<input type="text" maxlength="30" name="whatsapp_phone" required></label>
@@ -120,6 +120,13 @@
             <label>Nombre del remitente al comprador<input type="text" maxlength="80" name="buyer_from_name" required></label>
             <label>Mail al dueño (from)<input type="email" name="owner_from_email" required></label>
             <label>Nombre del remitente al dueño<input type="text" maxlength="80" name="owner_from_name" required></label>
+          </fieldset>
+          <fieldset class="settings-group" style="grid-template-columns:1fr"><legend>Plantillas de mail</legend>
+            <label>Asunto del mail al comprador<input type="text" maxlength="200" name="buyer_email_subject" placeholder="Disponible: {{nombre}} y {{color}}"></label>
+            <label>Cuerpo del mail al comprador (HTML)<textarea name="buyer_email_html" rows="8" style="font-family:monospace;font-size:12px" placeholder="Vacío = plantilla original. Tokens: {{nombre}} {{color}} {{orden}} {{video_link}} {{video}}"></textarea></label>
+            <label>Asunto del mail al dueño<input type="text" maxlength="200" name="owner_email_subject" placeholder="Disponible: {{color}} y {{cliente}}"></label>
+            <label>Cuerpo del mail al dueño (HTML)<textarea name="owner_email_html" rows="8" style="font-family:monospace;font-size:12px" placeholder="Vacío = plantilla original. Tokens: {{cliente}} {{mail}} {{telefono}} {{departamento}} {{localidad}} {{direccion}} {{color}} {{total}} {{orden}} {{pago}} {{estado_mail}}"></textarea></label>
+            <p style="margin:0;color:var(--muted);font-size:11px">Si dejás el cuerpo vacío se usa la plantilla original de la marca. Los tokens {{...}} se reemplazan con los datos de cada venta. Cuidado al editar el HTML: es el contenido real del mail.</p>
           </fieldset>
           <div class="form-actions">
             <button type="submit" class="button-primary" id="settings-save">Guardar cambios</button>
@@ -221,6 +228,22 @@
           </div>
           <div id="faq-list" class="panel-body" style="border-top: 1px solid var(--line-soft)"></div>
         </div>
+      </div>
+    </section>
+
+    <section data-page="auditoria" class="page hidden">
+      <div class="panel">
+        <header class="panel-header"><div><h2>Registro de actividad</h2><span class="panel-hint">Cada cambio hecho desde el panel queda registrado acá.</span></div></header>
+        <div class="panel-toolbar">
+          <select id="audit-action" class="input"><option value="">Todas las acciones</option></select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="audit-table">
+            <thead><tr><th>Fecha</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="audit-pagination"></div>
       </div>
     </section>
 

@@ -132,6 +132,10 @@ async function sendEmail(env: Env, payload: Record<string, unknown>): Promise<Em
   }
 }
 
+function reemplazarTokens(html: string, tokens: Record<string, string>): string {
+  return html.replace(/\{\{(\w+)\}\}/g, (match, key: string) => tokens[key] ?? match);
+}
+
 async function enviarEmailComprador(env: Env, origin: string, order: OrderRow): Promise<EmailResult> {
   const attachments: Array<{ filename: string; content: string }> = [];
   try {
@@ -152,12 +156,35 @@ async function enviarEmailComprador(env: Env, origin: string, order: OrderRow): 
 
   const fromEmail = (await getSetting(env, 'buyer_from_email')) ?? 'recetario@daring.com.uy';
   const fromName = (await getSetting(env, 'buyer_from_name')) ?? 'Daring';
+  const videoLink = `${origin}/api/descargas/video-armado?orden=${order.id}`;
+  const nombre = order.customer_name.split(' ')[0];
+
+  let html: string;
+  const plantilla = await getSetting(env, 'buyer_email_html');
+  if (plantilla && plantilla.trim()) {
+    html = reemplazarTokens(plantilla, {
+      nombre,
+      color: order.color,
+      orden: order.id,
+      video_link: videoLink,
+      video: hasVideo
+        ? `<p style="margin:0 0 10px">También grabamos un <strong>video paso a paso</strong> para el primer uso de tu sartén:</p><p style="margin:0 0 10px"><a href="${videoLink}" style="display:inline-block;background:#c8102e;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:999px;font-weight:bold">Descargar video de armado</a></p>`
+        : ''
+    });
+  } else {
+    html = buildBuyerEmailHTML(order, origin, hasVideo);
+  }
+
+  const subjectPlantilla = await getSetting(env, 'buyer_email_subject');
+  const subject = subjectPlantilla && subjectPlantilla.trim()
+    ? reemplazarTokens(subjectPlantilla, { nombre, color: order.color })
+    : '¡Gracias por tu compra! Tu recetario y el video de armado';
 
   return sendEmail(env, {
     from: `${fromName} <${fromEmail}>`,
     to: [order.customer_email],
-    subject: '¡Gracias por tu compra! Tu recetario y el video de armado',
-    html: buildBuyerEmailHTML(order, origin, hasVideo),
+    subject,
+    html,
     ...(attachments.length ? { attachments } : {})
   });
 }
@@ -168,11 +195,37 @@ async function enviarEmailDueno(env: Env, order: OrderRow, paymentId: string, bu
   const ownerEmail = (await getSetting(env, 'owner_email')) ?? 'irineomadrid.daring@gmail.com';
   const fromEmail = (await getSetting(env, 'owner_from_email')) ?? 'ventas@daring.com.uy';
   const fromName = (await getSetting(env, 'owner_from_name')) ?? 'Daring Ventas';
+
+  let html: string;
+  const plantilla = await getSetting(env, 'owner_email_html');
+  if (plantilla && plantilla.trim()) {
+    html = reemplazarTokens(plantilla, {
+      cliente: order.customer_name,
+      mail: order.customer_email,
+      telefono: order.customer_phone ?? '-',
+      departamento: order.shipping_department ?? '-',
+      localidad: order.shipping_city ?? '-',
+      direccion: order.shipping_address ?? '-',
+      color: order.color,
+      total: `$ ${(order.amount_cents / 100).toLocaleString('es-UY')}`,
+      orden: order.id,
+      pago: paymentId,
+      estado_mail: buyerEmailOk ? 'enviado al comprador' : 'FALLO el envío al comprador'
+    });
+  } else {
+    html = buildOwnerEmailHTML(order, paymentId, buyerEmailOk);
+  }
+
+  const subjectPlantilla = await getSetting(env, 'owner_email_subject');
+  const subject = subjectPlantilla && subjectPlantilla.trim()
+    ? reemplazarTokens(subjectPlantilla, { color: order.color, cliente: order.customer_name })
+    : `Nueva venta aprobada — Sartén Daring color ${order.color}`;
+
   return sendEmail(env, {
     from: `${fromName} <${fromEmail}>`,
     to: [ownerEmail],
-    subject: `Nueva venta aprobada — Sartén Daring color ${order.color}`,
-    html: buildOwnerEmailHTML(order, paymentId, buyerEmailOk)
+    subject,
+    html
   });
 }
 

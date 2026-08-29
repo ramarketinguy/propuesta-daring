@@ -9,10 +9,11 @@ const state = {
 const SECTIONS = {
   resumen: { title: 'Resumen', subtitle: 'Vista general del estado de la página.', loader: 'resumen' },
   ventas: { title: 'Ventas', subtitle: 'Revisá los checkouts iniciados, las ventas concluidas y las rechazadas.', loader: 'ventas' },
-  stock: { title: 'Stock', subtitle: 'Control de unidades disponibles, reservadas y vendidas.', loader: 'stock' },
+  stock: { title: 'Stock', subtitle: 'Control de unidades disponibles, reservadas y vendidas, por color.', loader: 'stock' },
   contenido: { title: 'Contenido', subtitle: 'Textos, imágenes, archivos y preguntas de la landing, todo en un lugar.', loader: 'contenido' },
-  configuracion: { title: 'Configuración', subtitle: 'Precio, contacto y remitentes de mail.', loader: 'configuracion' },
+  configuracion: { title: 'Configuración', subtitle: 'Precio, contacto, remitentes y plantillas de mail.', loader: 'configuracion' },
   emails: { title: 'Emails enviados', subtitle: 'Bitácora de los mails automáticos al comprador y al dueño.', loader: 'emails' },
+  auditoria: { title: 'Auditoría', subtitle: 'Registro de todos los cambios hechos desde el panel.', loader: 'auditoria' },
   uso: { title: 'Uso de Cloudflare', subtitle: 'Espacio ocupado y límites del plan.', loader: 'uso' }
 };
 
@@ -789,9 +790,54 @@ const LOADERS = {
   contenido: loadContenido,
   configuracion: loadConfiguracion,
   emails: loadEmails,
-  medios: loadMedios,
+  auditoria: loadAuditoria,
   uso: loadUso
 };
+
+const stateAudit = { page: 1, limit: 30, action: '' };
+
+async function loadAuditoria() {
+  const tbody = document.querySelector('#audit-table tbody');
+  tbody.replaceChildren();
+  const params = new URLSearchParams({ page: String(stateAudit.page), limit: String(stateAudit.limit) });
+  if (stateAudit.action) params.set('action', stateAudit.action);
+  const response = await api(`/api/audit?${params.toString()}`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'auditoria');
+
+  const select = document.querySelector('#audit-action');
+  const acciones = data.actions ?? [];
+  const seleccionActual = select.value;
+  select.replaceChildren();
+  const todas = document.createElement('option');
+  todas.value = '';
+  todas.textContent = 'Todas las acciones';
+  select.append(todas);
+  acciones.forEach((a) => {
+    const opt = document.createElement('option');
+    opt.value = a;
+    opt.textContent = a;
+    if (a === seleccionActual) opt.selected = true;
+    select.append(opt);
+  });
+
+  if (!data.entries.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Sin registros todavía.</td></tr>';
+  } else {
+    data.entries.forEach((entry) => {
+      const row = document.createElement('tr');
+      let detalle = entry.details ?? '';
+      if (detalle.length > 120) detalle = detalle.slice(0, 120) + '…';
+      row.innerHTML = `
+        <td>${escapeHTML(formatDate(entry.created_at))}</td>
+        <td><span class="status-pill">${escapeHTML(entry.action)}</span></td>
+        <td class="text-muted">${escapeHTML(entry.entity)}${entry.entity_id ? ` · <code>${escapeHTML(entry.entity_id.slice(0, 8))}</code>` : ''}</td>
+        <td class="text-muted" style="white-space:normal;max-width:420px">${escapeHTML(detalle)}</td>`;
+      tbody.append(row);
+    });
+  }
+  renderPagination('audit-pagination', data.total, stateAudit.page, stateAudit.limit, (p) => { stateAudit.page = p; loadAuditoria().catch(() => undefined); });
+}
 
 function navigate() {
   const hash = window.location.hash.replace('#', '') || 'resumen';
@@ -838,6 +884,13 @@ async function boot() {
   document.querySelector('#contenido-save').addEventListener('click', saveContenido);
   document.querySelector('#faq-form').addEventListener('submit', createFaq);
   document.querySelector('#stock-form').addEventListener('submit', saveStock);
+
+  const auditAction = document.querySelector('#audit-action');
+  auditAction.addEventListener('change', () => {
+    stateAudit.action = auditAction.value;
+    stateAudit.page = 1;
+    loadAuditoria().catch(() => undefined);
+  });
 
   document.querySelectorAll('[data-content-tab-button]').forEach((button) => button.addEventListener('click', () => {
     document.querySelectorAll('[data-content-tab-button]').forEach((b) => b.classList.toggle('active', b === button));

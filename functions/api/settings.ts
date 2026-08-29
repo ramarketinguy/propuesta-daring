@@ -17,7 +17,11 @@ const SETTINGS_KEYS: Record<string, { type: 'number' | 'text' | 'boolean'; min?:
   owner_from_name: { type: 'text', maxLength: 80 },
   telegram_enabled: { type: 'boolean' },
   telegram_bot_token: { type: 'text', maxLength: 200 },
-  telegram_chat_id: { type: 'text', maxLength: 40 }
+  telegram_chat_id: { type: 'text', maxLength: 40 },
+  buyer_email_subject: { type: 'text', maxLength: 200 },
+  buyer_email_html: { type: 'text', maxLength: 12000 },
+  owner_email_subject: { type: 'text', maxLength: 200 },
+  owner_email_html: { type: 'text', maxLength: 12000 }
 };
 
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
