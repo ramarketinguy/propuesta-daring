@@ -438,3 +438,11 @@
 - Testimonio 6 web pesa 16 MB (por encima del limite de subida de 12 MB del panel): se cargo directo por wrangler. Ojo al reemplazarlo desde el panel: hay que subirlo comprimido o ampliara el limite.
 - Fix de cierre: .close-copy tenia max-width 30rem que partia la frase; en pantallas >=720px va en una sola linea (white-space nowrap, max-width none).
 - Nota tecnica: wrangler d1 execute --file falla con import polling failed; para inserts usar la API REST de D1 (POST /accounts/{id}/d1/database/{id}/query con {"sql": ...}) via Node fetch. media_type debe ser image/video (no el mime) por el CHECK constraint.
+
+## Etapa 3 parcial (29-ago-2026)
+
+- Editor de plantillas de mail en Configuracion: 4 campos nuevos (asunto/cuerpo del comprador y del dueno) guardados en settings (buyer_email_subject, buyer_email_html, owner_email_subject, owner_email_html). Cuerpo vacio = plantilla original de la marca. Tokens con {{...}}: comprador (nombre, color, orden, video_link, video) y dueno (cliente, mail, telefono, departamento, localidad, direccion, color, total, orden, pago, estado_mail). El webhook reemplaza tokens y cae a las plantillas built-in si el setting esta vacio.
+- Vista de Auditoria: seccion nueva en el panel con GET /api/audit (filtro por accion + paginacion). El audit_log ya registra settings.update, orders.update, stock.update, faq.*, page_content.update, page_images.update, maintenance.cleanup.
+- Limpieza: se quito el campo obsoleto Stock visible inicial de Configuracion (el contador de la landing usa el stock real por color). Endpoint admin POST /api/maintenance/cleanup: borra objetos R2 que no esten en media_assets (protegiendo entregables/); se borraron 11 huesrfanos de la subida fallida (~39 MB). R2 quedo en 13 objetos / 87 MB.
+- Verificacion general: todos los endpoints 200, 0 mojibake en landing, sin funciones duplicadas en admin.js, favicon en las 3 paginas.
+- Telegram y multi-usuario admin: descartados por decision del usuario.
