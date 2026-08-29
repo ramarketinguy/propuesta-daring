@@ -455,22 +455,23 @@ async function loadContenidoImagenes() {
     }
     const defaultUrl = slot.default_path.startsWith('/') || slot.default_path.startsWith('http') ? slot.default_path : '/' + slot.default_path;
     const currentUrl = slot.media_id && slot.media_published === 1 ? `/api/media/file?id=${slot.media_id}` : defaultUrl;
-    const isVideo = slot.slot.startsWith('voces.') || (slot.media_type === 'video');
+    const isVideo = slot.media_id ? slot.media_type === 'video' : slot.slot.startsWith('voces.');
+    const usando = slot.media_id ? 'Usando archivo de la biblioteca' : (slot.slot === 'hero.animacion' ? 'Animación original (secuencia de imágenes)' : 'Imagen original del código');
+    const permitidos = slot.slot === 'hero.animacion' ? ['image', 'video'] : (slot.slot.startsWith('voces.') ? ['video'] : ['image']);
     const card = document.createElement('article');
     card.className = 'image-slot-card';
     card.dataset.slot = slot.slot;
     card.innerHTML = `
       <div class="image-slot-preview">${isVideo
         ? `<video src="${escapeHTML(currentUrl)}" muted preload="metadata"></video>`
-        : `<img src="${escapeHTML(currentUrl)}" alt="${escapeHTML(slot.alt_text ?? slot.label)}">`}</div>
+        : `<img src="${escapeHTML(currentUrl)}" alt="${escapeHTML(slot.label)}">`}</div>
       <div class="image-slot-copy">
         <strong>${escapeHTML(slot.label)}</strong>
-        <span class="text-muted">${slot.media_id ? 'Usando archivo de la biblioteca' : 'Usando imagen original del código'}</span>
+        <span class="text-muted">${escapeHTML(usando)}</span>
         <select data-field="media_id" class="input">
-          <option value="">Imagen original</option>
-          ${(data.options ?? []).filter((o) => (slot.slot.startsWith('voces.') ? o.media_type === 'video' : o.media_type === 'image')).map((o) => `<option value="${escapeHTML(o.id)}" ${o.id === slot.media_id ? 'selected' : ''}>${escapeHTML(o.title || o.file_name)} (${escapeHTML(o.placement)})</option>`).join('')}
+          <option value="">${slot.slot === 'hero.animacion' ? 'Animación original' : 'Imagen original'}</option>
+          ${(data.options ?? []).filter((o) => permitidos.includes(o.media_type)).map((o) => `<option value="${escapeHTML(o.id)}" ${o.id === slot.media_id ? 'selected' : ''}>${escapeHTML(o.title || o.file_name)} (${escapeHTML(o.placement)})</option>`).join('')}
         </select>
-        <label>Texto alternativo<input type="text" data-field="alt_text" maxlength="240" value="${escapeHTML(slot.alt_text ?? '')}" placeholder="Descripción para accesibilidad"></label>
         <div class="form-actions"><button class="button-secondary" type="button" data-action="guardar">Guardar</button><span data-feedback class="form-status"></span></div>
       </div>`;
     container.append(card);
@@ -752,6 +753,11 @@ async function boot() {
   document.querySelector('#contenido-save').addEventListener('click', saveContenido);
   document.querySelector('#faq-form').addEventListener('submit', createFaq);
   document.querySelector('#stock-form').addEventListener('submit', saveStock);
+
+  document.querySelectorAll('[data-content-tab-button]').forEach((button) => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-content-tab-button]').forEach((b) => b.classList.toggle('active', b === button));
+    document.querySelectorAll('[data-content-tab]').forEach((group) => group.classList.toggle('hidden', group.dataset.contentTab !== button.dataset.contentTabButton));
+  }));
 
   const ventasSearch = document.querySelector('#ventas-search');
   const ventasStatus = document.querySelector('#ventas-status');

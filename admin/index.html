@@ -177,39 +177,51 @@
 
     <section data-page="contenido" class="page hidden">
       <div class="panel">
-        <header class="panel-header"><div><h2>Textos de la página</h2><span class="panel-hint">Cada campo indica exactamente qué parte de la landing modifica.</span></div></header>
-        <div class="panel-body" id="contenido-fields"><p class="empty-state">Cargando campos editables…</p></div>
-        <div class="form-actions" style="padding: 0 1.1rem 1.1rem;"><button class="button-primary" id="contenido-save" type="button">Guardar todos los cambios</button><span id="contenido-status" class="form-status" role="status" aria-live="polite"></span></div>
+        <div class="content-tabs" role="tablist">
+          <button class="content-tab active" data-content-tab-button="textos" type="button">Textos</button>
+          <button class="content-tab" data-content-tab-button="imagenes" type="button">Imágenes</button>
+          <button class="content-tab" data-content-tab-button="faq" type="button">Preguntas frecuentes</button>
+        </div>
       </div>
-      <div class="panel">
-        <header class="panel-header"><div><h2>Preguntas frecuentes</h2><span class="panel-hint">Estas preguntas aparecen en la sección "Preguntas frecuentes" de la landing.</span></div></header>
-        <div class="panel-body">
-          <form id="faq-form" class="settings-form" style="padding: 0; max-width: 920px;">
-            <div class="settings-group"><label>Pregunta<input name="question" maxlength="240" required></label><label>Respuesta<textarea name="answer" rows="3" maxlength="2000" required></textarea></label></div>
-            <div class="form-actions"><button class="button-primary" type="submit">Agregar pregunta</button></div>
+      <div data-content-tab="textos">
+        <div class="panel">
+          <header class="panel-header"><div><h2>Textos de la página</h2><span class="panel-hint">Cada campo indica exactamente qué parte de la landing modifica.</span></div></header>
+          <div class="panel-body" id="contenido-fields"><p class="empty-state">Cargando campos editables…</p></div>
+          <div class="form-actions" style="padding: 0 1.1rem 1.1rem;"><button class="button-primary" id="contenido-save" type="button">Guardar todos los cambios</button><span id="contenido-status" class="form-status" role="status" aria-live="polite"></span></div>
+        </div>
+      </div>
+      <div data-content-tab="imagenes" class="hidden">
+        <div class="panel">
+          <header class="panel-header"><div><h2>Imágenes y videos de la página</h2><span class="panel-hint">Elegí qué archivo de la biblioteca va en cada posición. Debe estar publicado. Si no elegís nada, se usa la imagen original.</span></div></header>
+          <div class="panel-body"><div id="images-list"><p class="empty-state">Cargando posiciones…</p></div></div>
+        </div>
+        <div class="panel">
+          <header class="panel-header"><div><h2>Biblioteca: subir archivos</h2><span class="panel-hint">Subí acá las imágenes y videos nuevos. Quedan guardados en la biblioteca y después los asignás arriba.</span></div></header>
+          <form class="media-form" id="media-form">
+            <label>Ubicación sugerida<select name="placement"><option value="pizza">Carrusel de platos</option><option value="testimonials">Testimonios</option><option value="history">Historia</option><option value="product">Producto</option></select></label>
+            <label>Orden<input name="sort_order" type="number" min="0" value="0"></label>
+            <label>Título<input name="title" type="text" maxlength="160"></label>
+            <label>Archivo<input name="file" type="file" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm" required></label>
+            <button class="button-primary" type="submit">Subir recurso</button>
+            <p class="media-status" id="media-status" role="status" aria-live="polite"></p>
           </form>
         </div>
-        <div id="faq-list" class="panel-body" style="border-top: 1px solid var(--line-soft)"></div>
+        <div class="panel">
+          <header class="panel-header"><div><h2>Biblioteca: archivos guardados</h2><span class="panel-hint">Todo lo subido. Los archivos sin publicar no se ven en la página.</span></div></header>
+          <div class="media-list" id="media-list"></div>
+        </div>
       </div>
-      <div class="panel">
-        <header class="panel-header"><div><h2>Imágenes y videos de la página</h2><span class="panel-hint">Elegí qué archivo de la biblioteca va en cada posición. Debe estar publicado. Si no elegís nada, se usa la imagen original.</span></div></header>
-        <div class="panel-body"><div id="images-list"><p class="empty-state">Cargando posiciones…</p></div></div>
-      </div>
-      <div class="panel">
-        <header class="panel-header"><div><h2>Biblioteca: subir archivos</h2><span class="panel-hint">Subí acá las imágenes y videos nuevos. Quedan guardados en la biblioteca y después los asignás arriba.</span></div></header>
-        <form class="media-form" id="media-form">
-          <label>Ubicación sugerida<select name="placement"><option value="pizza">Carrusel de platos</option><option value="testimonials">Testimonios</option><option value="history">Historia</option><option value="product">Producto</option></select></label>
-          <label>Orden<input name="sort_order" type="number" min="0" value="0"></label>
-          <label>Título<input name="title" type="text" maxlength="160"></label>
-          <label>Texto alternativo<input name="alt_text" type="text" maxlength="240"></label>
-          <label>Archivo<input name="file" type="file" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm" required></label>
-          <button class="button-primary" type="submit">Subir recurso</button>
-          <p class="media-status" id="media-status" role="status" aria-live="polite"></p>
-        </form>
-      </div>
-      <div class="panel">
-        <header class="panel-header"><div><h2>Biblioteca: archivos guardados</h2><span class="panel-hint">Todo lo subido. Los archivos sin publicar no se ven en la página.</span></div></header>
-        <div class="media-list" id="media-list"></div>
+      <div data-content-tab="faq" class="hidden">
+        <div class="panel">
+          <header class="panel-header"><div><h2>Preguntas frecuentes</h2><span class="panel-hint">Estas preguntas aparecen en la sección "Preguntas frecuentes" de la landing.</span></div></header>
+          <div class="panel-body">
+            <form id="faq-form" class="settings-form" style="padding: 0; max-width: 920px;">
+              <div class="settings-group"><label>Pregunta<input name="question" maxlength="240" required></label><label>Respuesta<textarea name="answer" rows="3" maxlength="2000" required></textarea></label></div>
+              <div class="form-actions"><button class="button-primary" type="submit">Agregar pregunta</button></div>
+            </form>
+          </div>
+          <div id="faq-list" class="panel-body" style="border-top: 1px solid var(--line-soft)"></div>
+        </div>
       </div>
     </section>
 
