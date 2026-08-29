@@ -446,3 +446,9 @@
 - Limpieza: se quito el campo obsoleto Stock visible inicial de Configuracion (el contador de la landing usa el stock real por color). Endpoint admin POST /api/maintenance/cleanup: borra objetos R2 que no esten en media_assets (protegiendo entregables/); se borraron 11 huesrfanos de la subida fallida (~39 MB). R2 quedo en 13 objetos / 87 MB.
 - Verificacion general: todos los endpoints 200, 0 mojibake en landing, sin funciones duplicadas en admin.js, favicon en las 3 paginas.
 - Telegram y multi-usuario admin: descartados por decision del usuario.
+
+## Fix de auditoria legible + biblioteca eliminada (29-ago-2026)
+
+- Auditoria ahora muestra descripciones en espanol claro (ej: Se ajusto el stock del color rojo: de 100 a 150 unidades - motivo). El frontend traduce cada registro del audit_log segun su tipo. Filtro con etiquetas amigables y filtro backend por prefijo (action LIKE).
+- Se elimino el panel Todos los archivos (biblioteca completa) por redundante: los carruseles tienen su propia gestion (agregar/reordenar/eliminar) y la foto del dueno su cambio directo. loadMedios eliminada de admin.js.
+- Importante: los intentos de reemplazo con PowerShell corrompieron el encoding de admin.js (misma falla que la landing). Reparacion universal con script Node (mapeo cp1252 inverso -> bytes -> UTF-8). Leccion reforzada: NO usar Get-Content/Set-Content de PowerShell 5.1 sobre archivos UTF-8 sin BOM; usar Node o -Encoding UTF8 en ambos lados.
