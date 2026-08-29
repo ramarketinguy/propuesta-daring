@@ -431,3 +431,10 @@
 - Reparacion: script Node (repair-mojibake.mjs en temp) que mapea las secuencias dobles (C3 83 C2 xx -> caracter correcto) y las triples para flechas/simbolos (E2 80 9C, E2 86 92, E2 97 86, etc.). 137 reemplazos, 0 secuencias restantes. Verificado en produccion: 15x sarten acentuado, 2x sartenes (plural correcto), 0 mojibake.
 - Leccion: NUNCA leer/escribir la landing con Get-Content/Set-Content de PowerShell 5.1 sin especificar UTF8 explicito en AMBOS lados; usar Node o -Encoding UTF8 en lectura y escritura.
 - Ademas: selects de formularios ahora oscuros (falta que cubra option nativa, hecho con select option), textos de estado vacio de carruseles corregidos.
+
+## Carruseles migrados a la biblioteca (29-ago-2026)
+
+- Los archivos originales de los carruseles (5 imagenes de platos + 6 videos de testimonios) se subieron a R2 y se registraron en media_assets con published=1, placement y sort_order 1..N. Asi aparecen en el panel (Contenido -> Imagenes) y se pueden eliminar, reordenar (flechas) o sustituir. Si se borran todos, la landing vuelve a las imagenes originales hardcoded (fallback de loadPublicMedia).
+- Testimonio 6 web pesa 16 MB (por encima del limite de subida de 12 MB del panel): se cargo directo por wrangler. Ojo al reemplazarlo desde el panel: hay que subirlo comprimido o ampliara el limite.
+- Fix de cierre: .close-copy tenia max-width 30rem que partia la frase; en pantallas >=720px va en una sola linea (white-space nowrap, max-width none).
+- Nota tecnica: wrangler d1 execute --file falla con import polling failed; para inserts usar la API REST de D1 (POST /accounts/{id}/d1/database/{id}/query con {"sql": ...}) via Node fetch. media_type debe ser image/video (no el mime) por el CHECK constraint.
