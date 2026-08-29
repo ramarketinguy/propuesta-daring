@@ -1,17 +1,147 @@
 # Memoria Del Proyecto Daring
 
-Última actualización: 2026-08-16
+Última actualización: 2026-08-29 (sesión 3: etapa 1.5 del panel + CMS de contenidos + límites del plan + precio en pesos)
 
 ## Estado Actual
 
 - Proyecto: landing de venta de la sartén Daring.
 - Archivo principal: `daring-landing.html`.
-- Servidor local habitual: `http://localhost:4173/daring-landing.html`.
+- Servidor local habitual: `http://localhost:4173/daring-landing.html` o `wrangler pages dev --port 8788`.
 - Repositorio: `https://github.com/ramarketinguy/propuesta-daring.git`.
 - Rama principal: `main`.
-- El precio de lanzamiento es `$1.590 UYU`.
-- La compra está preparada para Mercado Pago Checkout Pro, pero la integración real todavía es pendiente.
+- El precio de lanzamiento es `$1.590 UYU` (configurable desde el panel; se guarda en centavos).
+- Checkout Pro de Mercado Pago integrado, desplegado y verificado en producción (ver sección Checkout Pro).
+- Dominio oficial `daring.com.uy` en Cloudflare Pages (sección Dominio).
+- Resend configurado con dominio verificado, clave cargada y envío automático funcionando (sección Resend).
+- Panel admin rediseñado como SPA con sidebar, 7 secciones, dark/light, límites de plan visibles, CMS de contenidos de la landing (sección Panel Admin).
+- Landing consume contenidos dinámicos desde la base con fallback al HTML hardcoded.
 - WhatsApp funciona únicamente como canal de consultas desde la barra inferior.
+
+## Checkout Pro (Mercado Pago)
+
+- Aplicación Mercado Pago: "Daring web", App ID `1304026149030121`.
+- Token de producción `APP_USR-` guardado en `.dev.vars` local y como secreto `MERCADOPAGO_ACCESS_TOKEN` en Cloudflare Pages.
+- Endpoint `POST /api/checkout/create-preference` (`functions/api/checkout/create-preference.ts`).
+- El endpoint valida los datos del formulario, crea la orden con estado `checkout_started` en D1 y la preferencia en Mercado Pago.
+- Precio fijo `1590 UYU`, cantidad 1, `statement_descriptor` DARING.
+- `back_urls` vuelven a la landing con `?pago=aprobado|pendiente|rechazado` y la landing muestra un aviso fijo con el resultado.
+- En origen local (http) se usan URLs públicas de reemplazo y se omite `notification_url`, porque Mercado Pago rechaza URLs locales.
+- En producción se envía `notification_url` apuntando a `/api/webhooks/mercadopago`.
+- Endpoint `POST /api/webhooks/mercadopago` (`functions/api/webhooks/mercadopago.ts`).
+- El webhook consulta el pago a la API de Mercado Pago, actualiza la orden por `external_reference` y registra el evento en `checkout_events` con control de duplicados.
+- La landing envía el formulario a `create-preference` y redirige a `init_point` (o `sandbox_init_point` si no hay producción).
+- MCP de Mercado Pago conectado en opencode con token común: listar apps funciona, pero `get_credentials` y `save_webhook` exigen conexión OAuth.
+- Desplegado a Cloudflare Pages el 26-ago-2026 (deployment `b8e2e95e`): health OK, validación OK y preferencia real generada en producción.
+- Orden de prueba de producción borrada de D1 remoto; solo quedan órdenes reales.
+- Los videos originales de más de 25 MB (límite de Pages) no se publican; la landing usa las versiones optimizadas de `Testimonios nuevos/web/`.
+- El despliegue a Pages se hace con una copia en carpeta temporal sin `.git`, `.wrangler`, `cloudflare-dist`, `.dev.vars` ni los videos pesados (ver "Cómo desplegar" más abajo).
+- Pendiente: activar la URL de webhook en el panel de Mercado Pago y probar un pago real de prueba.
+- Migraciones 0002 y 0003 aplicadas también en D1 remoto de producción.
+
+## Cómo Desplegar
+
+- La carpeta raíz contiene archivos que Pages rechaza (videos de más de 25 MB), así que no se publica directo.
+- Procedimiento usado: `robocopy` a una carpeta temporal excluyendo `.git`, `.wrangler`, `cloudflare-dist`, `.dev.vars` y los MP4 de la raíz de `Testimonios nuevos`; luego `wrangler pages deploy <carpeta> --project-name daring-landing`.
+- Wrangler instalado en `%TEMP%\opencode\wr` (no hay `package.json` en el proyecto).
+- Login de wrangler: cuenta `irineomadrid.daring@gmail.com`, credenciales en `%APPDATA%\xdg.config\.wrangler\config\default.toml`.
+
+## Dominio Oficial (daring.com.uy)
+
+- Dominio comprado en dominios.uy (NIC Uruguay), a nombre de Irineo (`irineomadridsosa@gmail.com`), vence 19/11/2026.
+- Agregado a la cuenta de Cloudflare; zone ID `c3ecd843c82e1f2dc4e5ff61b8fae17c`; zona **activa** desde el 27-ago-2026.
+- Nameservers: `abby.ns.cloudflare.com` y `alexis.ns.cloudflare.com` (cargados en dominios.uy y propagados).
+- `daring.com.uy` y `www.daring.com.uy` agregados como custom domains del proyecto Pages `daring-landing` y **activos y funcionando** (verificado el 27-ago-2026).
+- Antes apuntaba a un WordPress viejo en Hostinger; el usuario borró los registros A/AAAA/CNAME viejos y creó dos CNAME (@ y www → `daring-landing.pages.dev`, Proxied).
+- Verificado: landing actual con título correcto en ambos dominios, `/api/health` 200 y webhook respondiendo desde el dominio definitivo.
+- Importante: el token de wrangler NO tiene permiso DNS sobre la zona (403); los cambios de DNS van por dashboard o con un token API con permisos de DNS.
+- El checkout generado desde el dominio nuevo usa `daring.com.uy` automáticamente en `back_urls` y `notification_url` (se arman con el origen de cada pedido).
+- El token OAuth de wrangler vence seguido; si la API da 403/"Authentication error", correr cualquier comando de wrangler para refrescarlo antes de usar la API.
+
+## Resend (Email)
+
+- Cuenta de Resend creada por Ramiro; clave API vigente: la primera quedó inaccesible (Resend no la vuelve a mostrar), se creó una nueva.
+- Clave cargada en `.dev.vars` local y como secreto `RESEND_API_KEY` en Cloudflare Pages (ambos verificados).
+- Dominio `daring.com.uy` agregado y **verificado** en Resend (DKIM, SPF y MX en verde; región São Paulo).
+- Los registros DNS los cargó Resend automáticamente en Cloudflare (botón Auto-configure).
+- El plan "Enable Sending" quedó activado; "Enable Receiving" (recibir mails) quedó apagado y no hace falta para el flujo actual.
+- Remitente del mail de compra: `Daring <recetario@daring.com.uy>`.
+
+## Envío Automático De Entregables
+
+- Recetario PDF: `assets/Pizza daring.pdf` (5,9 MB), subido a R2 como `entregables/recetario-pizza-daring.pdf`.
+- Video de armado: `assets/Armado sartén .mp4` (42,2 MB), subido a R2 como `entregables/video-armado-daring.mp4`. (Importante: wrangler 4.126 se rompe con "é"/espacios en el nombre del archivo al subir; copiar a un nombre simple antes de `r2 object put`.)
+- Endpoint `GET /api/descargas/[type]?orden=<uuid>` (`functions/api/descargas/[type].ts`): sirve `video-armado` y `recetario` desde R2 solo si la orden existe con estado `approved`; inválido 400, sin pago aprobado 403, archivo faltante 404.
+- El webhook (`functions/api/webhooks/mercadopago.ts`) al aprobarse un pago: envía mail al COMPRADOR con el PDF adjunto y botón de descarga del video, y mail al DUEÑO (`owner_email` desde settings, remitente `owner_from_email`/`owner_from_name` desde settings) con la orden completa: datos del formulario, teléfono, dirección, color elegido, total, número de orden y pago MP. Ambos quedan en `email_deliveries` con provider `resend-buyer` / `resend-owner` y control anti-duplicados.
+- Si `owner_email_enabled` está en `false`, no se manda el mail al dueño.
+- El mail al comprador usa remitente `buyer_from_email`/`buyer_from_name` desde settings.
+- El precio se lee de `settings.price_cents` (default 159000); `create-preference` ya no tiene el precio hardcoded.
+- Desplegado y verificado en producción el 28-ago-2026.
+
+## Panel Admin — Etapa 1
+
+- Migración nueva `0004_admin_panel_etapa1.sql` aplicada en D1 producción: columnas `shipping_status`, `tracking_number`, `admin_notes` en `orders`; tabla `settings` (clave/valor con categoría); tabla `audit_log`.
+- 13 settings sembradas en 4 categorías: `producto` (precio, moneda, stock visible), `contacto` (WhatsApp, mail del dueño, activar avisos), `resend` (remitente comprador y dueño), `notifications` (Telegram). Cambiables desde el panel.
+- Endpoints nuevos: `GET/PATCH /api/orders/:id` (detalle con timeline y emails + cambiar estado de envío, tracking y notas), `GET /api/orders` (lista con filtros: búsqueda, estado, período + contadores y revenue), `GET /api/settings`, `PUT /api/settings` (validado por tipo, registra audit_log), `GET /api/emails` (lista con filtros + contadores buyer/owner).
+- `create-preference` lee precio y moneda desde `settings`; ya no están hardcoded.
+- Webhook lee remitentes y mail del dueño desde `settings`.
+- Panel rediseñado como SPA con sidebar y 6 secciones: Resumen, Ventas, Configuración, Emails enviados, Medios, Uso. Estilo back-office denso (tipografía Inter, colores tipo dashboard). Hash routing (`#ventas`, `#configuracion`, etc.).
+- Ventas: 4 KPI cards (Iniciados / Concluidas / Rechazadas / Ingresos), tabla con búsqueda por mail/nombre/orden, filtros por estado y período, paginación, detalle con timeline + envío + notas, exportar CSV.
+- Configuración: form con Producto / Contacto / Remitentes Resend (Telegram queda para etapa 3). El campo "Precio" se muestra en **pesos uruguayos** (no centavos) y el backend convierte a centavos antes de guardar.
+- Emails enviados: contadores buyer/owner, tabla con filtros y paginación.
+- Logs de auditoría: cualquier cambio en settings y orders se registra en `audit_log`.
+- Login del panel con Path=/ (corregido el 28-ago para que la sesión sirva también a `/api/auth/session` y `/api/admin/health`).
+
+## Panel Admin — Etapa 1.5 (CMS de la landing)
+
+- Migración `0005_page_content.sql`: tablas `page_content` (textos con sección, label, type, sort_order) y `page_faq` (preguntas con orden y published).
+- 27 campos `page_content` sembrados cubriendo Hero, Platos, Diseño, Oferta, Cierre (incluye título del hero por línea, subtítulo, badges, bullets de la oferta, CTA, copy del lanzamiento, etc.) y 4 preguntas frecuentes iniciales.
+- Endpoints nuevos: `GET/PUT /api/content` (admin), `GET /api/faq`, `POST /api/faq`, `GET/PATCH/DELETE /api/faq/:id`, `GET /api/public/content` (público, con CORS y cache de 30 s).
+- La landing (`daring-landing.html`) tiene `data-cms="key"` en cada elemento editable y `data-cms-faq` en el contenedor de preguntas. Un script al final carga `/api/public/content`, aplica los textos y popula el FAQ desde la base. Si la API falla, queda el contenido hardcoded (fallback).
+- Panel: nueva sección **Contenido** en el sidebar con:
+  - Bloque "Textos de la página": form con campos agrupados por sección (Hero, Versatilidad, Diseño, Oferta, Cierre), cada uno con su **label descriptivo** que dice exactamente qué parte de la página modifica (ej: "Título del hero · primera línea (aparece arriba de todo en la página)", "Bullet 1 de lo que incluye la oferta", "Texto del botón de compra de la sección Oferta"). Un solo botón "Guardar todos los cambios".
+  - Bloque "Preguntas frecuentes": form para agregar + lista con cards por pregunta que permiten editar pregunta, respuesta, orden y publicado, con botones Guardar y Eliminar.
+- La landing ya consume el contenido dinámico: verificable en producción (ver `/api/public/content`).
+
+## Panel — Límites del plan arreglados
+
+- Endpoint `GET /api/cloudflare/usage` ya no requiere `CF_API_TOKEN`/`CF_ACCOUNT_ID` (siempre mostraba "No disponible"). Ahora devuelve:
+  - `plan: 'free'` y `plan_label: 'Cloudflare Free'`
+  - R2: objetos, tamaño usado, `limit_label: '10 GB'`, `used_percent` calculado.
+  - D1: filas estimadas, `limit_label: '5 GB'`.
+  - Pages y Workers: límites hardcoded del plan Free.
+- Panel renderiza 4 grupos con tabla de uso vs límite (objetos, espacio, lecturas, escrituras, requests, builds, dominios personalizados, etc.).
+
+## Panel Admin — CMS de contenidos (Etapa 1.5)
+
+- El panel permite editar los **textos visibles** de la landing y las **preguntas frecuentes** sin tocar código.
+- Migración `0005_page_content.sql`: tablas `page_content` (clave/valor con sección, label descriptivo, tipo y orden) y `page_faq` (pregunta + respuesta + orden + publicado).
+- 27 campos `page_content` sembrados cubriendo todas las zonas editables: Hero (título por línea, subtítulo, CTAs, 4 badges), Platos (eyebrow, título, lead), Diseño e ingeniería (eyebrow, título, lead), Oferta (eyebrow, título, 4 bullets, CTA, copy del lanzamiento), Cierre (título, copy).
+- 4 preguntas frecuentes iniciales sembradas (inducción, envío, garantía, peso).
+- Cada campo tiene un `label` que indica exactamente qué parte de la página modifica (ej: "Título del hero · primera línea (aparece arriba de todo en la página)"), de modo que el usuario no necesita adivinar dónde impacta el cambio.
+- Endpoints:
+  - `GET/PUT /api/content` (admin, con auth)
+  - `GET /api/faq`, `POST /api/faq`, `GET/PATCH/DELETE /api/faq/:id`
+  - `GET /api/public/content` (público, CORS abierto, cache de 30 s)
+- La landing tiene `data-cms="clave"` en cada elemento editable y `data-cms-faq` en el contenedor de FAQ. Un script al final del body consume `/api/public/content` y aplica los textos/popula el FAQ. Si la API falla, queda el contenido hardcoded como fallback (sin ruptura de la página).
+- Imagen mapping de la landing (qué media de R2 va en qué posición) sigue pendiente; las imágenes de la landing actualmente son hardcoded. Está contemplado para etapa 2.
+
+## Panel Admin
+
+- Usuario admin creado en D1 producción: `irineomadrid.daring@gmail.com` (contraseña la conoce Ramiro; hash PBKDF2 en la tabla `admin_users`, login solo contra D1).
+- **Aprendizaje clave:** Cloudflare Workers NO soporta PBKDF2 con más de 100.000 iteraciones (`NotSupportedError: iteration counts above 100000 are not supported`). `PASSWORD_ITERATIONS` fijado en 100.000 en `functions/api/_lib/auth.ts`; con 120.000 el hash se generaba bien en Node pero `verifyPassword` fallaba silenciosamente en producción (el try/catch devolvía false).
+- Login verificado de punta a punta en producción el 28-ago-2026: `/api/auth/login` devuelve ok:true y `/api/admin/health` responde con la sesión.
+- **Fix importante (28-ago):** la cookie de sesión tenía `Path=/admin`, así que el navegador no la enviaba a `/api/auth/session` ni a los endpoints `/api/*` que usa el panel: se veía el panel un instante y volvía al login. Cambiado a `Path=/` en `functions/api/_lib/auth.ts`. Los tests anteriores no lo detectaron porque usaban curl con cookie forzada (ignora reglas de path); la verificación correcta se hace con cookie jar (`-c`/`-b`), que sí respeta paths.
+- El formulario de login tiene botón de ojito para mostrar/ocultar la contraseña (`admin/login/index.html` + estilos en `admin/admin.css`).
+- Los secrets `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` y `ADMIN_SESSION_SECRET` NO se usan en ningún endpoint; no hace falta configurarlos.
+- Usuario accede por `daring.com.uy/admin` (login en `/admin/login`).
+
+## Entorno De Desarrollo (opencode)
+
+- MCP de Mercado Pago configurado en `~/.config/opencode/opencode.json` con `Authorization: Bearer {env:MERCADOPAGO_ACCESS_TOKEN}`; requiere la variable de entorno `MERCADOPAGO_ACCESS_TOKEN` a nivel usuario.
+- Skills de Cloudflare instaladas en `~/.agents/skills` (cloudflare, wrangler, durable-objects, workers-best-practices, web-perf, etc.).
+- 5 servidores MCP de Cloudflare agregados a la config global de opencode: `cloudflare`, `cloudflare-docs` (público), `cloudflare-bindings`, `cloudflare-builds`, `cloudflare-observability` (los de OAuth piden login al primer uso).
+- `cloudflare-docs` MCP funciona en esta sesión; los de OAuth aún no fueron autenticados.
+- Cuenta de Cloudflare: `irineomadrid.daring@gmail.com`, account ID `279493ad9c175d0a242f41a62789e83d`.
 
 ## Diseño Y Contenido
 
