@@ -1,4 +1,4 @@
-const state = {
+﻿const state = {
   session: null,
   ventas: { data: null, page: 1, limit: 20, filters: { q: '', status: '', period: 'all' } },
   emails: { data: null, page: 1, limit: 20, filters: { status: '', provider: '', period: 'all' } },
@@ -381,7 +381,6 @@ async function loadContenido() {
   await loadCarouselManager('testimonials', 'manager-testimonials', 'hint-testimonials', 'el carrusel de testimonios');
   await loadHistoria();
   await loadFaq();
-  await loadMedios();
 }
 
 async function loadContenidoTextos() {
@@ -510,7 +509,6 @@ async function wireCarouselUpload(placement, buttonSelector, inputSelector, cont
       await subirArchivo(placement, file);
       toast('Archivo agregado y publicado', 'success');
       await loadCarouselManager(placement, containerId, hintId, nombre);
-      await loadMedios();
     } catch (error) {
       toast(error.message ?? 'No se pudo subir el archivo.', 'error');
     } finally {
@@ -557,7 +555,6 @@ async function loadHistoria() {
       feedback.textContent = 'Actualizada.';
       toast('Foto del dueño actualizada', 'success');
       await loadHistoria();
-      await loadMedios();
     } catch (error) {
       feedback.textContent = error.message ?? 'No se pudo subir.';
     } finally {
@@ -569,7 +566,6 @@ async function loadHistoria() {
     await api('/api/images', { method: 'PUT', body: JSON.stringify({ slot: 'historia.foto', media_id: null }) });
     toast('Volviste a la foto original', 'success');
     await loadHistoria();
-    await loadMedios();
   });
 }
 
@@ -693,45 +689,6 @@ function renderUsageLimits(data) {
   });
 }
 
-async function loadMedios() {
-  const response = await api('/api/media');
-  const data = await response.json();
-  const list = document.querySelector('#media-list');
-  list.replaceChildren();
-  if (!data.media?.length) {
-    const empty = document.createElement('p');
-    empty.className = 'empty-state';
-    empty.textContent = 'Todavía no hay recursos cargados.';
-    list.append(empty);
-    return;
-  }
-  data.media.forEach((item) => {
-    const card = document.createElement('article');
-    card.className = 'media-card';
-    const preview = item.media_type === 'video' ? document.createElement('video') : document.createElement('img');
-    preview.src = item.url;
-    if (item.media_type === 'video') preview.controls = true;
-    else preview.alt = item.alt_text || item.file_name;
-    const meta = document.createElement('div');
-    meta.innerHTML = `<strong>${escapeHTML(item.title || item.file_name)}</strong><span>${escapeHTML(item.placement)} · ${item.published ? 'Publicado' : 'Sin publicar'}</span><input class="media-order input" data-order-id="${escapeHTML(item.id)}" type="number" min="0" value="${escapeHTML(item.sort_order || 0)}" aria-label="Orden"><button class="button-secondary" data-action="guardar-orden" data-id="${escapeHTML(item.id)}">Guardar orden</button><button class="button-secondary" data-action="publicar" data-id="${escapeHTML(item.id)}" data-published="${item.published ? 'false' : 'true'}">${item.published ? 'Ocultar' : 'Publicar'}</button><button class="button-secondary" data-action="eliminar" data-id="${escapeHTML(item.id)}">Eliminar</button>`;
-    card.append(preview, meta);
-    list.append(card);
-  });
-  list.querySelectorAll('button[data-action="guardar-orden"]').forEach((button) => button.addEventListener('click', async () => {
-    const input = list.querySelector(`[data-order-id="${button.dataset.id}"]`);
-    const response = await api('/api/media/reorder', { method: 'POST', body: JSON.stringify({ id: button.dataset.id, sort_order: Number(input.value) }) });
-    button.textContent = response.ok ? 'Guardado' : 'Error';
-  }));
-  list.querySelectorAll('button[data-action="publicar"]').forEach((button) => button.addEventListener('click', async () => {
-    const response = await api('/api/media/publish', { method: 'POST', body: JSON.stringify({ id: button.dataset.id, published: button.dataset.published === 'true' }) });
-    if (response.ok) await loadMedios();
-  }));
-  list.querySelectorAll('button[data-action="eliminar"]').forEach((button) => button.addEventListener('click', async () => {
-    if (!window.confirm('¿Eliminar este recurso?')) return;
-    const response = await api(`/api/media?id=${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE' });
-    if (response.ok) await loadMedios();
-  }));
-}
 
 async function loadStock() {
   const response = await api('/api/stock');
@@ -796,6 +753,71 @@ const LOADERS = {
 
 const stateAudit = { page: 1, limit: 30, action: '' };
 
+const NOMBRES_SETTING = {
+  price_cents: 'el precio',
+  currency: 'la moneda',
+  initial_stock_visible: 'el stock visible',
+  whatsapp_phone: 'el número de WhatsApp',
+  owner_email: 'el mail del dueño',
+  owner_email_enabled: 'los avisos al dueño',
+  buyer_from_email: 'el remitente del mail al comprador',
+  buyer_from_name: 'el nombre del remitente al comprador',
+  owner_from_email: 'el remitente del mail al dueño',
+  owner_from_name: 'el nombre del remitente al dueño',
+  buyer_email_subject: 'el asunto del mail al comprador',
+  buyer_email_html: 'el cuerpo del mail al comprador',
+  owner_email_subject: 'el asunto del mail al dueño',
+  owner_email_html: 'el cuerpo del mail al dueño',
+  telegram_enabled: 'las notificaciones de Telegram',
+  telegram_bot_token: 'el bot de Telegram',
+  telegram_chat_id: 'el chat de Telegram'
+};
+
+const SECCION_TEXTO = {
+  hero: 'el inicio de la página',
+  platos: 'la sección de platos',
+  diseno: 'la sección de diseño e ingeniería',
+  oferta: 'la sección de oferta',
+  cierre: 'el cierre de la página'
+};
+
+function describirAuditoria(entry) {
+  let d = {};
+  try { d = entry.details ? JSON.parse(entry.details) : {}; } catch { return 'Cambio registrado.'; }
+  switch (entry.action) {
+    case 'settings.update': {
+      const cambios = Array.isArray(d) ? d.map((u) => NOMBRES_SETTING[u.key] ?? u.key) : [];
+      return 'Se actualizó la configuración: ' + (cambios.join(', ') || 'datos generales') + '.';
+    }
+    case 'orders.update': {
+      const partes = [];
+      if (d.shipping_status) partes.push('estado de envío: ' + ({ preparing: 'preparando', shipped: 'despachado', delivered: 'entregado', returned: 'devuelto' }[d.shipping_status] ?? d.shipping_status));
+      if (d.tracking_number) partes.push('número de seguimiento cargado');
+      if (d.admin_notes) partes.push('notas internas');
+      return 'Se actualizó una venta' + (partes.length ? ' (' + partes.join(', ') + ')' : '') + '.';
+    }
+    case 'stock.update':
+      return 'Se ajustó el stock' + (entry.entity_id ? ' del color ' + entry.entity_id : '') + ': de ' + (d.previous ?? '?') + ' a ' + (d.next ?? '?') + ' unidades' + (d.reason ? ' — ' + d.reason : '') + '.';
+    case 'faq.create':
+      return 'Se agregó una pregunta frecuente.';
+    case 'faq.update':
+      return 'Se editó una pregunta frecuente.';
+    case 'faq.delete':
+      return 'Se eliminó una pregunta frecuente.';
+    case 'page_content.update': {
+      const claves = Array.isArray(d) ? d.map((u) => u.key) : [];
+      const secciones = [...new Set(claves.map((k) => k.split('.')[0]))].map((s) => SECCION_TEXTO[s] ?? s);
+      return 'Se editaron los textos de ' + (secciones.join(' y ') || 'la página') + '.';
+    }
+    case 'page_images.update':
+      return entry.entity_id === 'historia.foto' ? 'Se cambió la foto del dueño.' : 'Se cambió una imagen de la página.';
+    case 'maintenance.cleanup':
+      return 'Limpieza automática: se borraron ' + (d.deleted ?? 0) + ' archivos sin uso de la biblioteca.';
+    default:
+      return 'Cambio registrado.';
+  }
+}
+
 async function loadAuditoria() {
   const tbody = document.querySelector('#audit-table tbody');
   tbody.replaceChildren();
@@ -804,35 +826,14 @@ async function loadAuditoria() {
   const response = await api(`/api/audit?${params.toString()}`);
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'auditoria');
-
-  const select = document.querySelector('#audit-action');
-  const acciones = data.actions ?? [];
-  const seleccionActual = select.value;
-  select.replaceChildren();
-  const todas = document.createElement('option');
-  todas.value = '';
-  todas.textContent = 'Todas las acciones';
-  select.append(todas);
-  acciones.forEach((a) => {
-    const opt = document.createElement('option');
-    opt.value = a;
-    opt.textContent = a;
-    if (a === seleccionActual) opt.selected = true;
-    select.append(opt);
-  });
-
   if (!data.entries.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Sin registros todavía.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="2" class="empty-state">Sin registros todavía.</td></tr>';
   } else {
     data.entries.forEach((entry) => {
       const row = document.createElement('tr');
-      let detalle = entry.details ?? '';
-      if (detalle.length > 120) detalle = detalle.slice(0, 120) + '…';
       row.innerHTML = `
         <td>${escapeHTML(formatDate(entry.created_at))}</td>
-        <td><span class="status-pill">${escapeHTML(entry.action)}</span></td>
-        <td class="text-muted">${escapeHTML(entry.entity)}${entry.entity_id ? ` · <code>${escapeHTML(entry.entity_id.slice(0, 8))}</code>` : ''}</td>
-        <td class="text-muted" style="white-space:normal;max-width:420px">${escapeHTML(detalle)}</td>`;
+        <td style="white-space:normal">${escapeHTML(describirAuditoria(entry))}</td>`;
       tbody.append(row);
     });
   }

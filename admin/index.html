@@ -212,10 +212,6 @@
           <header class="panel-header"><div><h2>Foto del dueño</h2><span class="panel-hint">La foto que aparece en la sección "Nuestra historia".</span></div></header>
           <div class="panel-body"><div id="manager-historia"><p class="empty-state">Cargando…</p></div><input type="file" id="file-historia" accept="image/*" class="hidden"></div>
         </div>
-        <div class="panel">
-          <header class="panel-header"><div><h2>Todos los archivos</h2><span class="panel-hint">Biblioteca completa, publicados y sin publicar.</span></div></header>
-          <div class="media-list" id="media-list"></div>
-        </div>
       </div>
       <div data-content-tab="faq" class="hidden">
         <div class="panel">
@@ -235,11 +231,20 @@
       <div class="panel">
         <header class="panel-header"><div><h2>Registro de actividad</h2><span class="panel-hint">Cada cambio hecho desde el panel queda registrado acá.</span></div></header>
         <div class="panel-toolbar">
-          <select id="audit-action" class="input"><option value="">Todas las acciones</option></select>
+          <select id="audit-action" class="input">
+            <option value="">Todas las acciones</option>
+            <option value="settings">Configuración</option>
+            <option value="orders">Ventas</option>
+            <option value="stock">Stock</option>
+            <option value="page_content">Textos de la página</option>
+            <option value="page_images">Imágenes</option>
+            <option value="faq">Preguntas frecuentes</option>
+            <option value="maintenance">Limpieza de archivos</option>
+          </select>
         </div>
         <div class="table-wrap">
           <table class="data-table" id="audit-table">
-            <thead><tr><th>Fecha</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Qué pasó</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>

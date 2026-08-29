@@ -14,8 +14,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const conditions: string[] = [];
   const bindings: unknown[] = [];
   if (action) {
-    conditions.push('action = ?');
-    bindings.push(action);
+    conditions.push('action LIKE ?');
+    bindings.push(action + '%');
   }
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
