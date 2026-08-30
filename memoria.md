@@ -1,47 +1,50 @@
-# Memoria Del Proyecto Daring
+﻿# Memoria Del Proyecto Daring
 
-Última actualización: 2026-08-29 (sesión 3: etapa 1.5 del panel + CMS de contenidos + límites del plan + precio en pesos)
+Ãšltima actualizaciÃ³n: 2026-08-29 (sesiÃ³n 3 completa: checkout pro, mails automÃ¡ticos, dominio propio, panel admin completo con ventas/stock/CMS/auditorÃ­a, GitHub sincronizado)
 
 ## Estado Actual
 
-- Proyecto: landing de venta de la sartén Daring.
+- Proyecto: landing de venta de la sartÃ©n Daring.
 - Archivo principal: `daring-landing.html`.
-- Servidor local habitual: `http://localhost:4173/daring-landing.html` o `wrangler pages dev --port 8788`.
-- Repositorio: `https://github.com/ramarketinguy/propuesta-daring.git`.
+- Servidor local habitual: `http://localhost:4173/daring-landing.html` o `wrangler pages dev --port 8788` (siempre con CurrentDirectory del proyecto).
+- Repositorio: `https://github.com/ramarketinguy/propuesta-daring.git` â€” sincronizado con producciÃ³n (todo committeado y pusheado).
 - Rama principal: `main`.
-- El precio de lanzamiento es `$1.590 UYU` (configurable desde el panel; se guarda en centavos).
-- Checkout Pro de Mercado Pago integrado, desplegado y verificado en producción (ver sección Checkout Pro).
-- Dominio oficial `daring.com.uy` en Cloudflare Pages (sección Dominio).
-- Resend configurado con dominio verificado, clave cargada y envío automático funcionando (sección Resend).
-- Panel admin rediseñado como SPA con sidebar, 7 secciones, dark/light, límites de plan visibles, CMS de contenidos de la landing (sección Panel Admin).
-- Landing consume contenidos dinámicos desde la base con fallback al HTML hardcoded.
-- WhatsApp funciona únicamente como canal de consultas desde la barra inferior.
+- El precio de lanzamiento es `$1.590 UYU` (configurable desde el panel en pesos; se guarda en centavos).
+- Checkout Pro de Mercado Pago integrado, desplegado y verificado en producciÃ³n (ver secciÃ³n Checkout Pro).
+- Dominio oficial `daring.com.uy` en Cloudflare Pages (secciÃ³n Dominio).
+- Resend configurado con dominio verificado, clave cargada y envÃ­o automÃ¡tico funcionando (secciÃ³n Resend).
+- Panel admin como SPA con sidebar y 8 secciones: Resumen, Ventas, Stock (por color), Contenido (tabs: Textos / ImÃ¡genes / Preguntas frecuentes), ConfiguraciÃ³n (con editor de plantillas de mail), Emails enviados, AuditorÃ­a (en lenguaje claro), Uso Cloudflare. Tema claro/oscuro con switch.
+- Landing consume contenidos dinÃ¡micos (textos, imÃ¡genes de carruseles, stock, precio) desde la base con fallback al HTML hardcoded.
+- Ãšnico pendiente de negocio: **prueba de compra real con tarjeta** (y devoluciÃ³n posterior) + revisiÃ³n visual en celular.
+- Descartados por decisiÃ³n del usuario: notificaciones Telegram, multi-usuario admin.
+- WhatsApp funciona Ãºnicamente como canal de consultas desde la barra inferior.
 
 ## Checkout Pro (Mercado Pago)
 
-- Aplicación Mercado Pago: "Daring web", App ID `1304026149030121`.
-- Token de producción `APP_USR-` guardado en `.dev.vars` local y como secreto `MERCADOPAGO_ACCESS_TOKEN` en Cloudflare Pages.
+- AplicaciÃ³n Mercado Pago: "Daring web", App ID `1304026149030121`.
+- Token de producciÃ³n `APP_USR-` guardado en `.dev.vars` local y como secreto `MERCADOPAGO_ACCESS_TOKEN` en Cloudflare Pages.
 - Endpoint `POST /api/checkout/create-preference` (`functions/api/checkout/create-preference.ts`).
-- El endpoint valida los datos del formulario, crea la orden con estado `checkout_started` en D1 y la preferencia en Mercado Pago.
-- Precio fijo `1590 UYU`, cantidad 1, `statement_descriptor` DARING.
+- El endpoint valida los datos del formulario, verifica stock disponible del color elegido, crea la orden con estado `checkout_started` en D1, reserva una unidad y crea la preferencia en Mercado Pago.
+- Precio y moneda se leen de `settings` (price_cents 159000, UYU), cantidad 1, `statement_descriptor` DARING.
 - `back_urls` vuelven a la landing con `?pago=aprobado|pendiente|rechazado` y la landing muestra un aviso fijo con el resultado.
-- En origen local (http) se usan URLs públicas de reemplazo y se omite `notification_url`, porque Mercado Pago rechaza URLs locales.
-- En producción se envía `notification_url` apuntando a `/api/webhooks/mercadopago`.
+- En origen local (http) se usan URLs pÃºblicas de reemplazo y se omite `notification_url`, porque Mercado Pago rechaza URLs locales.
+- En producciÃ³n se envÃ­a `notification_url` apuntando a `/api/webhooks/mercadopago`.
 - Endpoint `POST /api/webhooks/mercadopago` (`functions/api/webhooks/mercadopago.ts`).
 - El webhook consulta el pago a la API de Mercado Pago, actualiza la orden por `external_reference` y registra el evento en `checkout_events` con control de duplicados.
-- La landing envía el formulario a `create-preference` y redirige a `init_point` (o `sandbox_init_point` si no hay producción).
-- MCP de Mercado Pago conectado en opencode con token común: listar apps funciona, pero `get_credentials` y `save_webhook` exigen conexión OAuth.
-- Desplegado a Cloudflare Pages el 26-ago-2026 (deployment `b8e2e95e`): health OK, validación OK y preferencia real generada en producción.
-- Orden de prueba de producción borrada de D1 remoto; solo quedan órdenes reales.
-- Los videos originales de más de 25 MB (límite de Pages) no se publican; la landing usa las versiones optimizadas de `Testimonios nuevos/web/`.
-- El despliegue a Pages se hace con una copia en carpeta temporal sin `.git`, `.wrangler`, `cloudflare-dist`, `.dev.vars` ni los videos pesados (ver "Cómo desplegar" más abajo).
-- Pendiente: activar la URL de webhook en el panel de Mercado Pago y probar un pago real de prueba.
-- Migraciones 0002 y 0003 aplicadas también en D1 remoto de producción.
+- La landing envÃ­a el formulario a `create-preference` y redirige a `init_point` (o `sandbox_init_point` si no hay producciÃ³n).
+- MCP de Mercado Pago conectado en opencode con token comÃºn: listar apps funciona, pero `get_credentials` y `save_webhook` exigen conexiÃ³n OAuth.
+- Desplegado a Cloudflare Pages el 26-ago-2026 (deployment `b8e2e95e`): health OK, validaciÃ³n OK y preferencia real generada en producciÃ³n.
+- Orden de prueba de producciÃ³n borrada de D1 remoto; solo quedan Ã³rdenes reales.
+- Los videos originales de mÃ¡s de 25 MB (lÃ­mite de Pages) no se publican; la landing usa las versiones optimizadas de `Testimonios nuevos/web/`.
+- El despliegue a Pages se hace con una copia en carpeta temporal sin `.git`, `.wrangler`, `cloudflare-dist`, `.dev.vars` ni los videos pesados (ver "CÃ³mo desplegar" mÃ¡s abajo).
+- URL de webhook ya configurada en el panel de Mercado Pago contra el dominio definitivo (confirmado por el usuario).
+- Pendiente: prueba de compra real con tarjeta y devoluciÃ³n posterior.
+- Migraciones 0002, 0003, 0004, 0005, 0006, 0007 y 0008 aplicadas en D1 remoto de producciÃ³n.
 
-## Cómo Desplegar
+## CÃ³mo Desplegar
 
-- La carpeta raíz contiene archivos que Pages rechaza (videos de más de 25 MB), así que no se publica directo.
-- Procedimiento usado: `robocopy` a una carpeta temporal excluyendo `.git`, `.wrangler`, `cloudflare-dist`, `.dev.vars` y los MP4 de la raíz de `Testimonios nuevos`; luego `wrangler pages deploy <carpeta> --project-name daring-landing`.
+- La carpeta raÃ­z contiene archivos que Pages rechaza (videos de mÃ¡s de 25 MB), asÃ­ que no se publica directo.
+- Procedimiento usado: `robocopy` a una carpeta temporal excluyendo `.git`, `.wrangler`, `cloudflare-dist`, `.dev.vars` y los MP4 de la raÃ­z de `Testimonios nuevos`; luego `wrangler pages deploy <carpeta> --project-name daring-landing`.
 - Wrangler instalado en `%TEMP%\opencode\wr` (no hay `package.json` en el proyecto).
 - Login de wrangler: cuenta `irineomadrid.daring@gmail.com`, credenciales en `%APPDATA%\xdg.config\.wrangler\config\default.toml`.
 
@@ -51,116 +54,116 @@
 - Agregado a la cuenta de Cloudflare; zone ID `c3ecd843c82e1f2dc4e5ff61b8fae17c`; zona **activa** desde el 27-ago-2026.
 - Nameservers: `abby.ns.cloudflare.com` y `alexis.ns.cloudflare.com` (cargados en dominios.uy y propagados).
 - `daring.com.uy` y `www.daring.com.uy` agregados como custom domains del proyecto Pages `daring-landing` y **activos y funcionando** (verificado el 27-ago-2026).
-- Antes apuntaba a un WordPress viejo en Hostinger; el usuario borró los registros A/AAAA/CNAME viejos y creó dos CNAME (@ y www → `daring-landing.pages.dev`, Proxied).
-- Verificado: landing actual con título correcto en ambos dominios, `/api/health` 200 y webhook respondiendo desde el dominio definitivo.
+- Antes apuntaba a un WordPress viejo en Hostinger; el usuario borrÃ³ los registros A/AAAA/CNAME viejos y creÃ³ dos CNAME (@ y www â†’ `daring-landing.pages.dev`, Proxied).
+- Verificado: landing actual con tÃ­tulo correcto en ambos dominios, `/api/health` 200 y webhook respondiendo desde el dominio definitivo.
 - Importante: el token de wrangler NO tiene permiso DNS sobre la zona (403); los cambios de DNS van por dashboard o con un token API con permisos de DNS.
-- El checkout generado desde el dominio nuevo usa `daring.com.uy` automáticamente en `back_urls` y `notification_url` (se arman con el origen de cada pedido).
+- El checkout generado desde el dominio nuevo usa `daring.com.uy` automÃ¡ticamente en `back_urls` y `notification_url` (se arman con el origen de cada pedido).
 - El token OAuth de wrangler vence seguido; si la API da 403/"Authentication error", correr cualquier comando de wrangler para refrescarlo antes de usar la API.
 
 ## Resend (Email)
 
-- Cuenta de Resend creada por Ramiro; clave API vigente: la primera quedó inaccesible (Resend no la vuelve a mostrar), se creó una nueva.
+- Cuenta de Resend creada por Ramiro; clave API vigente: la primera quedÃ³ inaccesible (Resend no la vuelve a mostrar), se creÃ³ una nueva.
 - Clave cargada en `.dev.vars` local y como secreto `RESEND_API_KEY` en Cloudflare Pages (ambos verificados).
-- Dominio `daring.com.uy` agregado y **verificado** en Resend (DKIM, SPF y MX en verde; región São Paulo).
-- Los registros DNS los cargó Resend automáticamente en Cloudflare (botón Auto-configure).
-- El plan "Enable Sending" quedó activado; "Enable Receiving" (recibir mails) quedó apagado y no hace falta para el flujo actual.
+- Dominio `daring.com.uy` agregado y **verificado** en Resend (DKIM, SPF y MX en verde; regiÃ³n SÃ£o Paulo).
+- Los registros DNS los cargÃ³ Resend automÃ¡ticamente en Cloudflare (botÃ³n Auto-configure).
+- El plan "Enable Sending" quedÃ³ activado; "Enable Receiving" (recibir mails) quedÃ³ apagado y no hace falta para el flujo actual.
 - Remitente del mail de compra: `Daring <recetario@daring.com.uy>`.
 
-## Envío Automático De Entregables
+## EnvÃ­o AutomÃ¡tico De Entregables
 
 - Recetario PDF: `assets/Pizza daring.pdf` (5,9 MB), subido a R2 como `entregables/recetario-pizza-daring.pdf`.
-- Video de armado: `assets/Armado sartén .mp4` (42,2 MB), subido a R2 como `entregables/video-armado-daring.mp4`. (Importante: wrangler 4.126 se rompe con "é"/espacios en el nombre del archivo al subir; copiar a un nombre simple antes de `r2 object put`.)
-- Endpoint `GET /api/descargas/[type]?orden=<uuid>` (`functions/api/descargas/[type].ts`): sirve `video-armado` y `recetario` desde R2 solo si la orden existe con estado `approved`; inválido 400, sin pago aprobado 403, archivo faltante 404.
-- El webhook (`functions/api/webhooks/mercadopago.ts`) al aprobarse un pago: envía mail al COMPRADOR con el PDF adjunto y botón de descarga del video, y mail al DUEÑO (`owner_email` desde settings, remitente `owner_from_email`/`owner_from_name` desde settings) con la orden completa: datos del formulario, teléfono, dirección, color elegido, total, número de orden y pago MP. Ambos quedan en `email_deliveries` con provider `resend-buyer` / `resend-owner` y control anti-duplicados.
-- Si `owner_email_enabled` está en `false`, no se manda el mail al dueño.
+- Video de armado: `assets/Armado sartÃ©n .mp4` (42,2 MB), subido a R2 como `entregables/video-armado-daring.mp4`. (Importante: wrangler 4.126 se rompe con "Ã©"/espacios en el nombre del archivo al subir; copiar a un nombre simple antes de `r2 object put`.)
+- Endpoint `GET /api/descargas/[type]?orden=<uuid>` (`functions/api/descargas/[type].ts`): sirve `video-armado` y `recetario` desde R2 solo si la orden existe con estado `approved`; invÃ¡lido 400, sin pago aprobado 403, archivo faltante 404.
+- El webhook (`functions/api/webhooks/mercadopago.ts`) al aprobarse un pago: envÃ­a mail al COMPRADOR con el PDF adjunto y botÃ³n de descarga del video, y mail al DUEÃ‘O (`owner_email` desde settings, remitente `owner_from_email`/`owner_from_name` desde settings) con la orden completa: datos del formulario, telÃ©fono, direcciÃ³n, color elegido, total, nÃºmero de orden y pago MP. Ambos quedan en `email_deliveries` con provider `resend-buyer` / `resend-owner` y control anti-duplicados.
+- Si `owner_email_enabled` estÃ¡ en `false`, no se manda el mail al dueÃ±o.
 - El mail al comprador usa remitente `buyer_from_email`/`buyer_from_name` desde settings.
 - El precio se lee de `settings.price_cents` (default 159000); `create-preference` ya no tiene el precio hardcoded.
-- Desplegado y verificado en producción el 28-ago-2026.
+- Desplegado y verificado en producciÃ³n el 28-ago-2026.
 
-## Panel Admin — Etapa 1
+## Panel Admin â€” Etapa 1
 
-- Migración nueva `0004_admin_panel_etapa1.sql` aplicada en D1 producción: columnas `shipping_status`, `tracking_number`, `admin_notes` en `orders`; tabla `settings` (clave/valor con categoría); tabla `audit_log`.
-- 13 settings sembradas en 4 categorías: `producto` (precio, moneda, stock visible), `contacto` (WhatsApp, mail del dueño, activar avisos), `resend` (remitente comprador y dueño), `notifications` (Telegram). Cambiables desde el panel.
-- Endpoints nuevos: `GET/PATCH /api/orders/:id` (detalle con timeline y emails + cambiar estado de envío, tracking y notas), `GET /api/orders` (lista con filtros: búsqueda, estado, período + contadores y revenue), `GET /api/settings`, `PUT /api/settings` (validado por tipo, registra audit_log), `GET /api/emails` (lista con filtros + contadores buyer/owner).
-- `create-preference` lee precio y moneda desde `settings`; ya no están hardcoded.
-- Webhook lee remitentes y mail del dueño desde `settings`.
-- Panel rediseñado como SPA con sidebar y 6 secciones: Resumen, Ventas, Configuración, Emails enviados, Medios, Uso. Estilo back-office denso (tipografía Inter, colores tipo dashboard). Hash routing (`#ventas`, `#configuracion`, etc.).
-- Ventas: 4 KPI cards (Iniciados / Concluidas / Rechazadas / Ingresos), tabla con búsqueda por mail/nombre/orden, filtros por estado y período, paginación, detalle con timeline + envío + notas, exportar CSV.
-- Configuración: form con Producto / Contacto / Remitentes Resend (Telegram queda para etapa 3). El campo "Precio" se muestra en **pesos uruguayos** (no centavos) y el backend convierte a centavos antes de guardar.
-- Emails enviados: contadores buyer/owner, tabla con filtros y paginación.
-- Logs de auditoría: cualquier cambio en settings y orders se registra en `audit_log`.
-- Login del panel con Path=/ (corregido el 28-ago para que la sesión sirva también a `/api/auth/session` y `/api/admin/health`).
+- MigraciÃ³n nueva `0004_admin_panel_etapa1.sql` aplicada en D1 producciÃ³n: columnas `shipping_status`, `tracking_number`, `admin_notes` en `orders`; tabla `settings` (clave/valor con categorÃ­a); tabla `audit_log`.
+- 13 settings sembradas en 4 categorÃ­as: `producto` (precio, moneda, stock visible), `contacto` (WhatsApp, mail del dueÃ±o, activar avisos), `resend` (remitente comprador y dueÃ±o), `notifications` (Telegram). Cambiables desde el panel.
+- Endpoints nuevos: `GET/PATCH /api/orders/:id` (detalle con timeline y emails + cambiar estado de envÃ­o, tracking y notas), `GET /api/orders` (lista con filtros: bÃºsqueda, estado, perÃ­odo + contadores y revenue), `GET /api/settings`, `PUT /api/settings` (validado por tipo, registra audit_log), `GET /api/emails` (lista con filtros + contadores buyer/owner).
+- `create-preference` lee precio y moneda desde `settings`; ya no estÃ¡n hardcoded.
+- Webhook lee remitentes y mail del dueÃ±o desde `settings`.
+- Panel rediseÃ±ado como SPA con sidebar y 6 secciones: Resumen, Ventas, ConfiguraciÃ³n, Emails enviados, Medios, Uso. Estilo back-office denso (tipografÃ­a Inter, colores tipo dashboard). Hash routing (`#ventas`, `#configuracion`, etc.).
+- Ventas: 4 KPI cards (Iniciados / Concluidas / Rechazadas / Ingresos), tabla con bÃºsqueda por mail/nombre/orden, filtros por estado y perÃ­odo, paginaciÃ³n, detalle con timeline + envÃ­o + notas, exportar CSV.
+- ConfiguraciÃ³n: form con Producto / Contacto / Remitentes Resend (Telegram queda para etapa 3). El campo "Precio" se muestra en **pesos uruguayos** (no centavos) y el backend convierte a centavos antes de guardar.
+- Emails enviados: contadores buyer/owner, tabla con filtros y paginaciÃ³n.
+- Logs de auditorÃ­a: cualquier cambio en settings y orders se registra en `audit_log`.
+- Login del panel con Path=/ (corregido el 28-ago para que la sesiÃ³n sirva tambiÃ©n a `/api/auth/session` y `/api/admin/health`).
 
-## Panel Admin — Etapa 1.5 (CMS de la landing)
+## Panel Admin â€” Etapa 1.5 (CMS de la landing)
 
-- Migración `0005_page_content.sql`: tablas `page_content` (textos con sección, label, type, sort_order) y `page_faq` (preguntas con orden y published).
-- 27 campos `page_content` sembrados cubriendo Hero, Platos, Diseño, Oferta, Cierre (incluye título del hero por línea, subtítulo, badges, bullets de la oferta, CTA, copy del lanzamiento, etc.) y 4 preguntas frecuentes iniciales.
-- Endpoints nuevos: `GET/PUT /api/content` (admin), `GET /api/faq`, `POST /api/faq`, `GET/PATCH/DELETE /api/faq/:id`, `GET /api/public/content` (público, con CORS y cache de 30 s).
+- MigraciÃ³n `0005_page_content.sql`: tablas `page_content` (textos con secciÃ³n, label, type, sort_order) y `page_faq` (preguntas con orden y published).
+- 27 campos `page_content` sembrados cubriendo Hero, Platos, DiseÃ±o, Oferta, Cierre (incluye tÃ­tulo del hero por lÃ­nea, subtÃ­tulo, badges, bullets de la oferta, CTA, copy del lanzamiento, etc.) y 4 preguntas frecuentes iniciales.
+- Endpoints nuevos: `GET/PUT /api/content` (admin), `GET /api/faq`, `POST /api/faq`, `GET/PATCH/DELETE /api/faq/:id`, `GET /api/public/content` (pÃºblico, con CORS y cache de 30 s).
 - La landing (`daring-landing.html`) tiene `data-cms="key"` en cada elemento editable y `data-cms-faq` en el contenedor de preguntas. Un script al final carga `/api/public/content`, aplica los textos y popula el FAQ desde la base. Si la API falla, queda el contenido hardcoded (fallback).
-- Panel: nueva sección **Contenido** en el sidebar con:
-  - Bloque "Textos de la página": form con campos agrupados por sección (Hero, Versatilidad, Diseño, Oferta, Cierre), cada uno con su **label descriptivo** que dice exactamente qué parte de la página modifica (ej: "Título del hero · primera línea (aparece arriba de todo en la página)", "Bullet 1 de lo que incluye la oferta", "Texto del botón de compra de la sección Oferta"). Un solo botón "Guardar todos los cambios".
+- Panel: nueva secciÃ³n **Contenido** en el sidebar con:
+  - Bloque "Textos de la pÃ¡gina": form con campos agrupados por secciÃ³n (Hero, Versatilidad, DiseÃ±o, Oferta, Cierre), cada uno con su **label descriptivo** que dice exactamente quÃ© parte de la pÃ¡gina modifica (ej: "TÃ­tulo del hero Â· primera lÃ­nea (aparece arriba de todo en la pÃ¡gina)", "Bullet 1 de lo que incluye la oferta", "Texto del botÃ³n de compra de la secciÃ³n Oferta"). Un solo botÃ³n "Guardar todos los cambios".
   - Bloque "Preguntas frecuentes": form para agregar + lista con cards por pregunta que permiten editar pregunta, respuesta, orden y publicado, con botones Guardar y Eliminar.
-- La landing ya consume el contenido dinámico: verificable en producción (ver `/api/public/content`).
+- La landing ya consume el contenido dinÃ¡mico: verificable en producciÃ³n (ver `/api/public/content`).
 
-## Panel — Límites del plan arreglados
+## Panel â€” LÃ­mites del plan arreglados
 
 - Endpoint `GET /api/cloudflare/usage` ya no requiere `CF_API_TOKEN`/`CF_ACCOUNT_ID` (siempre mostraba "No disponible"). Ahora devuelve:
   - `plan: 'free'` y `plan_label: 'Cloudflare Free'`
-  - R2: objetos, tamaño usado, `limit_label: '10 GB'`, `used_percent` calculado.
+  - R2: objetos, tamaÃ±o usado, `limit_label: '10 GB'`, `used_percent` calculado.
   - D1: filas estimadas, `limit_label: '5 GB'`.
-  - Pages y Workers: límites hardcoded del plan Free.
-- Panel renderiza 4 grupos con tabla de uso vs límite (objetos, espacio, lecturas, escrituras, requests, builds, dominios personalizados, etc.).
+  - Pages y Workers: lÃ­mites hardcoded del plan Free.
+- Panel renderiza 4 grupos con tabla de uso vs lÃ­mite (objetos, espacio, lecturas, escrituras, requests, builds, dominios personalizados, etc.).
 
-## Panel Admin — CMS de contenidos (Etapa 1.5)
+## Panel Admin â€” CMS de contenidos (Etapa 1.5)
 
-- El panel permite editar los **textos visibles** de la landing y las **preguntas frecuentes** sin tocar código.
-- Migración `0005_page_content.sql`: tablas `page_content` (clave/valor con sección, label descriptivo, tipo y orden) y `page_faq` (pregunta + respuesta + orden + publicado).
-- 27 campos `page_content` sembrados cubriendo todas las zonas editables: Hero (título por línea, subtítulo, CTAs, 4 badges), Platos (eyebrow, título, lead), Diseño e ingeniería (eyebrow, título, lead), Oferta (eyebrow, título, 4 bullets, CTA, copy del lanzamiento), Cierre (título, copy).
-- 4 preguntas frecuentes iniciales sembradas (inducción, envío, garantía, peso).
-- Cada campo tiene un `label` que indica exactamente qué parte de la página modifica (ej: "Título del hero · primera línea (aparece arriba de todo en la página)"), de modo que el usuario no necesita adivinar dónde impacta el cambio.
+- El panel permite editar los **textos visibles** de la landing y las **preguntas frecuentes** sin tocar cÃ³digo.
+- MigraciÃ³n `0005_page_content.sql`: tablas `page_content` (clave/valor con secciÃ³n, label descriptivo, tipo y orden) y `page_faq` (pregunta + respuesta + orden + publicado).
+- 27 campos `page_content` sembrados cubriendo todas las zonas editables: Hero (tÃ­tulo por lÃ­nea, subtÃ­tulo, CTAs, 4 badges), Platos (eyebrow, tÃ­tulo, lead), DiseÃ±o e ingenierÃ­a (eyebrow, tÃ­tulo, lead), Oferta (eyebrow, tÃ­tulo, 4 bullets, CTA, copy del lanzamiento), Cierre (tÃ­tulo, copy).
+- 4 preguntas frecuentes iniciales sembradas (inducciÃ³n, envÃ­o, garantÃ­a, peso).
+- Cada campo tiene un `label` que indica exactamente quÃ© parte de la pÃ¡gina modifica (ej: "TÃ­tulo del hero Â· primera lÃ­nea (aparece arriba de todo en la pÃ¡gina)"), de modo que el usuario no necesita adivinar dÃ³nde impacta el cambio.
 - Endpoints:
   - `GET/PUT /api/content` (admin, con auth)
   - `GET /api/faq`, `POST /api/faq`, `GET/PATCH/DELETE /api/faq/:id`
-  - `GET /api/public/content` (público, CORS abierto, cache de 30 s)
-- La landing tiene `data-cms="clave"` en cada elemento editable y `data-cms-faq` en el contenedor de FAQ. Un script al final del body consume `/api/public/content` y aplica los textos/popula el FAQ. Si la API falla, queda el contenido hardcoded como fallback (sin ruptura de la página).
-- Imagen mapping de la landing (qué media de R2 va en qué posición) sigue pendiente; las imágenes de la landing actualmente son hardcoded. Está contemplado para etapa 2.
+  - `GET /api/public/content` (pÃºblico, CORS abierto, cache de 30 s)
+- La landing tiene `data-cms="clave"` en cada elemento editable y `data-cms-faq` en el contenedor de FAQ. Un script al final del body consume `/api/public/content` y aplica los textos/popula el FAQ. Si la API falla, queda el contenido hardcoded como fallback (sin ruptura de la pÃ¡gina).
+- Imagen mapping de la landing (quÃ© media de R2 va en quÃ© posiciÃ³n) sigue pendiente; las imÃ¡genes de la landing actualmente son hardcoded. EstÃ¡ contemplado para etapa 2.
 
 ## Panel Admin
 
-- Usuario admin creado en D1 producción: `irineomadrid.daring@gmail.com` (contraseña la conoce Ramiro; hash PBKDF2 en la tabla `admin_users`, login solo contra D1).
-- **Aprendizaje clave:** Cloudflare Workers NO soporta PBKDF2 con más de 100.000 iteraciones (`NotSupportedError: iteration counts above 100000 are not supported`). `PASSWORD_ITERATIONS` fijado en 100.000 en `functions/api/_lib/auth.ts`; con 120.000 el hash se generaba bien en Node pero `verifyPassword` fallaba silenciosamente en producción (el try/catch devolvía false).
-- Login verificado de punta a punta en producción el 28-ago-2026: `/api/auth/login` devuelve ok:true y `/api/admin/health` responde con la sesión.
-- **Fix importante (28-ago):** la cookie de sesión tenía `Path=/admin`, así que el navegador no la enviaba a `/api/auth/session` ni a los endpoints `/api/*` que usa el panel: se veía el panel un instante y volvía al login. Cambiado a `Path=/` en `functions/api/_lib/auth.ts`. Los tests anteriores no lo detectaron porque usaban curl con cookie forzada (ignora reglas de path); la verificación correcta se hace con cookie jar (`-c`/`-b`), que sí respeta paths.
-- El formulario de login tiene botón de ojito para mostrar/ocultar la contraseña (`admin/login/index.html` + estilos en `admin/admin.css`).
-- Los secrets `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` y `ADMIN_SESSION_SECRET` NO se usan en ningún endpoint; no hace falta configurarlos.
+- Usuario admin creado en D1 producciÃ³n: `irineomadrid.daring@gmail.com` (contraseÃ±a la conoce Ramiro; hash PBKDF2 en la tabla `admin_users`, login solo contra D1).
+- **Aprendizaje clave:** Cloudflare Workers NO soporta PBKDF2 con mÃ¡s de 100.000 iteraciones (`NotSupportedError: iteration counts above 100000 are not supported`). `PASSWORD_ITERATIONS` fijado en 100.000 en `functions/api/_lib/auth.ts`; con 120.000 el hash se generaba bien en Node pero `verifyPassword` fallaba silenciosamente en producciÃ³n (el try/catch devolvÃ­a false).
+- Login verificado de punta a punta en producciÃ³n el 28-ago-2026: `/api/auth/login` devuelve ok:true y `/api/admin/health` responde con la sesiÃ³n.
+- **Fix importante (28-ago):** la cookie de sesiÃ³n tenÃ­a `Path=/admin`, asÃ­ que el navegador no la enviaba a `/api/auth/session` ni a los endpoints `/api/*` que usa el panel: se veÃ­a el panel un instante y volvÃ­a al login. Cambiado a `Path=/` en `functions/api/_lib/auth.ts`. Los tests anteriores no lo detectaron porque usaban curl con cookie forzada (ignora reglas de path); la verificaciÃ³n correcta se hace con cookie jar (`-c`/`-b`), que sÃ­ respeta paths.
+- El formulario de login tiene botÃ³n de ojito para mostrar/ocultar la contraseÃ±a (`admin/login/index.html` + estilos en `admin/admin.css`).
+- Los secrets `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` y `ADMIN_SESSION_SECRET` NO se usan en ningÃºn endpoint; no hace falta configurarlos.
 - Usuario accede por `daring.com.uy/admin` (login en `/admin/login`).
 
 ## Entorno De Desarrollo (opencode)
 
 - MCP de Mercado Pago configurado en `~/.config/opencode/opencode.json` con `Authorization: Bearer {env:MERCADOPAGO_ACCESS_TOKEN}`; requiere la variable de entorno `MERCADOPAGO_ACCESS_TOKEN` a nivel usuario.
 - Skills de Cloudflare instaladas en `~/.agents/skills` (cloudflare, wrangler, durable-objects, workers-best-practices, web-perf, etc.).
-- 5 servidores MCP de Cloudflare agregados a la config global de opencode: `cloudflare`, `cloudflare-docs` (público), `cloudflare-bindings`, `cloudflare-builds`, `cloudflare-observability` (los de OAuth piden login al primer uso).
-- `cloudflare-docs` MCP funciona en esta sesión; los de OAuth aún no fueron autenticados.
+- 5 servidores MCP de Cloudflare agregados a la config global de opencode: `cloudflare`, `cloudflare-docs` (pÃºblico), `cloudflare-bindings`, `cloudflare-builds`, `cloudflare-observability` (los de OAuth piden login al primer uso).
+- `cloudflare-docs` MCP funciona en esta sesiÃ³n; los de OAuth aÃºn no fueron autenticados.
 - Cuenta de Cloudflare: `irineomadrid.daring@gmail.com`, account ID `279493ad9c175d0a242f41a62789e83d`.
 
-## Diseño Y Contenido
+## DiseÃ±o Y Contenido
 
-- Hero con el mensaje principal “Una sartén para todo” y CTA de compra/ver en acción.
+- Hero con el mensaje principal â€œUna sartÃ©n para todoâ€ y CTA de compra/ver en acciÃ³n.
 - Intro de logo a pantalla completa, con scroll bloqueado hasta terminar.
-- Hero construido por capas: fondo, sartén, pizza y logo.
-- Animación secuencial del fondo, producto, logo, títulos y precio.
+- Hero construido por capas: fondo, sartÃ©n, pizza y logo.
+- AnimaciÃ³n secuencial del fondo, producto, logo, tÃ­tulos y precio.
 - Precio comparativo `$2.200` tachado y precio lanzamiento `$1.590`.
 - Contador visual de 200 unidades disponibles.
-- Chips del hero: 28 centímetros de base, antiadherente premium, tapa de vidrio templado y doble agarre.
-- Indicador de scroll en dos líneas, con dos flechas laterales y estilo bordó.
-- Banda animada de comidas entre el hero y la animación por scroll.
-- Animación por scroll de la sartén ubicada después de la banda.
-- Se eliminó la sección Beneficios Reales.
-- Se eliminó la sección Diferencial frente al mercado.
-- Diseño e Ingeniería quedó inmediatamente después de la animación.
-- Diseño e Ingeniería incluye la característica 04: doble agarre, manija y agarradera para levantar la sartén con más firmeza y estabilidad.
-- Ficha técnica disponible dentro de un modal.
-- Versatilidad presentada como carrusel de imágenes.
+- Chips del hero: 28 centÃ­metros de base, antiadherente premium, tapa de vidrio templado y doble agarre.
+- Indicador de scroll en dos lÃ­neas, con dos flechas laterales y estilo bordÃ³.
+- Banda animada de comidas entre el hero y la animaciÃ³n por scroll.
+- AnimaciÃ³n por scroll de la sartÃ©n ubicada despuÃ©s de la banda.
+- Se eliminÃ³ la secciÃ³n Beneficios Reales.
+- Se eliminÃ³ la secciÃ³n Diferencial frente al mercado.
+- DiseÃ±o e IngenierÃ­a quedÃ³ inmediatamente despuÃ©s de la animaciÃ³n.
+- DiseÃ±o e IngenierÃ­a incluye la caracterÃ­stica 04: doble agarre, manija y agarradera para levantar la sartÃ©n con mÃ¡s firmeza y estabilidad.
+- Ficha tÃ©cnica disponible dentro de un modal.
+- Versatilidad presentada como carrusel de imÃ¡genes.
 - Testimonios presentados como carrusel de videos.
 - Historia de Daring narrada en primera persona como Irineo, con su imagen y nombre debajo de la imagen.
 - FAQ reducido a las preguntas aprobadas.
@@ -168,36 +171,36 @@
 ## Checkout
 
 - En escritorio: imagen del checkout a la izquierda y contenido a la derecha.
-- En móvil: disposición vertical.
+- En mÃ³vil: disposiciÃ³n vertical.
 - Imagen de checkout: `assets/Imagenes nuevas/Checkout.png`.
-- El bloque incluye solamente: sartén con 28 centímetros de base, tapa de vidrio templado, menos tiempo en la cocina y más tiempo para vos.
-- El formulario se abre desde el botón de compra.
-- Campos del formulario: nombre completo, teléfono, departamento, localidad, dirección y correo electrónico.
-- El formulario explica que el recetario de pizza y el video de armado se enviarán al correo indicado.
-- Los datos quedan preparados en memoria para la futura integración de Checkout Pro, sin redirección real todavía.
+- El bloque incluye solamente: sartÃ©n con 28 centÃ­metros de base, tapa de vidrio templado, menos tiempo en la cocina y mÃ¡s tiempo para vos.
+- El formulario se abre desde el botÃ³n de compra.
+- Campos del formulario: nombre completo, telÃ©fono, departamento, localidad, direcciÃ³n y correo electrÃ³nico.
+- El formulario explica que el recetario de pizza y el video de armado se enviarÃ¡n al correo indicado.
+- Los datos quedan preparados en memoria para la futura integraciÃ³n de Checkout Pro, sin redirecciÃ³n real todavÃ­a.
 
 ## Recursos
 
 - Capas del hero: `assets/Imagen Hero/`.
-- Imágenes nuevas: `assets/Imagenes nuevas/`.
+- ImÃ¡genes nuevas: `assets/Imagenes nuevas/`.
 - Carrusel de pizza: `assets/Imagenes nuevas/Carrusel pizza Daring/`.
 - Imagen de Irineo: `assets/Imagenes nuevas/Irineo.jpeg`.
 - Testimonios originales: `assets/Testimonios nuevos/`.
 - Testimonios optimizados para web: `assets/Testimonios nuevos/web/`.
-- Los videos de testimonios están en 720×960, conservan audio y pesan aproximadamente 15 MB en total.
-- Los testimonios no se reproducen automáticamente al cargar.
+- Los videos de testimonios estÃ¡n en 720Ã—960, conservan audio y pesan aproximadamente 15 MB en total.
+- Los testimonios no se reproducen automÃ¡ticamente al cargar.
 - Si la persona inicia un testimonio y cambia de slide, el video anterior se pausa y el nuevo comienza a reproducirse.
 
 ## Rendimiento
 
 - Intro desktop optimizado: `assets/intro-logo-desktop.mp4`.
-- Intro móvil optimizado: `assets/intro-logo-mobile.mp4`.
-- El intro original fue reemplazado en la página por las versiones optimizadas con nombres simples.
-- Frames móviles reducidos de aproximadamente 280 MB a 7,82 MB.
+- Intro mÃ³vil optimizado: `assets/intro-logo-mobile.mp4`.
+- El intro original fue reemplazado en la pÃ¡gina por las versiones optimizadas con nombres simples.
+- Frames mÃ³viles reducidos de aproximadamente 280 MB a 7,82 MB.
 - Frames desktop reducidos de aproximadamente 29,2 MB a 6,98 MB.
-- La página carga solamente el primer frame y algunos frames cercanos al inicio.
-- Los demás frames se solicitan bajo demanda mientras la persona hace scroll.
-- Se fuerza el inicio de la página en `scrollY = 0` y se desactiva la restauración automática del scroll.
+- La pÃ¡gina carga solamente el primer frame y algunos frames cercanos al inicio.
+- Los demÃ¡s frames se solicitan bajo demanda mientras la persona hace scroll.
+- Se fuerza el inicio de la pÃ¡gina en `scrollY = 0` y se desactiva la restauraciÃ³n automÃ¡tica del scroll.
 
 ## Verificaciones
 
@@ -208,183 +211,186 @@
 
 ## Commits Relevantes
 
-- `76203d6` — sincronización inicial del estado del proyecto.
-- `96f0687` — actualización de la experiencia de la landing Daring.
-- `05c807a` — optimización de carga de medios.
+- `76203d6` â€” sincronizaciÃ³n inicial del estado del proyecto.
+- `96f0687` â€” actualizaciÃ³n de la experiencia de la landing Daring.
+- `05c807a` â€” optimizaciÃ³n de carga de medios.
 
-## Sesión De Video Automático
+## SesiÃ³n De Video AutomÃ¡tico
 
-- La animación de scroll dejó de usar el canvas con frames como mecanismo activo.
+- La animaciÃ³n de scroll dejÃ³ de usar el canvas con frames como mecanismo activo.
 - Se generaron `assets/story-scroll-mobile.mp4` y `assets/story-scroll-desktop.mp4`.
-- El video móvil pesa aproximadamente 2,61 MB.
+- El video mÃ³vil pesa aproximadamente 2,61 MB.
 - El video desktop pesa aproximadamente 3,13 MB.
-- El video se carga de forma diferida cuando la sección se acerca al viewport.
-- La reproducción comienza cuando el 60% de la sección está visible.
-- Una vez iniciada, la reproducción continúa aunque la persona siga desplazándose.
-- Los cinco títulos aparecen sincronizados con el tiempo del video.
-- Se eliminaron los subtítulos de la animación.
-- El cuarto título dice “Lista en menos de 15 minutos.”.
-- El video queda detenido en el último frame durante 2 segundos antes de reiniciar.
-- La sección móvil ocupa `100svh` para evitar espacios negros vacíos.
-- Se agregó el asset `assets/Videos/Landing Daring Movil 2.mp4` al proyecto.
+- El video se carga de forma diferida cuando la secciÃ³n se acerca al viewport.
+- La reproducciÃ³n comienza cuando el 60% de la secciÃ³n estÃ¡ visible.
+- Una vez iniciada, la reproducciÃ³n continÃºa aunque la persona siga desplazÃ¡ndose.
+- Los cinco tÃ­tulos aparecen sincronizados con el tiempo del video.
+- Se eliminaron los subtÃ­tulos de la animaciÃ³n.
+- El cuarto tÃ­tulo dice â€œLista en menos de 15 minutos.â€.
+- El video queda detenido en el Ãºltimo frame durante 2 segundos antes de reiniciar.
+- La secciÃ³n mÃ³vil ocupa `100svh` para evitar espacios negros vacÃ­os.
+- Se agregÃ³ el asset `assets/Videos/Landing Daring Movil 2.mp4` al proyecto.
 
-## Pendientes
+## Pendientes (estado real - ver PENDIENTES.md para el detalle completo)
 
-- Integrar la URL y el flujo real de Mercado Pago Checkout Pro.
-- Conectar el formulario con el backend o servicio que recibirá los datos de envío.
-- Revisar visualmente en dispositivos reales después de cada cambio importante.
-- Mantener este archivo actualizado al finalizar cada sesión de trabajo.
+- Unica tarea de negocio pendiente: prueba de compra real con tarjeta y devolucion posterior (el usuario la ejecuta; verificacion tecnica acompanada).
+- Revision visual en dispositivos reales (usuario).
+- Opcional/etapa futura si se desea: ampliar el panel (mejoras menores). Telegram y multi-usuario admin descartados por decision del usuario.
+- Mantener este archivo actualizado al finalizar cada sesion de trabajo.
+- Conectar el formulario con el backend o servicio que recibirÃ¡ los datos de envÃ­o.
+- Revisar visualmente en dispositivos reales despuÃ©s de cada cambio importante.
+- Mantener este archivo actualizado al finalizar cada sesiÃ³n de trabajo.
 
 ## Primera Etapa Del Panel Admin
 
-- Se creó la especificación en `docs/superpowers/specs/2026-08-16-daring-admin-panel-design.md`.
-- Se creó el plan en `docs/superpowers/plans/2026-08-16-daring-admin-foundation.md`.
-- Se creó la documentación de provisioning en `docs/superpowers/runbooks/admin-provisioning.md`.
-- Se agregaron primitivas de autenticación en `functions/api/_lib/auth.ts`.
+- Se creÃ³ la especificaciÃ³n en `docs/superpowers/specs/2026-08-16-daring-admin-panel-design.md`.
+- Se creÃ³ el plan en `docs/superpowers/plans/2026-08-16-daring-admin-foundation.md`.
+- Se creÃ³ la documentaciÃ³n de provisioning en `docs/superpowers/runbooks/admin-provisioning.md`.
+- Se agregaron primitivas de autenticaciÃ³n en `functions/api/_lib/auth.ts`.
 - Se agregaron respuestas JSON comunes en `functions/api/_lib/response.ts`.
-- Se implementó PBKDF2 con salt aleatorio para hash de contraseñas.
-- Se implementaron sesiones D1 con cookies `HttpOnly`, `Secure`, `SameSite=Lax` y expiración de 7 días.
+- Se implementÃ³ PBKDF2 con salt aleatorio para hash de contraseÃ±as.
+- Se implementaron sesiones D1 con cookies `HttpOnly`, `Secure`, `SameSite=Lax` y expiraciÃ³n de 7 dÃ­as.
 - Se agregaron rutas `POST /api/auth/login`, `POST /api/auth/logout` y `GET /api/auth/session`.
-- Se agregó `GET /api/admin/health`, protegido contra acceso sin sesión.
-- Se creó el panel inicial en `admin/index.html`.
-- Se creó el estilo del panel en `admin/admin.css`.
-- Se creó la lógica del panel en `admin/admin.js`.
-- Se creó el login en `admin/login/index.html`.
-- El panel verifica sesión y API antes de mostrar su estado.
-- El panel no muestra métricas inventadas; indica que todavía no hay datos conectados.
-- Se creó `scripts/create-admin-hash.mjs` para generar hashes sin guardar contraseñas.
-- Se creó `tests/auth-contract.mjs` para validar cookies y contratos básicos.
-- La migración D1 local fue aplicada correctamente.
-- Sin sesión, `/api/auth/session` devuelve `authenticated:false`.
-- Sin sesión, `/api/admin/health` devuelve HTTP 401.
+- Se agregÃ³ `GET /api/admin/health`, protegido contra acceso sin sesiÃ³n.
+- Se creÃ³ el panel inicial en `admin/index.html`.
+- Se creÃ³ el estilo del panel en `admin/admin.css`.
+- Se creÃ³ la lÃ³gica del panel en `admin/admin.js`.
+- Se creÃ³ el login en `admin/login/index.html`.
+- El panel verifica sesiÃ³n y API antes de mostrar su estado.
+- El panel no muestra mÃ©tricas inventadas; indica que todavÃ­a no hay datos conectados.
+- Se creÃ³ `scripts/create-admin-hash.mjs` para generar hashes sin guardar contraseÃ±as.
+- Se creÃ³ `tests/auth-contract.mjs` para validar cookies y contratos bÃ¡sicos.
+- La migraciÃ³n D1 local fue aplicada correctamente.
+- Sin sesiÃ³n, `/api/auth/session` devuelve `authenticated:false`.
+- Sin sesiÃ³n, `/api/admin/health` devuelve HTTP 401.
 - `/admin` y `/admin/login` responden HTTP 200 en Wrangler local.
 - Commits de esta etapa: `72ca034`, `dda2b9c`, `4130d23`, `4aa6ecd`, `feee1bd`.
 - Pendiente: provisionar el usuario administrador real en D1 con correo y hash seguros.
 
-## Segunda Etapa: Analítica Y Dashboard
+## Segunda Etapa: AnalÃ­tica Y Dashboard
 
-- Se creó el plan en `docs/superpowers/plans/2026-08-16-daring-analytics-dashboard.md`.
-- Se creó la migración `migrations/0002_analytics_events.sql`.
-- Se creó el helper de normalización y agregación en `functions/api/metrics/_lib.ts`.
-- Se creó el contrato `tests/metrics-contract.mjs`.
-- Se agregó `POST /api/metrics/events`.
-- El endpoint acepta únicamente eventos definidos y rechaza payloads desconocidos o demasiado grandes.
-- La landing registra page view, clics de compra, ver en acción, apertura/completado del checkout y consultas por WhatsApp.
-- No se envían nombres, correos, teléfonos, direcciones ni valores del formulario a la analítica.
-- Los identificadores de visitante y sesión son anónimos y se generan localmente.
-- Se agregó `GET /api/metrics/summary`, protegido por sesión.
-- Se agregó `GET /api/alerts`, protegido por sesión.
+- Se creÃ³ el plan en `docs/superpowers/plans/2026-08-16-daring-analytics-dashboard.md`.
+- Se creÃ³ la migraciÃ³n `migrations/0002_analytics_events.sql`.
+- Se creÃ³ el helper de normalizaciÃ³n y agregaciÃ³n en `functions/api/metrics/_lib.ts`.
+- Se creÃ³ el contrato `tests/metrics-contract.mjs`.
+- Se agregÃ³ `POST /api/metrics/events`.
+- El endpoint acepta Ãºnicamente eventos definidos y rechaza payloads desconocidos o demasiado grandes.
+- La landing registra page view, clics de compra, ver en acciÃ³n, apertura/completado del checkout y consultas por WhatsApp.
+- No se envÃ­an nombres, correos, telÃ©fonos, direcciones ni valores del formulario a la analÃ­tica.
+- Los identificadores de visitante y sesiÃ³n son anÃ³nimos y se generan localmente.
+- Se agregÃ³ `GET /api/metrics/summary`, protegido por sesiÃ³n.
+- Se agregÃ³ `GET /api/alerts`, protegido por sesiÃ³n.
 - El panel muestra visitas, clics de compra, formularios abiertos y formularios completados.
-- El panel permite elegir 7 días, 30 días o todo el período.
-- El panel muestra alertas explicadas en lenguaje simple cuando hay suficiente información.
-- Los pagos aprobados y la conversión de pago permanecen como no disponibles hasta conectar Mercado Pago.
-- La migración local de analítica fue aplicada correctamente.
-- Eventos válidos devuelven HTTP 202 y eventos inválidos HTTP 400.
-- Endpoints protegidos sin sesión devuelven HTTP 401.
+- El panel permite elegir 7 dÃ­as, 30 dÃ­as o todo el perÃ­odo.
+- El panel muestra alertas explicadas en lenguaje simple cuando hay suficiente informaciÃ³n.
+- Los pagos aprobados y la conversiÃ³n de pago permanecen como no disponibles hasta conectar Mercado Pago.
+- La migraciÃ³n local de analÃ­tica fue aplicada correctamente.
+- Eventos vÃ¡lidos devuelven HTTP 202 y eventos invÃ¡lidos HTTP 400.
+- Endpoints protegidos sin sesiÃ³n devuelven HTTP 401.
 - Commits de esta etapa: `8f15aa7`, `51a0e35`, `7bf7c26`, `68a2d2f`.
 
 ## Avances Recientes Del Panel
 
-- Se creó el plan de analítica en `docs/superpowers/plans/2026-08-16-daring-analytics-dashboard.md`.
-- Se agregó la tabla D1 `analytics_events` mediante la migración `0002_analytics_events.sql`.
-- Se creó el endpoint público `POST /api/metrics/events`.
-- Se validan eventos permitidos, tamaño de payload y tipo de dispositivo.
-- La landing registra visitas, clics de compra, ver en acción, apertura/completado del checkout y consultas por WhatsApp.
+- Se creÃ³ el plan de analÃ­tica en `docs/superpowers/plans/2026-08-16-daring-analytics-dashboard.md`.
+- Se agregÃ³ la tabla D1 `analytics_events` mediante la migraciÃ³n `0002_analytics_events.sql`.
+- Se creÃ³ el endpoint pÃºblico `POST /api/metrics/events`.
+- Se validan eventos permitidos, tamaÃ±o de payload y tipo de dispositivo.
+- La landing registra visitas, clics de compra, ver en acciÃ³n, apertura/completado del checkout y consultas por WhatsApp.
 - Los eventos no incluyen datos personales del formulario.
-- Se creó `GET /api/metrics/summary` para el panel.
-- Se creó `GET /api/alerts` con recomendaciones en lenguaje simple.
-- El panel muestra visitas, clics, formularios y períodos de 7 días, 30 días o todo el período.
-- El panel diferencia estados sin datos, errores y métricas todavía no disponibles.
-- Se verificó que eventos inválidos devuelven HTTP 400 y endpoints protegidos sin sesión HTTP 401.
-- Commits adicionales de analítica: `eaa73dd`, `8f15aa7`, `51a0e35`, `7bf7c26`, `68a2d2f`, `25a8658`.
+- Se creÃ³ `GET /api/metrics/summary` para el panel.
+- Se creÃ³ `GET /api/alerts` con recomendaciones en lenguaje simple.
+- El panel muestra visitas, clics, formularios y perÃ­odos de 7 dÃ­as, 30 dÃ­as o todo el perÃ­odo.
+- El panel diferencia estados sin datos, errores y mÃ©tricas todavÃ­a no disponibles.
+- Se verificÃ³ que eventos invÃ¡lidos devuelven HTTP 400 y endpoints protegidos sin sesiÃ³n HTTP 401.
+- Commits adicionales de analÃ­tica: `eaa73dd`, `8f15aa7`, `51a0e35`, `7bf7c26`, `68a2d2f`, `25a8658`.
 
-## Optimización De Animación
+## OptimizaciÃ³n De AnimaciÃ³n
 
-- Se reemplazó la animación activa de frames por videos optimizados controlados automáticamente.
+- Se reemplazÃ³ la animaciÃ³n activa de frames por videos optimizados controlados automÃ¡ticamente.
 - Videos generados: `assets/story-scroll-mobile.mp4` y `assets/story-scroll-desktop.mp4`.
-- El video móvil pesa aproximadamente 2,61 MB y el desktop 3,13 MB.
-- La sección precarga el video al acercarse y empieza cuando el 60% está visible.
-- La reproducción continúa aunque la persona siga desplazándose.
+- El video mÃ³vil pesa aproximadamente 2,61 MB y el desktop 3,13 MB.
+- La secciÃ³n precarga el video al acercarse y empieza cuando el 60% estÃ¡ visible.
+- La reproducciÃ³n continÃºa aunque la persona siga desplazÃ¡ndose.
 - Los textos se sincronizan con el tiempo del video.
-- Se eliminaron los subtítulos y se mantienen solamente los títulos grandes.
-- El cuarto título es “Lista en menos de 15 minutos.”.
-- El video queda en el último frame durante 2 segundos antes de reiniciar.
-- La sección móvil ocupa `100svh`, evitando espacios negros vacíos.
-- Se generó una versión desktop y móvil del intro del logo con nombres simples y bajo peso.
+- Se eliminaron los subtÃ­tulos y se mantienen solamente los tÃ­tulos grandes.
+- El cuarto tÃ­tulo es â€œLista en menos de 15 minutos.â€.
+- El video queda en el Ãºltimo frame durante 2 segundos antes de reiniciar.
+- La secciÃ³n mÃ³vil ocupa `100svh`, evitando espacios negros vacÃ­os.
+- Se generÃ³ una versiÃ³n desktop y mÃ³vil del intro del logo con nombres simples y bajo peso.
 - La landing fue validada con JavaScript correcto y HTTP 200 local.
 
 ## R2
 
-- Se verificó autenticación de Wrangler con la cuenta `irineomadrid.daring@gmail.com`.
+- Se verificÃ³ autenticaciÃ³n de Wrangler con la cuenta `irineomadrid.daring@gmail.com`.
 - Account ID detectado: `279493ad9c175d0a242f41a62789e83d`.
-- Se intentó consultar y preparar el bucket R2 `daring-media`.
-- Cloudflare respondió error `10042`: R2 está deshabilitado en la cuenta.
-- No se creó el bucket ni se modificó la configuración de R2.
+- Se intentÃ³ consultar y preparar el bucket R2 `daring-media`.
+- Cloudflare respondiÃ³ error `10042`: R2 estÃ¡ deshabilitado en la cuenta.
+- No se creÃ³ el bucket ni se modificÃ³ la configuraciÃ³n de R2.
 - Pendiente: activar R2 desde Cloudflare Dashboard y luego crear/conectar `daring-media`.
 
 ## R2 Activado
 
 - R2 fue habilitado en la cuenta de Cloudflare.
-- Se creó el bucket `daring-media`.
+- Se creÃ³ el bucket `daring-media`.
 - Account ID: `279493ad9c175d0a242f41a62789e83d`.
-- Ubicación reportada por Cloudflare: `ENAM`.
+- UbicaciÃ³n reportada por Cloudflare: `ENAM`.
 - Clase de almacenamiento: `Standard`.
 - Estado inicial: 0 objetos y 0 B.
-- Se agregó el binding `MEDIA` a `wrangler.jsonc`.
+- Se agregÃ³ el binding `MEDIA` a `wrangler.jsonc`.
 - Wrangler local confirma `env.MEDIA (daring-media) R2 Bucket`.
-- El bucket todavía no contiene imágenes ni videos.
+- El bucket todavÃ­a no contiene imÃ¡genes ni videos.
 
-## Gestión De Medios R2
+## GestiÃ³n De Medios R2
 
-- Se creó la migración `migrations/0003_media_content.sql`.
-- `media_assets` ahora guarda ubicación, orden, publicación, título y texto alternativo.
-- Se creó `functions/api/media/_lib.ts` con validación de MIME, tamaño y ubicación.
-- Se creó `GET/POST /api/media` para listar y cargar archivos.
-- Se creó `POST /api/media/publish` para publicar u ocultar recursos.
-- Se creó `GET /api/media/file` para servir únicamente recursos publicados.
-- El panel permite seleccionar ubicación, orden, título, texto alternativo y archivo.
-- Las imágenes se convierten a WebP en el navegador antes de subirlas.
-- Los videos se validan con un límite de 12 MB antes de enviarlos.
-- Los archivos se cargan a R2 como no publicados hasta revisión.
-- El panel muestra una vista previa y estado de publicación.
-- El contrato `tests/media-contract.mjs` valida formatos, límites y claves de objetos.
-- La migración `0003` fue aplicada correctamente en D1 local.
-- Los endpoints de medios sin sesión responden HTTP 401.
+- Se creÃ³ la migraciÃ³n `migrations/0003_media_content.sql`.
+- `media_assets` ahora guarda ubicaciÃ³n, orden, publicaciÃ³n, tÃ­tulo y texto alternativo.
+- Se creÃ³ `functions/api/media/_lib.ts` con validaciÃ³n de MIME, tamaÃ±o y ubicaciÃ³n.
+- Se creÃ³ `GET/POST /api/media` para listar y cargar archivos.
+- Se creÃ³ `POST /api/media/publish` para publicar u ocultar recursos.
+- Se creÃ³ `GET /api/media/file` para servir Ãºnicamente recursos publicados.
+- El panel permite seleccionar ubicaciÃ³n, orden, tÃ­tulo, texto alternativo y archivo.
+- Las imÃ¡genes se convierten a WebP en el navegador antes de subirlas.
+- Los videos se validan con un lÃ­mite de 12 MB antes de enviarlos.
+- Los archivos se cargan a R2 como no publicados hasta revisiÃ³n.
+- El panel muestra una vista previa y estado de publicaciÃ³n.
+- El contrato `tests/media-contract.mjs` valida formatos, lÃ­mites y claves de objetos.
+- La migraciÃ³n `0003` fue aplicada correctamente en D1 local.
+- Los endpoints de medios sin sesiÃ³n responden HTTP 401.
 
-## Gestión De Medios Y Uso Cloudflare
+## GestiÃ³n De Medios Y Uso Cloudflare
 
-- Se agregó `POST /api/media/reorder` para cambiar el orden de los recursos.
-- El panel muestra un campo de orden y botón “Guardar orden” para cada archivo.
-- Se agregó `GET /api/cloudflare/usage` protegido por sesión.
+- Se agregÃ³ `POST /api/media/reorder` para cambiar el orden de los recursos.
+- El panel muestra un campo de orden y botÃ³n â€œGuardar ordenâ€ para cada archivo.
+- Se agregÃ³ `GET /api/cloudflare/usage` protegido por sesiÃ³n.
 - El panel muestra cantidad y peso de objetos en R2.
 - El panel muestra cantidad de eventos almacenados en D1.
-- El panel informa cuando los límites exactos del plan no están disponibles por falta de API configurada.
-- Las imágenes se comprimen en el navegador a WebP antes de subirlas.
-- Los videos se validan con límite de 12 MB; no se agrega un compresor pesado al panel para proteger la velocidad de la web.
+- El panel informa cuando los lÃ­mites exactos del plan no estÃ¡n disponibles por falta de API configurada.
+- Las imÃ¡genes se comprimen en el navegador a WebP antes de subirlas.
+- Los videos se validan con lÃ­mite de 12 MB; no se agrega un compresor pesado al panel para proteger la velocidad de la web.
 - Tests y sintaxis de media, panel y endpoints validados.
 
 ## Cierre De Etapa De Medios
 
-- Los recursos publicados de R2 pueden reemplazar los carruseles públicos de pizza y testimonios.
-- Si no existen recursos publicados, la landing conserva el contenido estático de respaldo.
-- Se agregó orden manual, publicación/ocultamiento y eliminación de recursos.
-- Se agregó consulta de uso de R2 y cantidad de eventos D1 en el panel.
-- El límite definitivo para videos subidos al panel es de 12 MB.
-- La validación de video ocurre en el navegador y en el endpoint del servidor.
-- Se evitó incorporar `ffmpeg.wasm` para no hacer pesado el panel.
+- Los recursos publicados de R2 pueden reemplazar los carruseles pÃºblicos de pizza y testimonios.
+- Si no existen recursos publicados, la landing conserva el contenido estÃ¡tico de respaldo.
+- Se agregÃ³ orden manual, publicaciÃ³n/ocultamiento y eliminaciÃ³n de recursos.
+- Se agregÃ³ consulta de uso de R2 y cantidad de eventos D1 en el panel.
+- El lÃ­mite definitivo para videos subidos al panel es de 12 MB.
+- La validaciÃ³n de video ocurre en el navegador y en el endpoint del servidor.
+- Se evitÃ³ incorporar `ffmpeg.wasm` para no hacer pesado el panel.
 - Commits recientes: `303e0b5`, `6fa8023`.
 
-## Integración Pública De Medios
+## IntegraciÃ³n PÃºblica De Medios
 
-- Se creó `GET /api/media/public?placement=...` para recursos publicados.
-- La landing puede reemplazar dinámicamente los carruseles de pizza y testimonios con recursos publicados en R2.
-- Si no hay recursos publicados, se mantiene el contenido estático actual como respaldo.
-- Se agregó eliminación de archivos desde `DELETE /api/media?id=...`.
-- Se agregó edición de metadatos y publicación mediante `PATCH /api/media`.
-- Se agregó `POST /api/media/reorder` para ordenar los recursos.
+- Se creÃ³ `GET /api/media/public?placement=...` para recursos publicados.
+- La landing puede reemplazar dinÃ¡micamente los carruseles de pizza y testimonios con recursos publicados en R2.
+- Si no hay recursos publicados, se mantiene el contenido estÃ¡tico actual como respaldo.
+- Se agregÃ³ eliminaciÃ³n de archivos desde `DELETE /api/media?id=...`.
+- Se agregÃ³ ediciÃ³n de metadatos y publicaciÃ³n mediante `PATCH /api/media`.
+- Se agregÃ³ `POST /api/media/reorder` para ordenar los recursos.
 - El panel ahora permite guardar orden y eliminar recursos.
-- Los datos dinámicos se escapan antes de insertarse en la landing.
-- El endpoint público solo entrega archivos con `published = 1`.
+- Los datos dinÃ¡micos se escapan antes de insertarse en la landing.
+- El endpoint pÃºblico solo entrega archivos con `published = 1`.
 
 ## Panel Admin - Etapa 2 (stock real + imagenes del CMS)
 
@@ -418,7 +424,7 @@
 
 ## Etapa 2 - Ajustes finales (29-ago-2026, tercera pasada)
 
-- Slots de imagenes simplificados: se eliminaron hero.animacion, cierre.logo, diseno.imagen, oferta.imagen y los 11 slots fijos de carruseles (platos.slide_1-5, voces.video_1-6). Queda solo historia.foto (foto del dueño). La animacion del hero no se modifica desde el panel (solo por codigo).
+- Slots de imagenes simplificados: se eliminaron hero.animacion, cierre.logo, diseno.imagen, oferta.imagen y los 11 slots fijos de carruseles (platos.slide_1-5, voces.video_1-6). Queda solo historia.foto (foto del dueÃ±o). La animacion del hero no se modifica desde el panel (solo por codigo).
 - Los carruseles (platos y testimonios) se gestionan directo por placement de media_assets: la pestana Imagenes muestra el carrusel con botones Agregar (sube + publica en un paso), flechas para reordenar (intercambia sort_order) y Eliminar. Si no hay archivos publicados, la landing muestra las imagenes originales.
 - Tabla nueva product_colors (migracion 0008): stock por color (rojo 100, negro 100 sembrados). create-preference chequea y reserva el stock del color elegido; el webhook aplica las transiciones (aprobado/rechazado/cancelado/reembolsado) por color usando el campo color de la orden.
 - /api/stock devuelve colores + totales + movimientos; PATCH ajusta el stock_total de un color con motivo y audit_log. Bug corregido: el SELECT pedia columna updated_at que no existia en product_colors (1101).
