@@ -480,3 +480,9 @@
 - robots.txt verificado limpio tras desactivar el robots.txt administrado de Cloudflare desde el dashboard (AI Audit): 0 bloqueos, todas las IAs permitidas (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, etc.).
 - Importante para el usuario: el siguiente paso de posicionamiento es EXTERNO al codigo: Google Business Profile, Search Console con el sitemap, redes y resenas. Eso es lo que las IAs citan ademas de la web.
 - Nota tecnica: la landing tiene BOM UTF-8 (de PowerShell); los scripts de Node lo manejan bien. Con BOM, PowerShell 5.1 Get-Content lee UTF-8 correctamente (por eso el ultimo edit con PS no corrompio).
+
+## Google Search Console (29-ago-2026)
+
+- Meta de verificacion cargada en el head de la landing (lY8rV0VQ9D_ok7fijqZa0zdVAUu7mgjTPgeTXXrF25w) + archivo google4a7ae9e6139d186e.html en la raiz con contenido exacto.
+- Problema conocido: Cloudflare Pages hace redirect 308 quitando el .html de la URL y Google NO sigue redirects al verificar. Fix: regla en _redirects (/google4a7ae9e6139d186e.html -> 200) + funcion de Pages functions/google4a7ae9e6139d186e.html.ts que sirve el contenido plano. Verificado 200 + contenido exacto.
+- El usuario debe verificar en GSC usando el metodo Etiqueta HTML o Archivo HTML (NO el de Google Analytics, que no esta configurado). Luego: Sitemaps -> enviar sitemap.xml.
