@@ -460,3 +460,15 @@
 - Importante: los intentos de reemplazo con PowerShell corrompieron el encoding de admin.js (misma falla que la landing). Reparacion universal con script Node (mapeo cp1252 inverso -> bytes -> UTF-8). Leccion reforzada: NO usar Get-Content/Set-Content de PowerShell 5.1 sobre archivos UTF-8 sin BOM; usar Node o -Encoding UTF8 en ambos lados.
 
 - Incidente: el panel Todos los archivos seguia apareciendo porque el deploy anterior solo copio admin.js al staging y el index.html quedo viejo. Regla definitiva: para deployar, SIEMPRE robocopy completo del proyecto a la carpeta staging (excluyendo .git/.wrangler/cloudflare-dist/node_modules/.dev.vars/videos pesados) y deployar esa carpeta; nunca confiar en copias sueltas de archivos individuales.
+
+## SEO y posicionamiento en IAs (GEO) (29-ago-2026)
+
+- Head de la landing: title optimizado (Daring: sarten 28 cm para pizza sin horno | Uruguay), meta description comercial, canonical, robots index/follow, Open Graph completo, Twitter card, theme-color.
+- JSON-LD con @graph: Organization (fundador Irineo), WebSite, Product (nombre, marca, descripcion, imagen, Offer con precio 1590 UYU, disponibilidad InStock, shippingDetails con plazos, MerchantReturnPolicy 7 dias) y FAQPage con las 5 preguntas.
+- Script del CMS actualiza el JSON-LD en tiempo real: precio (price_cents), disponibilidad (stock disponible -> InStock/OutOfStock) y las preguntas del FAQ dinamico.
+- Archivos nuevos en la raiz: robots.txt (permite explicitamente GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended, etc. y bloquea /admin), sitemap.xml y llms.txt (resumen de la marca/producto/preguntas para crawlers de IA).
+- Panel y login con noindex, nofollow.
+- PROBLEMA PENDIENTE DEL LADO DE CLOUDFLARE: la cuenta tiene activado AI Audit (Cloudflare) que INYECTA en robots.txt un bloque administrado que BLOQUEA GPTBot, ClaudeBot, Google-Extended, meta-externalagent, Bytespider, CCBot, Amazonbot y Applebot-Extended (ai-train=no). Contradice el objetivo de aparecer en IAs. El token de wrangler no tiene permiso para la API de AI Audit (403 en /zones/{id}/ai-audit/robots-txt). Solucion: desactivar el robots.txt administrado o permitir esos bots desde el dashboard: dash.cloudflare.com -> daring.com.uy -> AI Audit -> desactivar Managed robots.txt (o cambiar los bots a Allow).
+- PerplexityBot y OAI-SearchBot (busqueda de ChatGPT) NO estan bloqueados por el bloque administrado: esas vias ya funcionan.
+- Verificado en produccion: title/canonical/OG/Twitter servidos, JSON-LD completo (Organization, WebSite, Product con precio 1590 UYU, FAQPage con 5 preguntas), robots.txt, sitemap.xml (200) y llms.txt (200).
+- Pendiente externo (fuera del codigo): crear Google Business Profile / Search Console y enviar sitemap; perfiles en redes citables; reseñas en Google. Eso es lo que mas pesa para que las IAs mencionen a Daring en consultas tipo 'donde compro una sarten para pizza sin horno en Uruguay'.
