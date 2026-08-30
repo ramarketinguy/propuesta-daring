@@ -472,3 +472,11 @@
 - PerplexityBot y OAI-SearchBot (busqueda de ChatGPT) NO estan bloqueados por el bloque administrado: esas vias ya funcionan.
 - Verificado en produccion: title/canonical/OG/Twitter servidos, JSON-LD completo (Organization, WebSite, Product con precio 1590 UYU, FAQPage con 5 preguntas), robots.txt, sitemap.xml (200) y llms.txt (200).
 - Pendiente externo (fuera del codigo): crear Google Business Profile / Search Console y enviar sitemap; perfiles en redes citables; reseñas en Google. Eso es lo que mas pesa para que las IAs mencionen a Daring en consultas tipo 'donde compro una sarten para pizza sin horno en Uruguay'.
+
+## Posicionamiento sarten antiadherente (29-ago-2026)
+
+- Objetivo del usuario: posicionar a Daring para la busqueda sarten antiadherente (SEO + IA).
+- Aplicado en: title (Daring: sarten antiadherente 28 cm | Pizza sin horno), meta description, og/twitter title, JSON-LD Product name + keywords (sarten antiadherente, sarten antiadherente 28 cm, sarten con tapa de vidrio, pizza sin horno, Uruguay), nueva pregunta frecuente en DB y schema (Daring es una sarten antiadherente premium...), llms.txt reescrito con enfoque antiadherente.
+- robots.txt verificado limpio tras desactivar el robots.txt administrado de Cloudflare desde el dashboard (AI Audit): 0 bloqueos, todas las IAs permitidas (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, etc.).
+- Importante para el usuario: el siguiente paso de posicionamiento es EXTERNO al codigo: Google Business Profile, Search Console con el sitemap, redes y resenas. Eso es lo que las IAs citan ademas de la web.
+- Nota tecnica: la landing tiene BOM UTF-8 (de PowerShell); los scripts de Node lo manejan bien. Con BOM, PowerShell 5.1 Get-Content lee UTF-8 correctamente (por eso el ultimo edit con PS no corrompio).
