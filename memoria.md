@@ -527,3 +527,9 @@
 - El PDF del recetario ya no va adjunto al mail: la tarjeta muestra el boton Descargar recetario (mismo mecanismo que el video: /api/descargas/recetario?orden=UUID, habilitado solo con pago aprobado). El mail queda liviano y evita filtros de spam por adjuntos.
 - enviarEmailComprador sin logicas de adjunto; PDF_KEY eliminado; el PDF sigue en R2 entregables/recetario-pizza-daring.pdf servido por el endpoint de descargas.
 - Probado con mail real a ramarketing.uy@gmail.com (Resend id 7c26a567). Desplegado.
+
+## Telegram activado (31-ago-2026)
+
+- Bot Daring Avisos (@DaringAvisosBot) creado por Irineo. Token + chat id (5754401318) cargados en settings via API, telegram_enabled=true. Mensaje de prueba enviado y recibido OK.
+- El aviso de Telegram se envia en mp-sync al aprobarse una venta (cliente, correo, color, total, pago, orden), junto con los mails. Si Telegram falla, el resto sigue funcionando.
+- Configurable desde Configuracion -> Telegram (token, chat id, activar/desactivar).
