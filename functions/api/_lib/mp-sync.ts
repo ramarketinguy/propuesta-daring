@@ -134,6 +134,23 @@ export async function getSetting(env: Env, key: string): Promise<string | null> 
   }
 }
 
+async function enviarTelegram(env: Env, texto: string): Promise<void> {
+  try {
+    const enabled = (await getSetting(env, 'telegram_enabled')) ?? 'false';
+    if (enabled !== 'true') return;
+    const token = await getSetting(env, 'telegram_bot_token');
+    const chatId = await getSetting(env, 'telegram_chat_id');
+    if (!token || !chatId) return;
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: texto })
+    });
+  } catch {
+    return;
+  }
+}
+
 function reemplazarTokens(html: string, tokens: Record<string, string>): string {
   return html.replace(/\{\{(\w+)\}\}/g, (match, key: string) => tokens[key] ?? match);
 }
@@ -345,6 +362,7 @@ export async function sincronizarPago(env: Env, origin: string, paymentId: strin
           await registrarEmail(env, order.id, 'resend-buyer', buyerResult);
           const ownerResult = await enviarEmailDueno(env, order, paymentId, buyerResult.ok);
           if (ownerResult) await registrarEmail(env, order.id, 'resend-owner', ownerResult);
+          await enviarTelegram(env, `Nueva venta aprobada en daring.com.uy\n\nCliente: ${order.customer_name}\nCorreo: ${order.customer_email}\nColor: ${order.color}\nTotal: $ ${(order.amount_cents / 100).toLocaleString('es-UY')}\nPago Mercado Pago: ${paymentId}\nOrden: ${order.id}`);
         }
       }
     }

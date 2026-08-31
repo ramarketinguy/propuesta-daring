@@ -135,6 +135,12 @@
             <label>Cuerpo del mail al dueño (HTML)<textarea name="owner_email_html" rows="8" style="font-family:monospace;font-size:12px" placeholder="Vacío = plantilla original. Tokens: {{cliente}} {{mail}} {{telefono}} {{departamento}} {{localidad}} {{direccion}} {{color}} {{total}} {{orden}} {{pago}} {{estado_mail}}"></textarea></label>
             <p style="margin:0;color:var(--muted);font-size:11px">Si dejás el cuerpo vacío se usa la plantilla original de la marca. Los tokens {{...}} se reemplazan con los datos de cada venta. Cuidado al editar el HTML: es el contenido real del mail.</p>
           </fieldset>
+          <fieldset class="settings-group"><legend>Telegram (avisos de venta)</legend>
+            <label style="grid-column:1/-1">Token del bot (te lo da @BotFather al crear el bot)<input type="text" maxlength="200" name="telegram_bot_token" placeholder="Ej: 123456789:AAE..."></label>
+            <label>Chat ID (te lo paso yo después de que le escribas al bot)<input type="text" maxlength="40" name="telegram_chat_id" placeholder="Ej: 123456789"></label>
+            <label class="settings-toggle" style="grid-column:1/-1"><input type="checkbox" name="telegram_enabled">Activar avisos de venta por Telegram</label>
+            <p style="grid-column:1/-1;margin:0;color:var(--muted);font-size:11px">Con esto activado, cada venta aprobada llega como mensaje al chat que indiques, además del mail.</p>
+          </fieldset>
           <div class="form-actions">
             <button type="submit" class="button-primary" id="settings-save">Guardar cambios</button>
             <span id="settings-status" class="form-status" role="status" aria-live="polite"></span>
