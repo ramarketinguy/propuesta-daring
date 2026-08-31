@@ -186,7 +186,11 @@ function renderOrderDetail(order, timeline, emails) {
   container.innerHTML = `
     <header class="venta-detail-header">
       <h2>Venta <code>${escapeHTML(order.id)}</code></h2>
-      <button class="button-secondary" type="button" data-action="cerrar-detalle">Cerrar</button>
+      <div class="venta-header-actions">
+        ${order.payment_id ? '<button class="button-secondary" type="button" data-action="verificar-mp">Verificar pago en Mercado Pago</button>' : ''}
+        ${order.status === 'approved' ? '<button class="button-secondary" type="button" data-action="reembolsar">Devolver pago</button>' : ''}
+        <button class="button-secondary" type="button" data-action="cerrar-detalle">Cerrar</button>
+      </div>
     </header>
     <div class="venta-detail-body">
       <section>
@@ -248,6 +252,32 @@ function renderOrderDetail(order, timeline, emails) {
   container.querySelector('[data-action="cerrar-detalle"]').addEventListener('click', () => {
     container.classList.add('hidden');
     container.innerHTML = '';
+  });
+  const verificarBtn = container.querySelector('[data-action="verificar-mp"]');
+  if (verificarBtn) verificarBtn.addEventListener('click', async () => {
+    verificarBtn.disabled = true;
+    verificarBtn.textContent = 'Consultando Mercado Pago...';
+    const response = await api(`/api/orders/${order.id}/refresh`, { method: 'POST' });
+    const result = await response.json().catch(() => ({}));
+    verificarBtn.disabled = false;
+    verificarBtn.textContent = 'Verificar pago en Mercado Pago';
+    if (!response.ok) { toast(result.error ?? 'No se pudo consultar Mercado Pago.', 'error'); return; }
+    if (result.changed) { toast(`Pago actualizado: ${statusLabel(result.current)}`, 'success'); await loadVentas(); await openOrderDetail(order.id); }
+    else { toast(`Mercado Pago confirma: ${statusLabel(result.current)} (sin cambios)`, 'success'); }
+  });
+  const reembolsarBtn = container.querySelector('[data-action="reembolsar"]');
+  if (reembolsarBtn) reembolsarBtn.addEventListener('click', async () => {
+    if (!window.confirm('¿Devolver el pago completo a la clienta por Mercado Pago? La venta pasará a "Reembolsada" y la unidad volverá al stock.')) return;
+    reembolsarBtn.disabled = true;
+    reembolsarBtn.textContent = 'Procesando devolución...';
+    const response = await api(`/api/orders/${order.id}/refund`, { method: 'POST' });
+    const result = await response.json().catch(() => ({}));
+    reembolsarBtn.disabled = false;
+    reembolsarBtn.textContent = 'Devolver pago';
+    if (!response.ok) { toast(result.error ?? 'No se pudo procesar la devolución.', 'error'); return; }
+    toast('Pago devuelto por Mercado Pago. La unidad volvió al stock.', 'success');
+    await loadVentas();
+    await openOrderDetail(order.id);
   });
   const form = container.querySelector('form[data-action="update-order"]');
   form.addEventListener('submit', async (event) => {
