@@ -75,27 +75,64 @@ function escapeHTML(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: boolean): string {
+export function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: boolean): string {
   const nombre = escapeHTML(order.customer_name.split(' ')[0]);
   const videoLink = `${origin}/api/descargas/video-armado?orden=${order.id}`;
   const videoBlock = hasVideo
-    ? `<p style="margin:0 0 10px">También grabamos un <strong>video paso a paso</strong> para el primer uso de tu sartén. Lo descargás desde acá (queda habilitado con tu número de compra):</p>
-       <p style="margin:0 0 10px"><a href="${videoLink}" style="display:inline-block;background:#c8102e;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:999px;font-weight:bold">Descargar video de armado</a></p>
-       <p style="margin:0 0 24px;font-size:12px;color:#8a6d70">Si el botón no funciona, copiá este enlace: ${videoLink}</p>`
+    ? `<tr>
+         <td style="padding:14px 18px;background:#241418;border:1px solid rgba(229,138,149,.35);border-radius:12px">
+           <p style="margin:0 0 6px;font-size:14px;font-weight:bold;color:#f6eced">Video de armado paso a paso</p>
+           <p style="margin:0 0 12px;font-size:12px;color:#b3a3a7;line-height:1.5">Mirá cómo armar y usar tu sartén por primera vez. Queda habilitado con tu número de compra.</p>
+           <a href="${videoLink}" style="display:inline-block;background:#c8102e;color:#ffffff;text-decoration:none;padding:10px 24px;border-radius:999px;font-weight:bold;font-size:13px">Descargar video</a>
+         </td>
+       </tr>`
     : '';
   return `<!doctype html>
-<html lang="es"><body style="margin:0;padding:24px;background:#f7f2f0;font-family:Arial,Helvetica,sans-serif;color:#2b1a1d">
-<div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #f0dcd9;border-radius:16px;padding:32px">
-<p style="margin:0 0 16px;font-size:13px;letter-spacing:2px;color:#c8102e;font-weight:bold">DARING</p>
-<h1 style="font-size:22px;margin:0 0 12px">¡Gracias por tu compra, ${nombre}!</h1>
-<p style="margin:0 0 16px;font-size:15px;line-height:1.5">Tu Sartén Daring color <strong>${escapeHTML(order.color)}</strong> quedó confirmada y ya está en camino: despachamos en 24 horas y la entrega es en 24 a 72 horas según tu zona.</p>
-<p style="margin:0 0 10px;font-size:15px;line-height:1.5">Como prometimos, adjuntamos el <strong>Recetario de la Pizza Daring</strong> en PDF para que estrenes la sartén como se debe.</p>
-${videoBlock}
-<p style="margin:0 0 6px;font-size:14px">Cualquier duda o consulta, escribinos por WhatsApp y te respondemos al toque.</p>
-<p style="margin:0;font-size:14px">¡Buenas pizzas!</p>
-<hr style="border:none;border-top:1px solid #f0dcd9;margin:24px 0">
-<p style="margin:0;font-size:11px;color:#8a6d70">Compra ${order.id}. Daring — Una sartén para cocinarlo todo.</p>
-</div></body></html>`;
+<html lang="es"><body style="margin:0;padding:24px;background:#0d080a">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#1c0f13;border:1px solid rgba(229,138,149,.35);border-radius:16px">
+  <tr><td style="padding:28px 28px 8px">
+    <p style="margin:0;font-size:13px;font-weight:bold;letter-spacing:6px;color:#e58a95">D A R I N G</p>
+  </td></tr>
+  <tr><td style="padding:0 28px">
+    <h1 style="margin:0 0 6px;font-size:22px;color:#f6eced;font-weight:bold">¡Gracias por tu compra, ${nombre}!</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#b3a3a7">Sartén Daring 28 cm · Color: <strong style="color:#f6eced">${escapeHTML(order.color)}</strong> · <strong style="color:#f6eced">$ ${(order.amount_cents / 100).toLocaleString('es-UY')}</strong></p>
+  </td></tr>
+  <tr><td style="padding:0 18px 12px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:14px 18px;background:#241418;border:1px solid rgba(229,138,149,.35);border-radius:12px">
+          <p style="margin:0 0 6px;font-size:14px;font-weight:bold;color:#f6eced">Tu recetario de la Pizza Daring</p>
+          <p style="margin:0;font-size:12px;color:#b3a3a7;line-height:1.5">Va adjunto en este correo en PDF, con la receta completa y los consejos de uso paso a paso.</p>
+        </td>
+      </tr>
+      <tr><td style="height:10px;font-size:0">&nbsp;</td></tr>
+      ${videoBlock}
+    </table>
+  </td></tr>
+  <tr><td style="padding:6px 18px 12px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(229,138,149,.12);border-left:3px solid #e58a95;border-radius:12px">
+      <tr><td style="padding:16px 18px">
+        <p style="margin:0 0 10px;font-size:15px;font-weight:bold;color:#e58a95">Cuidados de tu sartén</p>
+        <p style="margin:0 0 8px;font-size:13px;color:#f6eced;line-height:1.5"><strong>• Limpieza:</strong> dejala enfriar antes de lavar. Lavala a mano con agua tibia, detergente suave y esponja suave.</p>
+        <p style="margin:0 0 8px;font-size:13px;color:#f6eced;line-height:1.5"><strong>• Nunca uses:</strong> virulanas, productos abrasivos ni utensilios metálicos.</p>
+        <p style="margin:0 0 8px;font-size:13px;color:#f6eced;line-height:1.5"><strong>• Al cocinar:</strong> fuego medio y utensilios de silicona, madera o nylon. Con el antiadherente alcanzó con muy poco aceite.</p>
+        <p style="margin:0 0 8px;font-size:13px;color:#f6eced;line-height:1.5"><strong>• Al guardarla:</strong> si apilás ollas encima, poné un paño o separador para que no se raye.</p>
+        <p style="margin:0;font-size:13px;color:#f6eced;line-height:1.5"><strong>• Compatibilidad:</strong> gas, eléctricas, anafe y garrafa. No es apta para inducción ni fuego abierto.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:4px 28px 8px">
+    <p style="margin:0;font-size:12px;color:#b3a3a7;line-height:1.5">Despacho en 24 horas · Entrega en 24 a 72 horas por Mercado Envíos · Envío incluido en el precio</p>
+  </td></tr>
+  <tr><td style="padding:0 28px 24px">
+    <hr style="border:none;border-top:1px solid rgba(229,138,149,.25);margin:0 0 12px">
+    <p style="margin:0 0 6px;font-size:13px;color:#f6eced">¿Dudas? Escribinos por WhatsApp y te respondemos al toque.</p>
+    <p style="margin:0;font-size:11px;color:#7a6e72">Compra ${order.id}</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
 }
 
 function buildOwnerEmailHTML(order: OrderRow, paymentId: string, buyerEmailOk: boolean): string {
