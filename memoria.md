@@ -501,3 +501,5 @@
 - Endpoints nuevos: POST /api/orders/{id}/refresh (verifica el estado real del pago en MP y sincroniza) y POST /api/orders/{id}/refund (reembolso completo, solo ventas aprobadas, audit_log).
 - Botones en el detalle de venta: Verificar pago en Mercado Pago (si tiene payment_id) y Devolver pago (solo ventas aprobadas, con confirmacion).
 - Refresh probado con la venta real: previous=approved, current=approved, changed=false. Reembolso sin probar con plata real (se probara en la primera devolucion genuina).
+
+- Cambio de estado de envio directo desde la tabla de Ventas (select inline en la columna Envio, guarda con PATCH al cambiar, sin abrir el detalle). Verificado 200.
