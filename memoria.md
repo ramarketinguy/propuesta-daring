@@ -486,3 +486,10 @@
 - Meta de verificacion cargada en el head de la landing (lY8rV0VQ9D_ok7fijqZa0zdVAUu7mgjTPgeTXXrF25w) + archivo google4a7ae9e6139d186e.html en la raiz con contenido exacto.
 - Problema conocido: Cloudflare Pages hace redirect 308 quitando el .html de la URL y Google NO sigue redirects al verificar. Fix: regla en _redirects (/google4a7ae9e6139d186e.html -> 200) + funcion de Pages functions/google4a7ae9e6139d186e.html.ts que sirve el contenido plano. Verificado 200 + contenido exacto.
 - El usuario debe verificar en GSC usando el metodo Etiqueta HTML o Archivo HTML (NO el de Google Analytics, que no esta configurado). Luego: Sitemaps -> enviar sitemap.xml.
+
+## Reparacion de encoding del panel (29-ago-2026, segunda pasada)
+
+- El sidebar del panel mostraba ConfiguraciA3n / AuditorA-a: el script que agrego el noindex de Google (PowerShell Set-Content) corrompio admin/index.html, admin/login/index.html y admin/admin.css (79, 8 y 2 secuencias dañadas).
+- Reparacion con script Node universal (repair-universal.mjs en temp): mapeo inverso cp1252 -> bytes -> decodificar UTF-8, descarta BOM, no guarda si algo queda sin reparar. Verificado en produccion: Configuracion/Auditoria/Envio correctos, 0 mojibake, noindex intacto.
+- Estado verificado sin texto danado: landing (0), admin/index (0), admin/login (0), admin.css (0), admin.js (0, reparado antes), llms.txt (0).
+- Script reutilizable: repair-universal.mjs toma cualquier archivo como argumento y solo guarda si la reparacion es completa.
