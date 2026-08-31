@@ -533,3 +533,8 @@
 - Bot Daring Avisos (@DaringAvisosBot) creado por Irineo. Token + chat id (5754401318) cargados en settings via API, telegram_enabled=true. Mensaje de prueba enviado y recibido OK.
 - El aviso de Telegram se envia en mp-sync al aprobarse una venta (cliente, correo, color, total, pago, orden), junto con los mails. Si Telegram falla, el resto sigue funcionando.
 - Configurable desde Configuracion -> Telegram (token, chat id, activar/desactivar).
+
+## Panel simplificado (01-sep-2026)
+
+- Se elimino el editor de plantillas de mail de Configuracion (decision del usuario: riesgo de que el cliente rompa algo). Las plantillas del codigo siguen siendo la fuente, con fallback incorporado.
+- Telegram en Configuracion quedo solo como interruptor activar/desactivar (telegram_enabled). El token y el chat id siguen guardados en settings pero ya no se muestran en el panel. El aviso por Telegram sigue funcionando igual.
