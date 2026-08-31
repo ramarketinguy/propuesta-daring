@@ -538,3 +538,11 @@
 
 - Se elimino el editor de plantillas de mail de Configuracion (decision del usuario: riesgo de que el cliente rompa algo). Las plantillas del codigo siguen siendo la fuente, con fallback incorporado.
 - Telegram en Configuracion quedo solo como interruptor activar/desactivar (telegram_enabled). El token y el chat id siguen guardados en settings pero ya no se muestran en el panel. El aviso por Telegram sigue funcionando igual.
+
+## Comision de Mercado Pago e ingresos netos (01-sep-2026)
+
+- Migracion 0010_mp_fee.sql: columna mp_fee_cents en orders.
+- sincronizarPago extrae fee_details (tipo fee) del pago de MP y guarda mp_fee_cents en cada sincronizacion (webhook o boton Verificar pago). Refrescando una venta vieja se completa el dato.
+- /api/orders devuelve revenue_cents (bruto), fees_cents y net_cents (bruto - comision) sobre ventas aprobadas. KPI Ingresos ahora es Ingresos netos con la comision visible en el subtitulo, en Resumen y Ventas. Detalle de venta muestra Comision y Neto recibido. CSV con comision_mp_cents y neto_cents.
+- Resultado real verificado con la venta de Magdalena (DR-000001, RedPagos/tarjeta): mp_fee_cents = 0 -> neto .590. MP no desconto comision en este pago segun su API.
+- Aclaracion honesta: si MP factura comisiones en el resumen mensual en vez de por pago, eso no figura en el objeto del pago; el sistema refleja lo que MP reporta por pago.
