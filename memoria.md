@@ -493,3 +493,11 @@
 - Reparacion con script Node universal (repair-universal.mjs en temp): mapeo inverso cp1252 -> bytes -> decodificar UTF-8, descarta BOM, no guarda si algo queda sin reparar. Verificado en produccion: Configuracion/Auditoria/Envio correctos, 0 mojibake, noindex intacto.
 - Estado verificado sin texto danado: landing (0), admin/index (0), admin/login (0), admin.css (0), admin.js (0, reparado antes), llms.txt (0).
 - Script reutilizable: repair-universal.mjs toma cualquier archivo como argumento y solo guarda si la reparacion es completa.
+
+## Acciones de Mercado Pago desde el panel (31-ago-2026)
+
+- Primera venta real aprobada de punta a punta: Magdalena Bornia, rojo, .590 pagado por RedPagos (efectivo). RedPagos acredita con demora (~40 min: 12:50 pendiente -> 13:32 aprobado), el webhook funciono en ambas etapas, stock convertido, mails enviados (revisar spam del dueño si no aparecen).
+- Libreria compartida functions/api/_lib/mp-sync.ts: sincronizarPago (consulta el pago a MP, aplica transicion de estado, movimientos de stock, eventos y mails) y reembolsarPago (reembolso completo por MP + venta a refunded + stock de vuelta + audit). El webhook quedo liviano usando la libreria.
+- Endpoints nuevos: POST /api/orders/{id}/refresh (verifica el estado real del pago en MP y sincroniza) y POST /api/orders/{id}/refund (reembolso completo, solo ventas aprobadas, audit_log).
+- Botones en el detalle de venta: Verificar pago en Mercado Pago (si tiene payment_id) y Devolver pago (solo ventas aprobadas, con confirmacion).
+- Refresh probado con la venta real: previous=approved, current=approved, changed=false. Reembolso sin probar con plata real (se probara en la primera devolucion genuina).
