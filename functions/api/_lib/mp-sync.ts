@@ -84,8 +84,7 @@ export function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: b
   const videoBlock = hasVideo
     ? `<tr>
          <td style="padding:14px 18px;background:#241418;border:1px solid rgba(229,138,149,.35);border-radius:12px">
-           <p style="margin:0 0 6px;font-size:14px;font-weight:bold;color:#f6eced">Video de armado paso a paso</p>
-           <p style="margin:0 0 12px;font-size:12px;color:#b3a3a7;line-height:1.5">Mirá cómo armar y usar tu sartén por primera vez. Queda habilitado con tu número de compra.</p>
+           <p style="margin:0 0 12px;font-size:14px;font-weight:bold;color:#f6eced">Video de armado paso a paso</p>
            <a href="${videoLink}" style="display:inline-block;background:#c8102e;color:#ffffff;text-decoration:none;padding:10px 24px;border-radius:999px;font-weight:bold;font-size:13px">Descargar video</a>
          </td>
        </tr>`
@@ -105,8 +104,7 @@ export function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: b
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td style="padding:14px 18px;background:#241418;border:1px solid rgba(229,138,149,.35);border-radius:12px">
-          <p style="margin:0 0 6px;font-size:14px;font-weight:bold;color:#f6eced">Tu recetario de la Pizza Daring</p>
-          <p style="margin:0 0 12px;font-size:12px;color:#b3a3a7;line-height:1.5">Descargá la receta completa y los consejos de uso paso a paso. Queda habilitado con tu número de compra.</p>
+          <p style="margin:0 0 12px;font-size:14px;font-weight:bold;color:#f6eced">Tu recetario de la Pizza Daring</p>
           <a href="${recetarioLink}" style="display:inline-block;background:#c8102e;color:#ffffff;text-decoration:none;padding:10px 24px;border-radius:999px;font-weight:bold;font-size:13px">Descargar recetario</a>
         </td>
       </tr>
