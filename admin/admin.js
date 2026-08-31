@@ -75,7 +75,8 @@ async function loadResumen() {
   document.querySelector('#kpi-checkout-opens').textContent = number(summary.checkout_opens);
   document.querySelector('#kpi-checkout-submits').textContent = number(summary.checkout_submits);
   document.querySelector('#kpi-resumen-completed').textContent = number(ventas.counts.completed);
-  document.querySelector('#kpi-resumen-revenue').textContent = money(ventas.revenue_cents);
+  document.querySelector('#kpi-resumen-revenue').textContent = money(ventas.net_cents);
+  document.querySelector('#kpi-resumen-fee').textContent = 'Comisión Mercado Pago: ' + money(ventas.fees_cents);
   document.querySelector('#kpi-resumen-initiated').textContent = number(ventas.counts.initiated);
   document.querySelector('#kpi-resumen-rejected').textContent = number(ventas.counts.rejected);
   renderAlerts(alerts.alerts || []);
@@ -117,7 +118,8 @@ async function loadVentas() {
   document.querySelector('#kpi-initiated').textContent = number(result.counts.initiated);
   document.querySelector('#kpi-completed').textContent = number(result.counts.completed);
   document.querySelector('#kpi-rejected').textContent = number(result.counts.rejected);
-  document.querySelector('#kpi-revenue').textContent = money(result.revenue_cents);
+  document.querySelector('#kpi-revenue').textContent = money(result.net_cents);
+  document.querySelector('#kpi-revenue-fee').textContent = 'Comisión Mercado Pago: ' + money(result.fees_cents);
   hint.textContent = `${number(result.total)} resultados en total`;
   if (!result.orders.length) {
     const empty = document.createElement('tr');
@@ -223,6 +225,8 @@ function renderOrderDetail(order, timeline, emails) {
           <dt>Color</dt><dd>${escapeHTML(order.color)}</dd>
           <dt>Cantidad</dt><dd>${escapeHTML(order.quantity)}</dd>
           <dt>Total</dt><dd>${money(order.amount_cents)}</dd>
+          <dt>Comisión Mercado Pago</dt><dd>${money(order.mp_fee_cents ?? 0)}</dd>
+          <dt>Neto recibido</dt><dd>${money((order.amount_cents ?? 0) - (order.mp_fee_cents ?? 0))}</dd>
           <dt>Estado de pago</dt><dd><span class="status-pill s-${escapeHTML(order.status)}">${statusLabel(order.status)}</span></dd>
           <dt>Pago Mercado Pago</dt><dd>${escapeHTML(order.payment_id ?? '—')}</dd>
         </dl>
@@ -321,7 +325,7 @@ function renderOrderDetail(order, timeline, emails) {
 function exportVentasCSV() {
   if (!state.ventas.data?.orders?.length) { toast('No hay datos para exportar.', 'error'); return; }
   const rows = state.ventas.data.orders;
-  const headers = ['id', 'fecha', 'cliente', 'email', 'telefono', 'departamento', 'localidad', 'direccion', 'color', 'monto_cents', 'estado_pago', 'estado_envio'];
+  const headers = ['id', 'codigo', 'fecha', 'cliente', 'email', 'telefono', 'departamento', 'localidad', 'direccion', 'color', 'monto_cents', 'comision_mp_cents', 'neto_cents', 'estado_pago', 'estado_envio'];
   const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
   const lines = [headers.join(',')];
   rows.forEach((order) => {
@@ -336,6 +340,8 @@ function exportVentasCSV() {
       order.shipping_address ?? '',
       order.color,
       order.amount_cents,
+      order.mp_fee_cents ?? 0,
+      (order.amount_cents ?? 0) - (order.mp_fee_cents ?? 0),
       order.status,
       order.shipping_status ?? ''
     ].map(escape).join(','));

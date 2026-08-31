@@ -72,7 +72,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     else if (row.status === 'refunded') buckets.refunded += row.total;
     buckets.total += row.total;
   }
-  const revenue = await env.DB.prepare('SELECT COALESCE(SUM(amount_cents), 0) AS revenue FROM orders WHERE status = ?').bind('approved').first<{ revenue: number }>();
+  const revenue = await env.DB.prepare('SELECT COALESCE(SUM(amount_cents), 0) AS gross, COALESCE(SUM(COALESCE(mp_fee_cents, 0)), 0) AS fees FROM orders WHERE status = ?').bind('approved').first<{ gross: number; fees: number }>();
+  const grossCents = Number(revenue?.gross ?? 0);
+  const feesCents = Number(revenue?.fees ?? 0);
 
   return json({
     orders: orders.results,
@@ -80,6 +82,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     limit,
     total: total?.total ?? 0,
     counts: { initiated: buckets.initiated, completed: buckets.completed, rejected: buckets.rejected, pending: buckets.pending, cancelled: buckets.cancelled, refunded: buckets.refunded },
-    revenue_cents: Number(revenue?.revenue ?? 0)
+    revenue_cents: grossCents,
+    fees_cents: feesCents,
+    net_cents: grossCents - feesCents
   });
 };

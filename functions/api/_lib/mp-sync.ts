@@ -343,14 +343,18 @@ export async function sincronizarPago(env: Env, origin: string, paymentId: strin
 
   let status = '';
   let reference = '';
+  let feeCents = 0;
   try {
     const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!response.ok) return { ok: false, previous: '', current: '', changed: false, orderId: '', error: `Mercado Pago respondió HTTP ${response.status}` };
-    const payment = await response.json() as { status?: string; external_reference?: string };
+    const payment = await response.json() as { status?: string; external_reference?: string; fee_details?: Array<{ type?: string; amount?: number }> };
     status = STATUS_MAP[payment.status ?? ''] ?? 'pending';
     reference = payment.external_reference ?? '';
+    feeCents = Math.round((Array.isArray(payment.fee_details) ? payment.fee_details : [])
+      .filter((f) => f.type === 'fee')
+      .reduce((total, f) => total + (Number(f.amount) || 0), 0) * 100);
   } catch (error) {
     return { ok: false, previous: '', current: '', changed: false, orderId: '', error: error instanceof Error ? error.message : 'error de red con Mercado Pago' };
   }
@@ -364,8 +368,8 @@ export async function sincronizarPago(env: Env, origin: string, paymentId: strin
   const eventType = EVENT_MAP[status === 'pending' ? 'pending' : status] ?? 'payment_pending';
 
   try {
-    await env.DB.prepare('UPDATE orders SET status = ?, payment_id = ?, updated_at = CURRENT_TIMESTAMP, approved_at = CASE WHEN ? = ? THEN CURRENT_TIMESTAMP ELSE approved_at END WHERE id = ?')
-      .bind(status, paymentId, status, 'approved', previous.id)
+    await env.DB.prepare('UPDATE orders SET status = ?, payment_id = ?, mp_fee_cents = ?, updated_at = CURRENT_TIMESTAMP, approved_at = CASE WHEN ? = ? THEN CURRENT_TIMESTAMP ELSE approved_at END WHERE id = ?')
+      .bind(status, paymentId, feeCents, status, 'approved', previous.id)
       .run();
 
     if (oldStatus !== status) {
