@@ -79,6 +79,7 @@ function escapeHTML(value: string): string {
 export function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: boolean, waPhone: string = '59899695118'): string {
   const nombre = escapeHTML(order.customer_name.split(' ')[0]);
   const codigoCompra = escapeHTML(order.order_code ?? order.id);
+  const recetarioLink = `${origin}/api/descargas/recetario?orden=${order.id}`;
   const videoLink = `${origin}/api/descargas/video-armado?orden=${order.id}`;
   const videoBlock = hasVideo
     ? `<tr>
@@ -105,7 +106,8 @@ export function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: b
       <tr>
         <td style="padding:14px 18px;background:#241418;border:1px solid rgba(229,138,149,.35);border-radius:12px">
           <p style="margin:0 0 6px;font-size:14px;font-weight:bold;color:#f6eced">Tu recetario de la Pizza Daring</p>
-          <p style="margin:0;font-size:12px;color:#b3a3a7;line-height:1.5">Va adjunto en este correo en PDF, con la receta completa y los consejos de uso paso a paso.</p>
+          <p style="margin:0 0 12px;font-size:12px;color:#b3a3a7;line-height:1.5">Descargá la receta completa y los consejos de uso paso a paso. Queda habilitado con tu número de compra.</p>
+          <a href="${recetarioLink}" style="display:inline-block;background:#c8102e;color:#ffffff;text-decoration:none;padding:10px 24px;border-radius:999px;font-weight:bold;font-size:13px">Descargar recetario</a>
         </td>
       </tr>
       <tr><td style="height:10px;font-size:0">&nbsp;</td></tr>
@@ -212,16 +214,6 @@ async function sendEmail(env: Env, payload: Record<string, unknown>): Promise<Em
 }
 
 async function enviarEmailComprador(env: Env, origin: string, order: OrderRow): Promise<EmailResult> {
-  const attachments: Array<{ filename: string; content: string }> = [];
-  try {
-    const pdf = await env.MEDIA.get(PDF_KEY);
-    if (pdf) {
-      attachments.push({ filename: 'Recetario Pizza Daring.pdf', content: toBase64(await pdf.arrayBuffer()) });
-    }
-  } catch {
-    attachments.length = 0;
-  }
-
   let hasVideo = false;
   try {
     hasVideo = Boolean(await env.MEDIA.head(VIDEO_KEY));
@@ -260,8 +252,7 @@ async function enviarEmailComprador(env: Env, origin: string, order: OrderRow): 
     from: `${fromName} <${fromEmail}>`,
     to: [order.customer_email],
     subject,
-    html,
-    ...(attachments.length ? { attachments } : {})
+    html
   });
 }
 
