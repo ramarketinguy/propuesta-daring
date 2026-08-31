@@ -511,3 +511,13 @@
 - El mail del dueño queda sin diseño (decisión del usuario).
 - Probado enviando un mail real de prueba a ramarketing.uy@gmail.com con PDF adjunto (Resend id d92bc66a). Desplegado en producción: las próximas ventas usan el nuevo diseño.
 - buildBuyerEmailHTML ahora es export (para pruebas); el sistema de plantillas editables sigue funcionando igual (vacío = nuevo diseño por defecto).
+
+## Codigo de compra simple + mail v2 (31-ago-2026)
+
+- Migracion 0009_order_code.sql: columna order_code en orders (indice unico) + backfill DR-000001 para la venta de Magdalena.
+- create-preference genera codigo DR-XXXXXX (6 caracteres sin caracteres ambiguos, con reintentos por colision). El external_reference sigue siendo el UUID (webhook intacto).
+- El codigo aparece en el detalle del panel (Compra DR-000001) y en los mails. Los links de descarga siguen usando el UUID internamente (invisible para el cliente).
+- Mail al comprador v2: logo Daring (img hospedada en el dominio, alt si se bloquea), tono profesional (sin expresiones coloquiales), boton verde de WhatsApp con mensaje pre-cargado incluyendo el codigo de compra, y el codigo simple en el pie.
+- Token {{orden}} de la plantilla editable ahora devuelve el codigo simple.
+- Probado con segundo mail de prueba a ramarketing.uy@gmail.com (id f70fbddf).
+- Importante: NO usar PowerShell Get-Content/Set-Content sobre los archivos del proyecto (corrompe UTF-8 sin BOM); usar Node o el Edit tool. Un BOM residual en admin.js/landing salva la situacion en algunos casos, pero no es garantia.
