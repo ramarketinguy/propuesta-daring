@@ -503,3 +503,11 @@
 - Refresh probado con la venta real: previous=approved, current=approved, changed=false. Reembolso sin probar con plata real (se probara en la primera devolucion genuina).
 
 - Cambio de estado de envio directo desde la tabla de Ventas (select inline en la columna Envio, guarda con PATCH al cambiar, sin abrir el detalle). Verificado 200.
+
+## Rediseno del mail al comprador (31-ago-2026)
+
+- Nuevo diseño oscuro tipográfico con la identidad de la marca: fondo #0d080a, tarjeta #1c0f13 con borde flame, wordmark D A R I N G espaciado en flame, resumen de compra (color + monto), tarjeta del recetario PDF, tarjeta del video con botón, y bloque DESTACADO de cuidados (limpieza, utensilios, fuego medio, apilado, no inducción) con borde flame lateral.
+- Construido con técnicas de email seguro: tablas role=presentation, estilos inline, 560px, sin imágenes (tipográfico puro, a prueba de modo oscuro y de clientes que bloquean imágenes).
+- El mail del dueño queda sin diseño (decisión del usuario).
+- Probado enviando un mail real de prueba a ramarketing.uy@gmail.com con PDF adjunto (Resend id d92bc66a). Desplegado en producción: las próximas ventas usan el nuevo diseño.
+- buildBuyerEmailHTML ahora es export (para pruebas); el sistema de plantillas editables sigue funcionando igual (vacío = nuevo diseño por defecto).
