@@ -521,3 +521,9 @@
 - Token {{orden}} de la plantilla editable ahora devuelve el codigo simple.
 - Probado con segundo mail de prueba a ramarketing.uy@gmail.com (id f70fbddf).
 - Importante: NO usar PowerShell Get-Content/Set-Content sobre los archivos del proyecto (corrompe UTF-8 sin BOM); usar Node o el Edit tool. Un BOM residual en admin.js/landing salva la situacion en algunos casos, pero no es garantia.
+
+## Mail v3 - recetario con boton en vez de adjunto (31-ago-2026)
+
+- El PDF del recetario ya no va adjunto al mail: la tarjeta muestra el boton Descargar recetario (mismo mecanismo que el video: /api/descargas/recetario?orden=UUID, habilitado solo con pago aprobado). El mail queda liviano y evita filtros de spam por adjuntos.
+- enviarEmailComprador sin logicas de adjunto; PDF_KEY eliminado; el PDF sigue en R2 entregables/recetario-pizza-daring.pdf servido por el endpoint de descargas.
+- Probado con mail real a ramarketing.uy@gmail.com (Resend id 7c26a567). Desplegado.
