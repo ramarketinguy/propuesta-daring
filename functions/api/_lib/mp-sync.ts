@@ -9,6 +9,7 @@ interface Env {
 
 export interface OrderRow {
   id: string;
+  order_code: string | null;
   customer_name: string;
   customer_email: string;
   customer_phone: string | null;
@@ -75,8 +76,9 @@ function escapeHTML(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-export function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: boolean): string {
+export function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: boolean, waPhone: string = '59899695118'): string {
   const nombre = escapeHTML(order.customer_name.split(' ')[0]);
+  const codigoCompra = escapeHTML(order.order_code ?? order.id);
   const videoLink = `${origin}/api/descargas/video-armado?orden=${order.id}`;
   const videoBlock = hasVideo
     ? `<tr>
@@ -91,11 +93,11 @@ export function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: b
 <html lang="es"><body style="margin:0;padding:24px;background:#0d080a">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#1c0f13;border:1px solid rgba(229,138,149,.35);border-radius:16px">
-  <tr><td style="padding:28px 28px 8px">
-    <p style="margin:0;font-size:13px;font-weight:bold;letter-spacing:6px;color:#e58a95">D A R I N G</p>
+  <tr><td style="padding:24px 28px 10px" align="center">
+    <img src="https://daring.com.uy/assets/Logo%20Daring%20(1).png" width="150" alt="Daring" style="display:block;margin:0 auto">
   </td></tr>
   <tr><td style="padding:0 28px">
-    <h1 style="margin:0 0 6px;font-size:22px;color:#f6eced;font-weight:bold">¡Gracias por tu compra, ${nombre}!</h1>
+    <h1 style="margin:0 0 6px;font-size:22px;color:#f6eced;font-weight:bold">Gracias por tu compra, ${nombre}</h1>
     <p style="margin:0 0 20px;font-size:14px;color:#b3a3a7">Sartén Daring 28 cm · Color: <strong style="color:#f6eced">${escapeHTML(order.color)}</strong> · <strong style="color:#f6eced">$ ${(order.amount_cents / 100).toLocaleString('es-UY')}</strong></p>
   </td></tr>
   <tr><td style="padding:0 18px 12px">
@@ -127,8 +129,9 @@ export function buildBuyerEmailHTML(order: OrderRow, origin: string, hasVideo: b
   </td></tr>
   <tr><td style="padding:0 28px 24px">
     <hr style="border:none;border-top:1px solid rgba(229,138,149,.25);margin:0 0 12px">
-    <p style="margin:0 0 6px;font-size:13px;color:#f6eced">¿Dudas? Escribinos por WhatsApp y te respondemos al toque.</p>
-    <p style="margin:0;font-size:11px;color:#7a6e72">Compra ${order.id}</p>
+    <p style="margin:0 0 12px;font-size:13px;color:#f6eced">Ante cualquier consulta, nuestro equipo está a tu disposición:</p>
+    <a href="https://wa.me/${escapeHTML(waPhone)}?text=${encodeURIComponent('Hola! Tengo una consulta sobre mi sartén Daring, compra ' + (order.order_code ?? order.id))}" style="display:inline-block;background:#25d366;color:#0d080a;text-decoration:none;padding:10px 26px;border-radius:999px;font-weight:bold;font-size:13px">Escribinos por WhatsApp</a>
+    <p style="margin:14px 0 0;font-size:11px;color:#7a6e72">Compra ${codigoCompra}</p>
   </td></tr>
 </table>
 </td></tr></table>
@@ -228,6 +231,7 @@ async function enviarEmailComprador(env: Env, origin: string, order: OrderRow): 
 
   const fromEmail = (await getSetting(env, 'buyer_from_email')) ?? 'recetario@daring.com.uy';
   const fromName = (await getSetting(env, 'buyer_from_name')) ?? 'Daring';
+  const waPhone = (await getSetting(env, 'whatsapp_phone')) ?? '59899695118';
   const videoLink = `${origin}/api/descargas/video-armado?orden=${order.id}`;
   const nombre = order.customer_name.split(' ')[0];
 
@@ -237,14 +241,14 @@ async function enviarEmailComprador(env: Env, origin: string, order: OrderRow): 
     html = reemplazarTokens(plantilla, {
       nombre,
       color: order.color,
-      orden: order.id,
+      orden: order.order_code ?? order.id,
       video_link: videoLink,
       video: hasVideo
         ? `<p style="margin:0 0 10px">También grabamos un <strong>video paso a paso</strong> para el primer uso de tu sartén:</p><p style="margin:0 0 10px"><a href="${videoLink}" style="display:inline-block;background:#c8102e;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:999px;font-weight:bold">Descargar video de armado</a></p>`
         : ''
     });
   } else {
-    html = buildBuyerEmailHTML(order, origin, hasVideo);
+    html = buildBuyerEmailHTML(order, origin, hasVideo, waPhone);
   }
 
   const subjectPlantilla = await getSetting(env, 'buyer_email_subject');
@@ -280,7 +284,7 @@ async function enviarEmailDueno(env: Env, order: OrderRow, paymentId: string, bu
       direccion: order.shipping_address ?? '-',
       color: order.color,
       total: `$ ${(order.amount_cents / 100).toLocaleString('es-UY')}`,
-      orden: order.id,
+      orden: order.order_code ?? order.id,
       pago: paymentId,
       estado_mail: buyerEmailOk ? 'enviado al comprador' : 'FALLO el envío al comprador'
     });
@@ -364,7 +368,7 @@ export async function sincronizarPago(env: Env, origin: string, paymentId: strin
 
   if (!reference) return { ok: false, previous: '', current: '', changed: false, orderId: '', error: 'El pago no tiene orden asociada en esta tienda.' };
 
-  const previous = await env.DB.prepare('SELECT id, status, color FROM orders WHERE external_reference = ?').bind(reference).first<{ id: string; status: string; color: string }>();
+  const previous = await env.DB.prepare('SELECT id, status, color, order_code FROM orders WHERE external_reference = ?').bind(reference).first<{ id: string; status: string; color: string; order_code: string | null }>();
   if (!previous) return { ok: false, previous: '', current: '', changed: false, orderId: '', error: 'El pago no pertenece a esta tienda.' };
 
   const oldStatus = previous.status;
@@ -414,7 +418,7 @@ export async function reembolsarPago(env: Env, orderId: string): Promise<{ ok: b
   const token = env.MERCADOPAGO_ACCESS_TOKEN;
   if (!token) return { ok: false, error: 'MERCADOPAGO_ACCESS_TOKEN no configurada' };
 
-  const order = await env.DB.prepare('SELECT id, status, payment_id, color FROM orders WHERE id = ?').bind(orderId).first<{ id: string; status: string; payment_id: string | null; color: string }>();
+  const order = await env.DB.prepare('SELECT id, status, payment_id, color FROM orders WHERE id = ?').bind(orderId).first<{ id: string; status: string; payment_id: string | null; color: string; order_code: string | null }>();
   if (!order) return { ok: false, error: 'Venta no encontrada.' };
   if (!order.payment_id) return { ok: false, error: 'Esta venta no tiene un pago de Mercado Pago asociado todavía.' };
   if (order.status !== 'approved') return { ok: false, error: 'Solo se pueden reembolsar ventas con pago aprobado.' };

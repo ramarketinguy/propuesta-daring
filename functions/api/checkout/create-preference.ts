@@ -44,6 +44,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const unitPrice = amountCents / 100;
 
   const orderId = crypto.randomUUID();
+  const ALFABETO_CODIGO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let orderCode = '';
+  for (let intento = 0; intento < 5 && !orderCode; intento++) {
+    const aleatorio = crypto.getRandomValues(new Uint8Array(6));
+    const candidato = 'DR-' + Array.from(aleatorio, (b) => ALFABETO_CODIGO[b % ALFABETO_CODIGO.length]).join('');
+    const existente = await env.DB.prepare('SELECT id FROM orders WHERE order_code = ?').bind(candidato).first();
+    if (!existente) orderCode = candidato;
+  }
+  if (!orderCode) orderCode = 'DR-' + orderId.slice(0, 6).toUpperCase();
   const origin = new URL(request.url).origin;
   const isLocalOrigin = origin.startsWith('http://');
   const publicOrigin = isLocalOrigin ? 'https://example.com' : origin;
@@ -54,8 +63,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   try {
-    await env.DB.prepare('INSERT INTO orders (id, external_reference, status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_department, color, quantity, amount_cents, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(orderId, orderId, 'checkout_started', name, email, phone, address, city, department, color, 1, amountCents, currency)
+    await env.DB.prepare('INSERT INTO orders (id, external_reference, order_code, status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_department, color, quantity, amount_cents, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(orderId, orderId, orderCode, 'checkout_started', name, email, phone, address, city, department, color, 1, amountCents, currency)
       .run();
   } catch {
     return json({ error: 'No se pudo registrar la orden. Probá de nuevo.' }, 500);

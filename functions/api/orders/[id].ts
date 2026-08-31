@@ -11,7 +11,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ params, env }) => {
   const id = String(params.id ?? '');
   if (!UUID_PATTERN.test(id)) return json({ error: 'ID inválido' }, 400);
 
-  const order = await env.DB.prepare('SELECT id, external_reference, payment_id, status, shipping_status, tracking_number, admin_notes, customer_name, customer_email, customer_phone, shipping_department, shipping_city, shipping_address, color, quantity, amount_cents, currency, created_at, updated_at, approved_at FROM orders WHERE id = ?').bind(id).first<Record<string, unknown>>();
+  const order = await env.DB.prepare('SELECT id, order_code, external_reference, payment_id, status, shipping_status, tracking_number, admin_notes, customer_name, customer_email, customer_phone, shipping_department, shipping_city, shipping_address, color, quantity, amount_cents, currency, created_at, updated_at, approved_at FROM orders WHERE id = ?').bind(id).first<Record<string, unknown>>();
   if (!order) return json({ error: 'Orden no encontrada' }, 404);
 
   const timeline = await env.DB.prepare('SELECT event_type, payment_id, metadata_json, created_at FROM checkout_events WHERE order_id = ? ORDER BY created_at ASC').bind(id).all<{ event_type: string; payment_id: string | null; metadata_json: string | null; created_at: string }>();

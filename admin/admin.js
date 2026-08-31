@@ -203,7 +203,7 @@ function renderOrderDetail(order, timeline, emails) {
   const container = document.querySelector('#venta-detail');
   container.innerHTML = `
     <header class="venta-detail-header">
-      <h2>Venta <code>${escapeHTML(order.id)}</code></h2>
+      <h2>Compra <code>${escapeHTML(order.order_code ?? order.id)}</code></h2>
       <div class="venta-header-actions">
         ${order.payment_id ? '<button class="button-secondary" type="button" data-action="verificar-mp">Verificar pago en Mercado Pago</button>' : ''}
         ${order.status === 'approved' ? '<button class="button-secondary" type="button" data-action="reembolsar">Devolver pago</button>' : ''}

@@ -56,7 +56,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const baseFrom = `FROM orders ${where}`;
 
   const orders = await env.DB.prepare(
-    `SELECT id, customer_name, customer_email, customer_phone, shipping_department, shipping_city, color, amount_cents, currency, status, shipping_status, tracking_number, created_at, approved_at ${baseFrom} ORDER BY ${sortColumn} ${order} LIMIT ? OFFSET ?`
+    `SELECT id, order_code, customer_name, customer_email, customer_phone, shipping_department, shipping_city, color, amount_cents, currency, status, shipping_status, tracking_number, created_at, approved_at ${baseFrom} ORDER BY ${sortColumn} ${order} LIMIT ? OFFSET ?`
   ).bind(...bindings, limit, offset).all<Record<string, unknown>>();
 
   const total = await env.DB.prepare(`SELECT COUNT(*) AS total ${baseFrom}`).bind(...bindings).first<{ total: number }>();
