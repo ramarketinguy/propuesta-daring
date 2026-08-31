@@ -127,13 +127,20 @@ async function loadVentas() {
     result.orders.forEach((order) => {
       const row = document.createElement('tr');
       row.dataset.orderId = order.id;
+      const opcionesEnvio = [
+        ['', 'Sin estado'],
+        ['preparing', 'Preparando'],
+        ['shipped', 'Despachado'],
+        ['delivered', 'Entregado'],
+        ['returned', 'Devuelto']
+      ];
       row.innerHTML = `
         <td>${escapeHTML(formatDateShort(order.created_at))}</td>
         <td><strong>${escapeHTML(order.customer_name)}</strong><div class="text-muted">${escapeHTML(order.customer_email)}</div></td>
         <td>${escapeHTML(order.color)}</td>
         <td>${money(order.amount_cents)}</td>
         <td><span class="status-pill s-${escapeHTML(order.status)}">${statusLabel(order.status)}</span></td>
-        <td><span class="status-pill s-${escapeHTML(order.shipping_status ?? 'pending')}">${shippingLabel(order.shipping_status)}</span></td>
+        <td><select class="input envio-select" data-order-id="${escapeHTML(order.id)}" aria-label="Estado de envío de ${escapeHTML(order.customer_name)}">${opcionesEnvio.map(([valor, texto]) => `<option value="${valor}" ${(order.shipping_status ?? '') === valor ? 'selected' : ''}>${texto}</option>`).join('')}</select></td>
         <td class="row-actions"><button class="button-secondary" data-action="detalle">Ver detalle</button></td>`;
       tbody.append(row);
     });
@@ -141,6 +148,17 @@ async function loadVentas() {
       event.stopPropagation();
       const id = button.closest('tr').dataset.orderId;
       openOrderDetail(id);
+    }));
+    tbody.querySelectorAll('select.envio-select').forEach((select) => select.addEventListener('change', async () => {
+      const id = select.dataset.orderId;
+      const valorAnterior = select.getAttribute('data-current') ?? '';
+      select.disabled = true;
+      const response = await api(`/api/orders/${id}`, { method: 'PATCH', body: JSON.stringify({ shipping_status: select.value || null }) });
+      const result = await response.json().catch(() => ({}));
+      select.disabled = false;
+      if (!response.ok) { select.value = valorAnterior; toast(result.error ?? 'No se pudo cambiar el estado de envío.', 'error'); return; }
+      toast('Estado de envío actualizado', 'success');
+      await loadVentas();
     }));
   }
   renderPagination('ventas-pagination', result.total, page, limit, (p) => { state.ventas.page = p; loadVentas(); });

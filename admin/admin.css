@@ -131,6 +131,7 @@ body.theme-light .data-table tbody tr:hover { background: rgba(201, 58, 78, .04)
 .data-table .text-muted { color: var(--muted); }
 .data-table .row-actions { text-align: right; }
 .data-table .row-actions .button-secondary { padding: .35rem .65rem; font-size: 12px; }
+.envio-select { min-width: 118px; padding: .3rem .45rem !important; font-size: 12px !important; }
 
 .status-pill { display: inline-flex; align-items: center; gap: .35rem; padding: .22rem .6rem; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; background: var(--bg-elev); color: var(--muted); border: 1px solid var(--line); }
 .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
