@@ -1,18 +1,18 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="/assets/Logo%20Daring%20(1).png">
-  <title>Panel Â· Daring</title>
+  <title>Panel · Daring</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/admin/admin.css">
 </head>
 <body class="admin-body">
-  <aside class="sidebar" aria-label="MenÃº principal">
+  <aside class="sidebar" aria-label="Menú principal">
     <div class="sidebar-brand">
       <span class="sidebar-brand-mark">D</span>
       <div><strong>Daring</strong><small>Panel interno</small></div>
@@ -22,9 +22,9 @@
       <a href="#ventas" data-section="ventas"><span class="nav-dot"></span>Ventas</a>
       <a href="#stock" data-section="stock"><span class="nav-dot"></span>Stock</a>
       <a href="#contenido" data-section="contenido"><span class="nav-dot"></span>Contenido</a>
-      <a href="#configuracion" data-section="configuracion"><span class="nav-dot"></span>ConfiguraciÃ³n</a>
+      <a href="#configuracion" data-section="configuracion"><span class="nav-dot"></span>Configuración</a>
       <a href="#emails" data-section="emails"><span class="nav-dot"></span>Emails enviados</a>
-      <a href="#auditoria" data-section="auditoria"><span class="nav-dot"></span>AuditorÃ­a</a>
+      <a href="#auditoria" data-section="auditoria"><span class="nav-dot"></span>Auditoría</a>
       <a href="#uso" data-section="uso"><span class="nav-dot"></span>Uso Cloudflare</a>
     </nav>
     <div class="sidebar-footer">
@@ -35,7 +35,7 @@
           <svg class="icon-moon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           <span id="theme-toggle-label">Claro</span>
         </button>
-        <button id="logout" class="sidebar-logout" type="button">Cerrar sesiÃ³n</button>
+        <button id="logout" class="sidebar-logout" type="button">Cerrar sesión</button>
       </div>
     </div>
   </aside>
@@ -43,28 +43,28 @@
   <main class="main">
     <header class="topbar">
       <h1 id="page-title">Resumen</h1>
-      <p id="page-subtitle" class="topbar-subtitle">Vista general del estado de la pÃ¡gina.</p>
+      <p id="page-subtitle" class="topbar-subtitle">Vista general del estado de la página.</p>
     </header>
 
     <section data-page="resumen" class="page">
       <div class="kpi-grid">
-        <article class="kpi-card"><span>Visitas</span><strong id="kpi-visits">â€”</strong><small id="kpi-visits-trend"></small></article>
-        <article class="kpi-card"><span>Clics en comprar</span><strong id="kpi-buy-clicks">â€”</strong><small id="kpi-buy-clicks-trend"></small></article>
-        <article class="kpi-card"><span>Formularios abiertos</span><strong id="kpi-checkout-opens">â€”</strong><small id="kpi-checkout-opens-trend"></small></article>
-        <article class="kpi-card"><span>Formularios completados</span><strong id="kpi-checkout-submits">â€”</strong><small id="kpi-checkout-submits-trend"></small></article>
+        <article class="kpi-card"><span>Visitas</span><strong id="kpi-visits">—</strong><small id="kpi-visits-trend"></small></article>
+        <article class="kpi-card"><span>Clics en comprar</span><strong id="kpi-buy-clicks">—</strong><small id="kpi-buy-clicks-trend"></small></article>
+        <article class="kpi-card"><span>Formularios abiertos</span><strong id="kpi-checkout-opens">—</strong><small id="kpi-checkout-opens-trend"></small></article>
+        <article class="kpi-card"><span>Formularios completados</span><strong id="kpi-checkout-submits">—</strong><small id="kpi-checkout-submits-trend"></small></article>
       </div>
       <div class="panel">
-        <header class="panel-header"><h2>Alertas</h2><span class="panel-hint">Recomendaciones automÃ¡ticas</span></header>
+        <header class="panel-header"><h2>Alertas</h2><span class="panel-hint">Recomendaciones automáticas</span></header>
         <div class="panel-body"><div id="alerts-list" class="alerts"></div></div>
       </div>
     </section>
 
     <section data-page="ventas" class="page hidden">
       <div class="kpi-grid kpi-grid-compact">
-        <article class="kpi-card kpi-initiated"><span>Checkouts iniciados</span><strong id="kpi-initiated">â€”</strong><small>Formularios enviados a Mercado Pago</small></article>
-        <article class="kpi-card kpi-completed"><span>Ventas concluidas</span><strong id="kpi-completed">â€”</strong><small>Pagos aprobados</small></article>
-        <article class="kpi-card kpi-rejected"><span>Ventas rechazadas</span><strong id="kpi-rejected">â€”</strong><small>Pagos rechazados</small></article>
-        <article class="kpi-card"><span>Ingresos</span><strong id="kpi-revenue">â€”</strong><small>Solo ventas concluidas</small></article>
+        <article class="kpi-card kpi-initiated"><span>Checkouts iniciados</span><strong id="kpi-initiated">—</strong><small>Formularios enviados a Mercado Pago</small></article>
+        <article class="kpi-card kpi-completed"><span>Ventas concluidas</span><strong id="kpi-completed">—</strong><small>Pagos aprobados</small></article>
+        <article class="kpi-card kpi-rejected"><span>Ventas rechazadas</span><strong id="kpi-rejected">—</strong><small>Pagos rechazados</small></article>
+        <article class="kpi-card"><span>Ingresos</span><strong id="kpi-revenue">—</strong><small>Solo ventas concluidas</small></article>
       </div>
       <div class="panel">
         <header class="panel-header">
@@ -75,7 +75,7 @@
           <button id="ventas-export" class="button-secondary" type="button">Exportar CSV</button>
         </header>
         <div class="panel-toolbar">
-          <input id="ventas-search" class="input" type="search" placeholder="Buscar por mail, nombre o nÃºmero de orden">
+          <input id="ventas-search" class="input" type="search" placeholder="Buscar por mail, nombre o número de orden">
           <select id="ventas-status" class="input">
             <option value="">Todos los estados</option>
             <option value="initiated">Iniciados</option>
@@ -86,14 +86,14 @@
             <option value="refunded">Reembolsadas</option>
           </select>
           <select id="ventas-period" class="input">
-            <option value="all">Todo el perÃ­odo</option>
-            <option value="7d">Ãšltimos 7 dÃ­as</option>
-            <option value="30d">Ãšltimos 30 dÃ­as</option>
+            <option value="all">Todo el período</option>
+            <option value="7d">Últimos 7 días</option>
+            <option value="30d">Últimos 30 días</option>
           </select>
         </div>
         <div class="table-wrap">
           <table class="data-table" id="ventas-table">
-            <thead><tr><th>Fecha</th><th>Cliente</th><th>Color</th><th>Monto</th><th>Estado pago</th><th>EnvÃ­o</th><th></th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Cliente</th><th>Color</th><th>Monto</th><th>Estado pago</th><th>Envío</th><th></th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -105,29 +105,29 @@
 
     <section data-page="configuracion" class="page hidden">
       <div class="panel">
-        <header class="panel-header"><div><h2>ConfiguraciÃ³n general</h2><span class="panel-hint">Cambios que afectan a la pÃ¡gina y a los mails</span></div></header>
+        <header class="panel-header"><div><h2>Configuración general</h2><span class="panel-hint">Cambios que afectan a la página y a los mails</span></div></header>
         <form id="settings-form" class="settings-form">
           <fieldset class="settings-group"><legend>Producto</legend>
             <label>Precio (pesos uruguayos)<input type="number" min="0" step="1" name="price" required></label>
             <label>Moneda<input type="text" maxlength="8" name="currency" required></label>
           </fieldset>
           <fieldset class="settings-group"><legend>Contacto</legend>
-            <label>WhatsApp (con cÃ³digo de paÃ­s, sin +)<input type="text" maxlength="30" name="whatsapp_phone" required></label>
-            <label>Mail del dueÃ±o<input type="email" maxlength="160" name="owner_email" required></label>
-            <label class="settings-toggle"><input type="checkbox" name="owner_email_enabled">Avisos de venta al dueÃ±o por mail</label>
+            <label>WhatsApp (con código de país, sin +)<input type="text" maxlength="30" name="whatsapp_phone" required></label>
+            <label>Mail del dueño<input type="email" maxlength="160" name="owner_email" required></label>
+            <label class="settings-toggle"><input type="checkbox" name="owner_email_enabled">Avisos de venta al dueño por mail</label>
           </fieldset>
           <fieldset class="settings-group"><legend>Remitentes Resend</legend>
             <label>Mail al comprador (from)<input type="email" name="buyer_from_email" required></label>
             <label>Nombre del remitente al comprador<input type="text" maxlength="80" name="buyer_from_name" required></label>
-            <label>Mail al dueÃ±o (from)<input type="email" name="owner_from_email" required></label>
-            <label>Nombre del remitente al dueÃ±o<input type="text" maxlength="80" name="owner_from_name" required></label>
+            <label>Mail al dueño (from)<input type="email" name="owner_from_email" required></label>
+            <label>Nombre del remitente al dueño<input type="text" maxlength="80" name="owner_from_name" required></label>
           </fieldset>
           <fieldset class="settings-group" style="grid-template-columns:1fr"><legend>Plantillas de mail</legend>
             <label>Asunto del mail al comprador<input type="text" maxlength="200" name="buyer_email_subject" placeholder="Disponible: {{nombre}} y {{color}}"></label>
-            <label>Cuerpo del mail al comprador (HTML)<textarea name="buyer_email_html" rows="8" style="font-family:monospace;font-size:12px" placeholder="VacÃ­o = plantilla original. Tokens: {{nombre}} {{color}} {{orden}} {{video_link}} {{video}}"></textarea></label>
-            <label>Asunto del mail al dueÃ±o<input type="text" maxlength="200" name="owner_email_subject" placeholder="Disponible: {{color}} y {{cliente}}"></label>
-            <label>Cuerpo del mail al dueÃ±o (HTML)<textarea name="owner_email_html" rows="8" style="font-family:monospace;font-size:12px" placeholder="VacÃ­o = plantilla original. Tokens: {{cliente}} {{mail}} {{telefono}} {{departamento}} {{localidad}} {{direccion}} {{color}} {{total}} {{orden}} {{pago}} {{estado_mail}}"></textarea></label>
-            <p style="margin:0;color:var(--muted);font-size:11px">Si dejÃ¡s el cuerpo vacÃ­o se usa la plantilla original de la marca. Los tokens {{...}} se reemplazan con los datos de cada venta. Cuidado al editar el HTML: es el contenido real del mail.</p>
+            <label>Cuerpo del mail al comprador (HTML)<textarea name="buyer_email_html" rows="8" style="font-family:monospace;font-size:12px" placeholder="Vacío = plantilla original. Tokens: {{nombre}} {{color}} {{orden}} {{video_link}} {{video}}"></textarea></label>
+            <label>Asunto del mail al dueño<input type="text" maxlength="200" name="owner_email_subject" placeholder="Disponible: {{color}} y {{cliente}}"></label>
+            <label>Cuerpo del mail al dueño (HTML)<textarea name="owner_email_html" rows="8" style="font-family:monospace;font-size:12px" placeholder="Vacío = plantilla original. Tokens: {{cliente}} {{mail}} {{telefono}} {{departamento}} {{localidad}} {{direccion}} {{color}} {{total}} {{orden}} {{pago}} {{estado_mail}}"></textarea></label>
+            <p style="margin:0;color:var(--muted);font-size:11px">Si dejás el cuerpo vacío se usa la plantilla original de la marca. Los tokens {{...}} se reemplazan con los datos de cada venta. Cuidado al editar el HTML: es el contenido real del mail.</p>
           </fieldset>
           <div class="form-actions">
             <button type="submit" class="button-primary" id="settings-save">Guardar cambios</button>
@@ -139,15 +139,15 @@
 
     <section data-page="emails" class="page hidden">
       <div class="kpi-grid kpi-grid-compact">
-        <article class="kpi-card"><span>Al comprador</span><strong id="email-buyer-total">â€”</strong><small><span id="email-buyer-sent">0</span> enviados Â· <span id="email-buyer-failed">0</span> con error</small></article>
-        <article class="kpi-card"><span>Al dueÃ±o</span><strong id="email-owner-total">â€”</strong><small><span id="email-owner-sent">0</span> enviados Â· <span id="email-owner-failed">0</span> con error</small></article>
+        <article class="kpi-card"><span>Al comprador</span><strong id="email-buyer-total">—</strong><small><span id="email-buyer-sent">0</span> enviados · <span id="email-buyer-failed">0</span> con error</small></article>
+        <article class="kpi-card"><span>Al dueño</span><strong id="email-owner-total">—</strong><small><span id="email-owner-sent">0</span> enviados · <span id="email-owner-failed">0</span> con error</small></article>
       </div>
       <div class="panel">
-        <header class="panel-header"><h2>BitÃ¡cora de envÃ­os</h2></header>
+        <header class="panel-header"><h2>Bitácora de envíos</h2></header>
         <div class="panel-toolbar">
           <select id="emails-status" class="input"><option value="">Todos</option><option value="sent">Enviados</option><option value="failed">Con error</option></select>
-          <select id="emails-provider" class="input"><option value="">Comprador y dueÃ±o</option><option value="buyer">Al comprador</option><option value="owner">Al dueÃ±o</option></select>
-          <select id="emails-period" class="input"><option value="all">Todo</option><option value="7d">7 dÃ­as</option><option value="30d">30 dÃ­as</option></select>
+          <select id="emails-provider" class="input"><option value="">Comprador y dueño</option><option value="buyer">Al comprador</option><option value="owner">Al dueño</option></select>
+          <select id="emails-period" class="input"><option value="all">Todo</option><option value="7d">7 días</option><option value="30d">30 días</option></select>
         </div>
         <div class="table-wrap">
           <table class="data-table" id="emails-table">
@@ -161,10 +161,10 @@
 
     <section data-page="stock" class="page hidden">
       <div class="kpi-grid">
-        <article class="kpi-card"><span>Disponible (total)</span><strong id="stock-available">â€”</strong><small>Rojo + Negro listos para vender</small></article>
-        <article class="kpi-card kpi-initiated"><span>Disponible Rojo</span><strong id="stock-rojo">â€”</strong><small id="stock-rojo-copy">â€”</small></article>
-        <article class="kpi-card kpi-completed"><span>Disponible Negro</span><strong id="stock-negro">â€”</strong><small id="stock-negro-copy">â€”</small></article>
-        <article class="kpi-card"><span>Vendidas</span><strong id="stock-sold">â€”</strong><small>Pagos aprobados, ambos colores</small></article>
+        <article class="kpi-card"><span>Disponible (total)</span><strong id="stock-available">—</strong><small>Rojo + Negro listos para vender</small></article>
+        <article class="kpi-card kpi-initiated"><span>Disponible Rojo</span><strong id="stock-rojo">—</strong><small id="stock-rojo-copy">—</small></article>
+        <article class="kpi-card kpi-completed"><span>Disponible Negro</span><strong id="stock-negro">—</strong><small id="stock-negro-copy">—</small></article>
+        <article class="kpi-card"><span>Vendidas</span><strong id="stock-sold">—</strong><small>Pagos aprobados, ambos colores</small></article>
       </div>
       <div class="panel">
         <header class="panel-header"><div><h2>Ajustar stock por color</h2><span class="panel-hint">El contador de la landing suma los dos colores y se actualiza solo.</span></div></header>
@@ -178,7 +178,7 @@
         </form>
       </div>
       <div class="panel">
-        <header class="panel-header"><div><h2>Ãšltimos movimientos</h2><span class="panel-hint">Reservas, ventas y ajustes registrados automÃ¡ticamente.</span></div></header>
+        <header class="panel-header"><div><h2>Últimos movimientos</h2><span class="panel-hint">Reservas, ventas y ajustes registrados automáticamente.</span></div></header>
         <div class="table-wrap">
           <table class="data-table"><thead><tr><th>Fecha</th><th>Cantidad</th><th>Motivo</th><th>Orden</th></tr></thead><tbody id="stock-movements"></tbody></table>
         </div>
@@ -189,34 +189,34 @@
       <div class="panel">
         <div class="content-tabs" role="tablist">
           <button class="content-tab active" data-content-tab-button="textos" type="button">Textos</button>
-          <button class="content-tab" data-content-tab-button="imagenes" type="button">ImÃ¡genes</button>
+          <button class="content-tab" data-content-tab-button="imagenes" type="button">Imágenes</button>
           <button class="content-tab" data-content-tab-button="faq" type="button">Preguntas frecuentes</button>
         </div>
       </div>
       <div data-content-tab="textos">
         <div class="panel">
-          <header class="panel-header"><div><h2>Textos de la pÃ¡gina</h2><span class="panel-hint">Cada campo indica exactamente quÃ© parte de la landing modifica.</span></div></header>
-          <div class="panel-body" id="contenido-fields"><p class="empty-state">Cargando campos editablesâ€¦</p></div>
+          <header class="panel-header"><div><h2>Textos de la página</h2><span class="panel-hint">Cada campo indica exactamente qué parte de la landing modifica.</span></div></header>
+          <div class="panel-body" id="contenido-fields"><p class="empty-state">Cargando campos editables…</p></div>
           <div class="form-actions" style="padding: 0 1.1rem 1.1rem;"><button class="button-primary" id="contenido-save" type="button">Guardar todos los cambios</button><span id="contenido-status" class="form-status" role="status" aria-live="polite"></span></div>
         </div>
       </div>
       <div data-content-tab="imagenes" class="hidden">
         <div class="panel">
-          <header class="panel-header"><div><h2>Carrusel de platos</h2><span class="panel-hint" id="hint-pizza">Estas son las imÃ¡genes que aparecen en el carrusel de la landing.</span></div><button class="button-primary" type="button" data-carousel-add="pizza" data-accept="image/*">ï¼‹ Agregar imagen</button></header>
-          <div class="panel-body"><div class="carousel-manager" id="manager-pizza"><p class="empty-state">Cargandoâ€¦</p></div><input type="file" id="file-pizza" accept="image/*" class="hidden"></div>
+          <header class="panel-header"><div><h2>Carrusel de platos</h2><span class="panel-hint" id="hint-pizza">Estas son las imágenes que aparecen en el carrusel de la landing.</span></div><button class="button-primary" type="button" data-carousel-add="pizza" data-accept="image/*">＋ Agregar imagen</button></header>
+          <div class="panel-body"><div class="carousel-manager" id="manager-pizza"><p class="empty-state">Cargando…</p></div><input type="file" id="file-pizza" accept="image/*" class="hidden"></div>
         </div>
         <div class="panel">
-          <header class="panel-header"><div><h2>Videos de testimonios</h2><span class="panel-hint" id="hint-testimonials">Estos son los videos que aparecen en el carrusel de testimonios.</span></div><button class="button-primary" type="button" data-carousel-add="testimonials" data-accept="video/mp4,video/webm">ï¼‹ Agregar video</button></header>
-          <div class="panel-body"><div class="carousel-manager carousel-videos" id="manager-testimonials"><p class="empty-state">Cargandoâ€¦</p></div><input type="file" id="file-testimonials" accept="video/mp4,video/webm" class="hidden"></div>
+          <header class="panel-header"><div><h2>Videos de testimonios</h2><span class="panel-hint" id="hint-testimonials">Estos son los videos que aparecen en el carrusel de testimonios.</span></div><button class="button-primary" type="button" data-carousel-add="testimonials" data-accept="video/mp4,video/webm">＋ Agregar video</button></header>
+          <div class="panel-body"><div class="carousel-manager carousel-videos" id="manager-testimonials"><p class="empty-state">Cargando…</p></div><input type="file" id="file-testimonials" accept="video/mp4,video/webm" class="hidden"></div>
         </div>
         <div class="panel">
-          <header class="panel-header"><div><h2>Foto del dueÃ±o</h2><span class="panel-hint">La foto que aparece en la secciÃ³n "Nuestra historia".</span></div></header>
-          <div class="panel-body"><div id="manager-historia"><p class="empty-state">Cargandoâ€¦</p></div><input type="file" id="file-historia" accept="image/*" class="hidden"></div>
+          <header class="panel-header"><div><h2>Foto del dueño</h2><span class="panel-hint">La foto que aparece en la sección "Nuestra historia".</span></div></header>
+          <div class="panel-body"><div id="manager-historia"><p class="empty-state">Cargando…</p></div><input type="file" id="file-historia" accept="image/*" class="hidden"></div>
         </div>
       </div>
       <div data-content-tab="faq" class="hidden">
         <div class="panel">
-          <header class="panel-header"><div><h2>Preguntas frecuentes</h2><span class="panel-hint">Estas preguntas aparecen en la secciÃ³n "Preguntas frecuentes" de la landing.</span></div></header>
+          <header class="panel-header"><div><h2>Preguntas frecuentes</h2><span class="panel-hint">Estas preguntas aparecen en la sección "Preguntas frecuentes" de la landing.</span></div></header>
           <div class="panel-body">
             <form id="faq-form" class="settings-form" style="padding: 0; max-width: 920px;">
               <div class="settings-group"><label>Pregunta<input name="question" maxlength="240" required></label><label>Respuesta<textarea name="answer" rows="3" maxlength="2000" required></textarea></label></div>
@@ -230,22 +230,22 @@
 
     <section data-page="auditoria" class="page hidden">
       <div class="panel">
-        <header class="panel-header"><div><h2>Registro de actividad</h2><span class="panel-hint">Cada cambio hecho desde el panel queda registrado acÃ¡.</span></div></header>
+        <header class="panel-header"><div><h2>Registro de actividad</h2><span class="panel-hint">Cada cambio hecho desde el panel queda registrado acá.</span></div></header>
         <div class="panel-toolbar">
           <select id="audit-action" class="input">
             <option value="">Todas las acciones</option>
-            <option value="settings">ConfiguraciÃ³n</option>
+            <option value="settings">Configuración</option>
             <option value="orders">Ventas</option>
             <option value="stock">Stock</option>
-            <option value="page_content">Textos de la pÃ¡gina</option>
-            <option value="page_images">ImÃ¡genes</option>
+            <option value="page_content">Textos de la página</option>
+            <option value="page_images">Imágenes</option>
             <option value="faq">Preguntas frecuentes</option>
             <option value="maintenance">Limpieza de archivos</option>
           </select>
         </div>
         <div class="table-wrap">
           <table class="data-table" id="audit-table">
-            <thead><tr><th>Fecha</th><th>QuÃ© pasÃ³</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Qué pasó</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -255,12 +255,12 @@
 
     <section data-page="uso" class="page hidden">
       <div class="kpi-grid">
-        <article class="kpi-card"><span>Plan actual</span><strong id="usage-plan">Cloudflare Free</strong><small>Tu cuenta de Daring estÃ¡ en este plan.</small></article>
-        <article class="kpi-card"><span>Archivos en R2</span><strong id="usage-r2">â€”</strong><small id="usage-r2-copy">Cargando...</small></article>
-        <article class="kpi-card"><span>Eventos D1</span><strong id="usage-d1">â€”</strong><small>Eventos de analÃ­tica almacenados.</small></article>
+        <article class="kpi-card"><span>Plan actual</span><strong id="usage-plan">Cloudflare Free</strong><small>Tu cuenta de Daring está en este plan.</small></article>
+        <article class="kpi-card"><span>Archivos en R2</span><strong id="usage-r2">—</strong><small id="usage-r2-copy">Cargando...</small></article>
+        <article class="kpi-card"><span>Eventos D1</span><strong id="usage-d1">—</strong><small>Eventos de analítica almacenados.</small></article>
       </div>
       <div class="panel">
-        <header class="panel-header"><div><h2>LÃ­mites del plan</h2><span class="panel-hint">Lo que el plan Free te permite hacer y dÃ³nde estÃ¡s parado hoy.</span></div></header>
+        <header class="panel-header"><div><h2>Límites del plan</h2><span class="panel-hint">Lo que el plan Free te permite hacer y dónde estás parado hoy.</span></div></header>
         <div class="panel-body">
           <div class="limits-grid" id="usage-limits"></div>
         </div>

@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #14090c;
   --bg-elev: #1c0f13;
   --panel: #221418;
@@ -220,7 +220,7 @@ body.theme-light .carousel-item-card { background: var(--panel-strong); }
 .carousel-item-actions { display: flex; gap: .3rem; justify-content: center; }
 .carousel-item-actions .button-secondary { padding: .3rem .55rem; font-size: 12px; }
 
-/* ---------- ImÃ¡genes del CMS ---------- */
+/* ---------- Imágenes del CMS ---------- */
 .content-tabs { display: flex; gap: .25rem; padding: .45rem .6rem 0; flex-wrap: wrap; }
 .content-tab { padding: .6rem 1rem; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: 6px 6px 0 0; transition: color .15s, background .15s; }
 .content-tab:hover { color: var(--text); background: var(--accent-soft); }
@@ -240,7 +240,7 @@ body.theme-light .image-slot-copy select, body.theme-light .image-slot-copy inpu
 .image-slot-copy .form-actions { margin-top: .25rem; }
 @media (max-width: 620px) { .image-slot-card { grid-template-columns: 1fr; } .image-slot-preview img, .image-slot-preview video { width: 100%; height: 160px; } }
 
-/* ---------- LÃ­mites del plan ---------- */
+/* ---------- Límites del plan ---------- */
 .limits-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .limits-grid section h3 { margin: 0 0 .65rem; font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
 .limits-table { display: grid; gap: .25rem; background: var(--bg-elev); border-radius: var(--radius-sm); padding: .65rem .75rem; border: 1px solid var(--line-soft); }
