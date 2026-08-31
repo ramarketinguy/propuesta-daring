@@ -61,14 +61,23 @@ function showPage(section) {
 async function loadResumen() {
   const period = state.ventas.filters.period;
   const query = `?period=${period}`;
-  const [summaryRes, alertsRes] = await Promise.all([fetch(`/api/metrics/summary${query}`, { credentials: 'same-origin' }), fetch(`/api/alerts${query}`, { credentials: 'same-origin' })]);
-  if (!summaryRes.ok || !alertsRes.ok) throw new Error('resumen');
+  const [summaryRes, alertsRes, ordersRes] = await Promise.all([
+    fetch(`/api/metrics/summary${query}`, { credentials: 'same-origin' }),
+    fetch(`/api/alerts${query}`, { credentials: 'same-origin' }),
+    api(`/api/orders?limit=1&period=${period}`)
+  ]);
+  if (!summaryRes.ok || !alertsRes.ok || !ordersRes.ok) throw new Error('resumen');
   const summary = await summaryRes.json();
   const alerts = await alertsRes.json();
+  const ventas = await ordersRes.json();
   document.querySelector('#kpi-visits').textContent = number(summary.page_views);
   document.querySelector('#kpi-buy-clicks').textContent = number(summary.buy_clicks);
   document.querySelector('#kpi-checkout-opens').textContent = number(summary.checkout_opens);
   document.querySelector('#kpi-checkout-submits').textContent = number(summary.checkout_submits);
+  document.querySelector('#kpi-resumen-completed').textContent = number(ventas.counts.completed);
+  document.querySelector('#kpi-resumen-revenue').textContent = money(ventas.revenue_cents);
+  document.querySelector('#kpi-resumen-initiated').textContent = number(ventas.counts.initiated);
+  document.querySelector('#kpi-resumen-rejected').textContent = number(ventas.counts.rejected);
   renderAlerts(alerts.alerts || []);
 }
 
