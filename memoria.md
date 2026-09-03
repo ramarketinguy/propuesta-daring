@@ -6,7 +6,7 @@
 
 - Proyecto: landing de venta de la sartÃ©n Daring.
 - Archivo principal: `daring-landing.html`.
-- Servidor local habitual: `http://localhost:4173/daring-landing.html` o `wrangler pages dev --port 8788` (siempre con CurrentDirectory del proyecto).
+- Servidor local habitual: `http://localhost:4173/index.html` o `wrangler pages dev --port 8788` (siempre con CurrentDirectory del proyecto).
 - Repositorio: `https://github.com/ramarketinguy/propuesta-daring.git` â€” sincronizado con producciÃ³n (todo committeado y pusheado).
 - Rama principal: `main`.
 - El precio de lanzamiento es `$1.590 UYU` (configurable desde el panel en pesos; se guarda en centavos).
@@ -562,3 +562,9 @@
 - Desplegado y verificado en producción (deployment `f2190326`, 03-sep-2026): los 8 checks del HTML servido en https://daring.com.uy/ OK (pixel base, PageView, fbevents.js, noscript, y los 4 eventos estándar). `/api/health` 200.
 - API de conversiones (CAPI): **NO conectada**. No hay ninguna llamada a `graph.facebook.com` ni token de Meta en el backend; todos los eventos viajan solo desde el navegador. Para conectarla hace falta: 1) token de Meta de la cuenta dueña del pixel (System User del Business Manager de Daring con permiso `ads_management`, o token de usuario), 2) enviar `Purchase` server-side desde `functions/api/webhooks/mercadopago.ts` al aprobarse el pago, usando el mismo `event_id` que el Purchase del navegador para que Meta deduplique. Ojo: la app "Ramarketer" de Meta sigue suspendida (apelación en curso), el token tiene que salir del BM propio de Daring.
 - Pendiente: verificar el pixel en el Administrador de eventos de Meta (pestaña Probar eventos) o con la extensión Meta Pixel Helper, con tráfico real.
+
+## Home en dominio limpio + GSC verificada (03-sep-2026)
+- La verificacion de Google Search Console quedo ACEPTADA en la propiedad https://daring.com.uy/daring-landing (tras servir el archivo de verificacion en esa ruta via function).
+- Causa de fondo de la URL fea: la home (/) hacia 308 a /daring-landing (regla _redirects + pretty-URL de Pages). Solucion: daring-landing.html renombrado a index.html (Pages lo sirve en / con 200 directo, sin redirect) y _redirects ahora manda /daring-landing y /daring-landing.html con 301 a / (consolida SEO y ads en el dominio limpio).
+- vercel.json actualizado a /index.html. /api/health, pixel, eventos y archivos de verificacion re-verificados en produccion (deployment 931dca34): home 200 sin redirect, urls viejas 301 a /, verificacion GSC 200 GET+HEAD en ambas rutas, api/health 200.
+- Los dos archivos de verificacion GSC se sirven via Pages Functions (functions/google83c5729b27d1923d.html.ts y functions/daring-landing/google83c5729b27d1923d.html.ts), no como archivos estaticos (el estatico hacia 308 por pretty-URL y Google no lo aceptaba).
