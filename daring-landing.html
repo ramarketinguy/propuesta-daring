@@ -3,6 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1395478826107134');
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1395478826107134&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- End Meta Pixel Code -->
   <link rel="icon" type="image/png" href="assets/Logo%20Daring%20(1).png">
   <script>history.scrollRestoration='manual'; window.scrollTo(0,0);</script>
   <meta name="description" content="Sartén antiadherente de 28 cm con tapa de vidrio templado y doble agarre. Pizzas crocantes sin prender el horno en menos de 15 minutos. Envío gratis a todo Uruguay en 24-72 h.">
@@ -281,7 +298,9 @@
        function storageId(storage,key){try{let value=storage.getItem(key);if(!value){value=crypto.randomUUID();storage.setItem(key,value);}return value;}catch{return undefined;}}
        const visitorId=storageId(localStorage,'daring_visitor_id'); const sessionId=storageId(sessionStorage,'daring_session_id');
        function trackEvent(event){const payload=JSON.stringify({event,visitor_id:visitorId,session_id:sessionId,page_path:location.pathname,referrer:document.referrer||undefined,device_type:innerWidth<768?'mobile':innerWidth<1024?'tablet':'desktop'});try{const blob=new Blob([payload],{type:'application/json'});if(navigator.sendBeacon&&navigator.sendBeacon('/api/metrics/events',blob))return;}catch{};fetch('/api/metrics/events',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true}).catch(()=>undefined);}
-       trackEvent('page_view'); document.querySelectorAll('a[href="#oferta"]').forEach((link)=>link.addEventListener('click',()=>trackEvent('hero_buy_click'))); document.querySelectorAll('a[href="#accion"]').forEach((link)=>link.addEventListener('click',()=>trackEvent('hero_action_click'))); document.querySelector('.bar-whatsapp')?.addEventListener('click',()=>trackEvent('whatsapp_click'));
+        const daringPixel={id:'daring-sarten-28',name:'Sartén Daring 28 cm'}; const daringPrice=()=>window.daringPriceUYU||1590; const fbqTrack=(event,params)=>{if(typeof fbq==='function')fbq('track',event,params);};
+        fbqTrack('ViewContent',{content_ids:[daringPixel.id],content_name:daringPixel.name,content_type:'product',value:daringPrice(),currency:'UYU'});
+        trackEvent('page_view'); document.querySelectorAll('a[href="#oferta"]').forEach((link)=>link.addEventListener('click',()=>trackEvent('hero_buy_click'))); document.querySelectorAll('a[href="#accion"]').forEach((link)=>link.addEventListener('click',()=>trackEvent('hero_action_click'))); document.querySelector('.bar-whatsapp')?.addEventListener('click',()=>{trackEvent('whatsapp_click');fbqTrack('Contact',{content_name:'WhatsApp'});});
        const story=document.getElementById('accion'); const storyVideo=document.getElementById('storyVideo'); const caps=[...story.querySelectorAll('.cap')]; const step=document.getElementById('stepNum'); const mobile=matchMedia('(max-width:767px)').matches; const storySource=mobile?'assets/story-scroll-mobile.mp4':'assets/story-scroll-desktop.mp4'; const storyPoster=mobile?'assets/video-frames/mobile/frame-0001.webp':'assets/video-frames/desktop/frame-0001.webp'; let activeStep=-1; let storyLoadPromise=null;
        function setStep(index){if(index===activeStep)return;activeStep=index;step.textContent=String(index+1).padStart(2,'0');caps.forEach((el,i)=>{el.style.opacity=i===index?'1':'0';el.style.transform=i===index?'translate(-50%,0)':'translate(-50%,30px)';});}
        function loadStoryVideo(){if(storyLoadPromise)return storyLoadPromise;storyVideo.poster=storyPoster;storyVideo.src=storySource;storyVideo.loop=false;storyVideo.controls=false;storyLoadPromise=new Promise((resolve)=>{if(storyVideo.readyState>=1){resolve();return;}storyVideo.addEventListener('loadedmetadata',resolve,{once:true});storyVideo.load();});return storyLoadPromise;}
@@ -306,9 +325,9 @@
        const checkoutModal=document.getElementById('checkout-modal'); const openCheckout=document.getElementById('open-checkout'); const closeCheckout=document.getElementById('close-checkout'); const checkoutForm=document.getElementById('checkout-form'); const checkoutStatus=document.getElementById('checkout-status');
        function setCheckout(open){checkoutModal.classList.toggle('open',open);checkoutModal.setAttribute('aria-hidden',String(!open));document.body.classList.toggle('modal-open',open);if(open)checkoutForm.querySelector('input').focus();else openCheckout.focus();}
        openCheckout.addEventListener('click',()=>{trackEvent('checkout_open');setCheckout(true);}); closeCheckout.addEventListener('click',()=>setCheckout(false)); checkoutModal.addEventListener('click',(event)=>{if(event.target===checkoutModal)setCheckout(false);});
-       checkoutForm.addEventListener('submit',async(event)=>{event.preventDefault();const formData=Object.fromEntries(new FormData(checkoutForm));window.daringCheckoutData=formData;trackEvent('checkout_submit');const submitButton=checkoutForm.querySelector('button[type="submit"]');submitButton.disabled=true;checkoutStatus.textContent='Conectando con Mercado Pago...';try{const response=await fetch('/api/checkout/create-preference',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(formData)});const result=await response.json().catch(()=>({}));if(!response.ok||!result.init_point){checkoutStatus.textContent=result.error||'No pudimos iniciar el pago. Probá de nuevo en unos minutos.';submitButton.disabled=false;return;}trackEvent('checkout_started');checkoutStatus.textContent='Te estamos llevando al pago...';window.location.href=result.init_point;}catch{checkoutStatus.textContent='No pudimos iniciar el pago. Revisá tu conexión y probá de nuevo.';submitButton.disabled=false;}});
+       checkoutForm.addEventListener('submit',async(event)=>{event.preventDefault();const formData=Object.fromEntries(new FormData(checkoutForm));window.daringCheckoutData=formData;trackEvent('checkout_submit');const submitButton=checkoutForm.querySelector('button[type="submit"]');submitButton.disabled=true;checkoutStatus.textContent='Conectando con Mercado Pago...';try{const response=await fetch('/api/checkout/create-preference',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(formData)});const result=await response.json().catch(()=>({}));if(!response.ok||!result.init_point){checkoutStatus.textContent=result.error||'No pudimos iniciar el pago. Probá de nuevo en unos minutos.';submitButton.disabled=false;return;}trackEvent('checkout_started');fbqTrack('InitiateCheckout',{content_ids:[daringPixel.id],content_name:daringPixel.name,content_type:'product',num_items:1,value:daringPrice(),currency:'UYU'});checkoutStatus.textContent='Te estamos llevando al pago...';window.location.href=result.init_point;}catch{checkoutStatus.textContent='No pudimos iniciar el pago. Revisá tu conexión y probá de nuevo.';submitButton.disabled=false;}});
        addEventListener('keydown',(event)=>{if(event.key==='Escape'&&checkoutModal.classList.contains('open'))setCheckout(false);});
-       const paymentResult=new URLSearchParams(location.search).get('pago');if(paymentResult){const paymentMessages={aprobado:'¡Pago aprobado! Gracias por tu compra. El recetario y el video de armado van a llegar a tu correo.',pendiente:'Tu pago quedó pendiente. Te vamos a avisar cuando se acredite.',rechazado:'El pago fue rechazado. Podés intentar de nuevo con otro medio de pago.'};const message=paymentMessages[paymentResult];if(message){const banner=document.createElement('div');banner.className='payment-banner';banner.setAttribute('role','status');banner.textContent=message;document.body.appendChild(banner);setTimeout(()=>banner.remove(),12000);}history.replaceState({},'',location.pathname);}
+       const paymentResult=new URLSearchParams(location.search).get('pago');if(paymentResult){const paymentMessages={aprobado:'¡Pago aprobado! Gracias por tu compra. El recetario y el video de armado van a llegar a tu correo.',pendiente:'Tu pago quedó pendiente. Te vamos a avisar cuando se acredite.',rechazado:'El pago fue rechazado. Podés intentar de nuevo con otro medio de pago.'};const message=paymentMessages[paymentResult];if(paymentResult==='aprobado'){fbqTrack('Purchase',{content_ids:[daringPixel.id],content_name:daringPixel.name,content_type:'product',num_items:1,value:daringPrice(),currency:'UYU'});}if(message){const banner=document.createElement('div');banner.className='payment-banner';banner.setAttribute('role','status');banner.textContent=message;document.body.appendChild(banner);setTimeout(()=>banner.remove(),12000);}history.replaceState({},'',location.pathname);}
         if(reduced){caps.forEach((cap,index)=>cap.style.display=index?'none':'block');}
      })();
    </script>
@@ -331,8 +350,9 @@
              if (media.alt) el.setAttribute('alt', media.alt);
            }
          });
-         if (data.price_cents) {
-           const priceText = '$ ' + Math.round(data.price_cents / 100).toLocaleString('es-UY');
+          if (data.price_cents) {
+            window.daringPriceUYU = Math.round(data.price_cents / 100);
+            const priceText = '$ ' + Math.round(data.price_cents / 100).toLocaleString('es-UY');
            const chip = document.querySelector('.price-chip strong');
            if (chip) chip.textContent = priceText;
            const big = document.querySelector('.price-row .price-big');

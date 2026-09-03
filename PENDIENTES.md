@@ -6,6 +6,7 @@
 - [x] Endpoint de envÃ­o: recibir datos del formulario y guardar orden pendiente de pago. (El formulario llama a `/api/checkout/create-preference`, que crea la orden en D1.)
 - [x] Desplegar a Cloudflare Pages y verificar el flujo completo en producciÃ³n. (Deployments `b8e2e95e`, `4ac9e9f0`, `35814fc6`, `aa83ceb0`, `e30d10e3`.)
 - [ ] Probar una compra real con tarjeta y hacer la devoluciÃ³n despuÃ©s.
+- [ ] Conectar la API de conversiones (CAPI) de Meta: token del BM propio de Daring + Purchase server-side en el webhook de Mercado Pago con event_id para deduplicar contra el pixel del navegador.
 - [x] Configurar la URL de webhook en el panel de Mercado Pago. (El usuario confirmÃ³ que quedÃ³ configurada en producciÃ³n contra el dominio `daring.com.uy`.)
 - [x] EnvÃ­o de recetario por email con Resend. (Mail al comprador con PDF adjunto + link de video, mail al dueÃ±o con toda la orden incluido color.)
 - [x] Subir recetario y video de armado a R2 (`entregables/recetario-pizza-daring.pdf` y `entregables/video-armado-daring.mp4`).

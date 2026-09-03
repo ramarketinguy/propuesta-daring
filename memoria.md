@@ -1,6 +1,6 @@
 ﻿# Memoria Del Proyecto Daring
 
-Ãšltima actualizaciÃ³n: 2026-08-29 (sesiÃ³n 3 completa: checkout pro, mails automÃ¡ticos, dominio propio, panel admin completo con ventas/stock/CMS/auditorÃ­a, GitHub sincronizado)
+Última actualización: 2026-09-03 (sesión 4: pixel de Meta en la landing con eventos del embudo + verificación de Google Search Console, desplegado y verificado en producción; CAPI sin conectar)
 
 ## Estado Actual
 
@@ -11,6 +11,7 @@
 - Rama principal: `main`.
 - El precio de lanzamiento es `$1.590 UYU` (configurable desde el panel en pesos; se guarda en centavos).
 - Checkout Pro de Mercado Pago integrado, desplegado y verificado en producciÃ³n (ver secciÃ³n Checkout Pro).
+- Pixel de Meta instalado en la landing con eventos del embudo; la API de conversiones (CAPI) NO está conectada (ver sección Pixel de Meta).
 - Dominio oficial `daring.com.uy` en Cloudflare Pages (secciÃ³n Dominio).
 - Resend configurado con dominio verificado, clave cargada y envÃ­o automÃ¡tico funcionando (secciÃ³n Resend).
 - Panel admin como SPA con sidebar y 8 secciones: Resumen, Ventas, Stock (por color), Contenido (tabs: Textos / ImÃ¡genes / Preguntas frecuentes), ConfiguraciÃ³n (con editor de plantillas de mail), Emails enviados, AuditorÃ­a (en lenguaje claro), Uso Cloudflare. Tema claro/oscuro con switch.
@@ -58,6 +59,8 @@
 - Verificado: landing actual con tÃ­tulo correcto en ambos dominios, `/api/health` 200 y webhook respondiendo desde el dominio definitivo.
 - Importante: el token de wrangler NO tiene permiso DNS sobre la zona (403); los cambios de DNS van por dashboard o con un token API con permisos de DNS.
 - El checkout generado desde el dominio nuevo usa `daring.com.uy` automÃ¡ticamente en `back_urls` y `notification_url` (se arman con el origen de cada pedido).
+- Verificacion de Google Search Console (03-sep-2026): primera intentona con archivo estatico google83c5729b27d1923d.html + regla en _redirects FALLO en Google (file not found). Causa raiz: Cloudflare Pages hace 308 automatico quitando el .html (/google83c5729b27d1923d.html -> /google83c5729b27d1923d) y Google no sigue ese redirect al verificar. Ese 308 tambien afecta a la raiz del sitio (/ -> /daring-landing) y al archivo viejo google4a7ae9e6139d186e.html.
+- Solucion: el archivo de verificacion ahora lo sirve una Pages Function (functions/google83c5729b27d1923d.html.ts) con 200 directo, sin redirect. El archivo estatico se borro del proyecto y la regla de _redirects del nuevo se quito (la del archivo viejo se deja). Verificado en produccion (deployment 629e4eea): 200 con contenido exacto en daring.com.uy y www.daring.com.uy, y la home sigue respondiendo 200.
 - El token OAuth de wrangler vence seguido; si la API da 403/"Authentication error", correr cualquier comando de wrangler para refrescarlo antes de usar la API.
 
 ## Resend (Email)
@@ -546,3 +549,14 @@
 - /api/orders devuelve revenue_cents (bruto), fees_cents y net_cents (bruto - comision) sobre ventas aprobadas. KPI Ingresos ahora es Ingresos netos con la comision visible en el subtitulo, en Resumen y Ventas. Detalle de venta muestra Comision y Neto recibido. CSV con comision_mp_cents y neto_cents.
 - Resultado real verificado con la venta de Magdalena (DR-000001, RedPagos/tarjeta): mp_fee_cents = 0 -> neto .590. MP no desconto comision en este pago segun su API.
 - Aclaracion honesta: si MP factura comisiones en el resumen mensual en vez de por pago, eso no figura en el objeto del pago; el sistema refleja lo que MP reporta por pago.
+
+## Pixel de Meta + estado de la API de conversiones (03-sep-2026)
+
+- Pixel de Meta instalado en `daring-landing.html` (única página pública; propuesta/auditoria/admin quedan sin pixel a propósito para no ensuciar datos). ID de pixel: `1395478826107134`.
+- Código base entre las etiquetas `<head>` (después del meta viewport, antes del favicon) + `<noscript>` de respaldo, con PageView incluido. Instalado una sola vez por página, según las reglas de instalación de Meta.
+- Eventos estándar agregados (embudo completo): `ViewContent` al cargar la página (con value y currency UYU), `InitiateCheckout` justo antes de redirigir a Mercado Pago (solo si la preferencia se crea OK), `Purchase` cuando la landing vuelve con `?pago=aprobado`, y `Contact` al clickear el WhatsApp de la barra inferior.
+- El valor de los eventos es dinámico: `window.daringPriceUYU` se setea con el precio que devuelve `/api/public/content` (fallback 1590 si la API no responde).
+- Helper `fbqTrack` con guard `typeof fbq === 'function'` para que nada se rompa si el script del pixel falla al cargar.
+- Desplegado y verificado en producción (deployment `f2190326`, 03-sep-2026): los 8 checks del HTML servido en https://daring.com.uy/ OK (pixel base, PageView, fbevents.js, noscript, y los 4 eventos estándar). `/api/health` 200.
+- API de conversiones (CAPI): **NO conectada**. No hay ninguna llamada a `graph.facebook.com` ni token de Meta en el backend; todos los eventos viajan solo desde el navegador. Para conectarla hace falta: 1) token de Meta de la cuenta dueña del pixel (System User del Business Manager de Daring con permiso `ads_management`, o token de usuario), 2) enviar `Purchase` server-side desde `functions/api/webhooks/mercadopago.ts` al aprobarse el pago, usando el mismo `event_id` que el Purchase del navegador para que Meta deduplique. Ojo: la app "Ramarketer" de Meta sigue suspendida (apelación en curso), el token tiene que salir del BM propio de Daring.
+- Pendiente: verificar el pixel en el Administrador de eventos de Meta (pestaña Probar eventos) o con la extensión Meta Pixel Helper, con tráfico real.
