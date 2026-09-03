@@ -61,6 +61,7 @@
 - El checkout generado desde el dominio nuevo usa `daring.com.uy` automÃ¡ticamente en `back_urls` y `notification_url` (se arman con el origen de cada pedido).
 - Verificacion de Google Search Console (03-sep-2026): primera intentona con archivo estatico google83c5729b27d1923d.html + regla en _redirects FALLO en Google (file not found). Causa raiz: Cloudflare Pages hace 308 automatico quitando el .html (/google83c5729b27d1923d.html -> /google83c5729b27d1923d) y Google no sigue ese redirect al verificar. Ese 308 tambien afecta a la raiz del sitio (/ -> /daring-landing) y al archivo viejo google4a7ae9e6139d186e.html.
 - Solucion: el archivo de verificacion ahora lo sirve una Pages Function (functions/google83c5729b27d1923d.html.ts) con 200 directo, sin redirect. El archivo estatico se borro del proyecto y la regla de _redirects del nuevo se quito (la del archivo viejo se deja). Verificado en produccion (deployment 629e4eea): 200 con contenido exacto en daring.com.uy y www.daring.com.uy, y la home sigue respondiendo 200.
+- IMPORTANTE aprendido: con Pages Function hay que exportar onRequest generico (no onRequestGet): Google hace peticiones HEAD al verificar y onRequestGet puro responde 404 al HEAD (eso dio el mismo error de verificacion dos veces). Con onRequest, GET y HEAD responden 200 (verificado deployment b720b5f7 en daring.com.uy, www y daring-landing.pages.dev).
 - El token OAuth de wrangler vence seguido; si la API da 403/"Authentication error", correr cualquier comando de wrangler para refrescarlo antes de usar la API.
 
 ## Resend (Email)
