@@ -576,6 +576,8 @@
 
 - Dominio daring.com.uy VERIFICADO en Meta Business Manager (ID 1103332215457895, 05-sep-2026) via archivo HTML servido por Pages Function.
 
+- Sitemap enviado en propiedad https://daring.com.uy/: estado Correcto, 1 página descubierta (05-sep-2026). shippingDestination agregado al schema.
+
 ## Cambio de pixel de Meta (05-sep-2026)
 - Pixel anterior 1395478826107134 reemplazado por 1073871952239425 (pedido del usuario). Eventos estándar intactos (no llevan ID). Desplegado y verificado en producción.
 
