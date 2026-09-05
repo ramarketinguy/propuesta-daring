@@ -539,6 +539,8 @@
 - El aviso de Telegram se envia en mp-sync al aprobarse una venta (cliente, correo, color, total, pago, orden), junto con los mails. Si Telegram falla, el resto sigue funcionando.
 - Configurable desde Configuracion -> Telegram (token, chat id, activar/desactivar).
 
+- Prueba 05-sep-2026: mensaje de prueba enviado y RECIBIDO OK en el chat del dueño (bot Daring Avisos operativo para avisos de venta).
+
 ## Panel simplificado (01-sep-2026)
 
 - Se elimino el editor de plantillas de mail de Configuracion (decision del usuario: riesgo de que el cliente rompa algo). Las plantillas del codigo siguen siendo la fuente, con fallback incorporado.
