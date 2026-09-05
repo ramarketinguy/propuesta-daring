@@ -574,6 +574,8 @@
 ## Imagen para compartir OG (05-sep-2026)
 - Generada assets/og-cover.jpg (1200x630, 68KB): fondo de marca + sartén recortada + titular SARTÉN ANTIADHERENTE + precio/envío. Cableada en og:image y twitter:image. La foto vertical anterior sigue como imagen de producto en schema. Deployment a3bbdc61 verificado (200 image/jpeg + meta en HTML).
 
+- Dominio daring.com.uy VERIFICADO en Meta Business Manager (ID 1103332215457895, 05-sep-2026) via archivo HTML servido por Pages Function.
+
 ## Cambio de pixel de Meta (05-sep-2026)
 - Pixel anterior 1395478826107134 reemplazado por 1073871952239425 (pedido del usuario). Eventos estándar intactos (no llevan ID). Desplegado y verificado en producción.
 
