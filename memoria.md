@@ -556,7 +556,7 @@
 
 ## Pixel de Meta + estado de la API de conversiones (03-sep-2026)
 
-- Pixel de Meta instalado en `daring-landing.html` (única página pública; propuesta/auditoria/admin quedan sin pixel a propósito para no ensuciar datos). ID de pixel: `1395478826107134`.
+- Pixel de Meta instalado en `daring-landing.html` (única página pública; propuesta/auditoria/admin quedan sin pixel a propósito para no ensuciar datos). ID de pixel: `1073871952239425`.
 - Código base entre las etiquetas `<head>` (después del meta viewport, antes del favicon) + `<noscript>` de respaldo, con PageView incluido. Instalado una sola vez por página, según las reglas de instalación de Meta.
 - Eventos estándar agregados (embudo completo): `ViewContent` al cargar la página (con value y currency UYU), `InitiateCheckout` justo antes de redirigir a Mercado Pago (solo si la preferencia se crea OK), `Purchase` cuando la landing vuelve con `?pago=aprobado`, y `Contact` al clickear el WhatsApp de la barra inferior.
 - El valor de los eventos es dinámico: `window.daringPriceUYU` se setea con el precio que devuelve `/api/public/content` (fallback 1590 si la API no responde).
@@ -573,3 +573,6 @@
 
 ## Imagen para compartir OG (05-sep-2026)
 - Generada assets/og-cover.jpg (1200x630, 68KB): fondo de marca + sartén recortada + titular SARTÉN ANTIADHERENTE + precio/envío. Cableada en og:image y twitter:image. La foto vertical anterior sigue como imagen de producto en schema. Deployment a3bbdc61 verificado (200 image/jpeg + meta en HTML).
+
+## Cambio de pixel de Meta (05-sep-2026)
+- Pixel anterior 1395478826107134 reemplazado por 1073871952239425 (pedido del usuario). Eventos estándar intactos (no llevan ID). Desplegado y verificado en producción.
