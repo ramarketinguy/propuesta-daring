@@ -957,6 +957,11 @@ function describirAuditoria(entry) {
     }
     case 'stock.update':
       return 'Se ajustó el stock' + (entry.entity_id ? ' del color ' + entry.entity_id : '') + ': de ' + (d.previous ?? '?') + ' a ' + (d.next ?? '?') + ' unidades' + (d.reason ? ' — ' + d.reason : '') + '.';
+    case 'stock.release': {
+      const n = Number(d.released ?? 0);
+      if (!n) return 'Se revisaron las reservas vencidas: no había ninguna para liberar.';
+      return `Se liberaron ${n} reserva${n === 1 ? '' : 's'} vencida${n === 1 ? '' : 's'} (compras sin pagar de más de 24 h)${d.order_codes?.length ? ': ' + d.order_codes.join(', ') : ''}.`;
+    }
     case 'faq.create':
       return 'Se agregó una pregunta frecuente.';
     case 'faq.update':
@@ -1053,6 +1058,26 @@ async function boot() {
   document.querySelector('#contenido-save').addEventListener('click', saveContenido);
   document.querySelector('#faq-form').addEventListener('submit', createFaq);
   document.querySelector('#stock-form').addEventListener('submit', saveStock);
+  document.querySelector('#stock-release').addEventListener('click', async (event) => {
+    if (!window.confirm('¿Liberar las reservas de compras que quedaron sin pagar hace más de 24 horas? Esas unidades vuelven al stock disponible.')) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = 'Liberando...';
+    try {
+      const response = await api('/api/stock/release-stale', { method: 'POST' });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error ?? 'No se pudo liberar.');
+      if (!result.released) toast('No había reservas vencidas para liberar.', 'success');
+      else toast(`Se liberaron ${result.released} reserva${result.released === 1 ? '' : 's'} vencida${result.released === 1 ? '' : 's'}.`, 'success');
+      await loadStock();
+    } catch (error) {
+      toast(error.message ?? 'No se pudo liberar.', 'error');
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  });
   document.querySelector('#stock-form select[name="color"]').addEventListener('change', (event) => {
     const fila = state.stockColors[event.currentTarget.value];
     const input = document.querySelector('#stock-form input[name="stock_total"]');

@@ -1,6 +1,6 @@
 ﻿# Memoria Del Proyecto Daring
 
-Última actualización: 2026-09-05 (sesión 6: SEO/GEO + posicionamiento sartén antiadherente, desplegado y verificado; CAPI sin conectar)
+Última actualización: 2026-09-05 (sesión 7: revisión general + fixes (checkout, WhatsApp dinámico, reservas vencidas, login, Purchase), desplegado y verificado; CAPI sin conectar)
 
 ## Estado Actual
 

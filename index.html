@@ -268,7 +268,7 @@
       <button class="checkout-close" id="close-checkout" type="button" aria-label="Cerrar formulario de compra">×</button>
       <span class="eyebrow">Datos de envío</span>
       <h2 id="checkout-title">Prepará tu compra.</h2>
-      <p>Completá tus datos para dejar preparado el envío. Cuando Checkout Pro esté conectado, estos datos se usarán para continuar con el pago.</p>
+      <p>Completá tus datos para coordinar el envío. Al continuar vas a pagar con Mercado Pago.</p>
       <form class="checkout-form" id="checkout-form">
         <label>Nombre completo<input name="nombre" type="text" autocomplete="name" required></label>
         <label>Teléfono<input name="telefono" type="tel" autocomplete="tel" required></label>
@@ -325,10 +325,10 @@
        loadPublicMedia().catch(()=>undefined);
        const checkoutModal=document.getElementById('checkout-modal'); const openCheckout=document.getElementById('open-checkout'); const closeCheckout=document.getElementById('close-checkout'); const checkoutForm=document.getElementById('checkout-form'); const checkoutStatus=document.getElementById('checkout-status');
        function setCheckout(open){checkoutModal.classList.toggle('open',open);checkoutModal.setAttribute('aria-hidden',String(!open));document.body.classList.toggle('modal-open',open);if(open)checkoutForm.querySelector('input').focus();else openCheckout.focus();}
-       openCheckout.addEventListener('click',()=>{trackEvent('checkout_open');setCheckout(true);}); closeCheckout.addEventListener('click',()=>setCheckout(false)); checkoutModal.addEventListener('click',(event)=>{if(event.target===checkoutModal)setCheckout(false);});
+               openCheckout.addEventListener('click',()=>{if(window.__daringSoldOut){const aviso=document.createElement('div');aviso.className='payment-banner';aviso.setAttribute('role','status');aviso.textContent='Por el momento no hay stock. Volvé a intentarlo en unos días.';document.body.appendChild(aviso);setTimeout(()=>aviso.remove(),8000);return;}trackEvent('checkout_open');setCheckout(true);}); closeCheckout.addEventListener('click',()=>setCheckout(false)); checkoutModal.addEventListener('click',(event)=>{if(event.target===checkoutModal)setCheckout(false);});
        checkoutForm.addEventListener('submit',async(event)=>{event.preventDefault();const formData=Object.fromEntries(new FormData(checkoutForm));window.daringCheckoutData=formData;trackEvent('checkout_submit');const submitButton=checkoutForm.querySelector('button[type="submit"]');submitButton.disabled=true;checkoutStatus.textContent='Conectando con Mercado Pago...';try{const response=await fetch('/api/checkout/create-preference',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(formData)});const result=await response.json().catch(()=>({}));if(!response.ok||!result.init_point){checkoutStatus.textContent=result.error||'No pudimos iniciar el pago. Probá de nuevo en unos minutos.';submitButton.disabled=false;return;}trackEvent('checkout_started');fbqTrack('InitiateCheckout',{content_ids:[daringPixel.id],content_name:daringPixel.name,content_type:'product',num_items:1,value:daringPrice(),currency:'UYU'});checkoutStatus.textContent='Te estamos llevando al pago...';window.location.href=result.init_point;}catch{checkoutStatus.textContent='No pudimos iniciar el pago. Revisá tu conexión y probá de nuevo.';submitButton.disabled=false;}});
        addEventListener('keydown',(event)=>{if(event.key==='Escape'&&checkoutModal.classList.contains('open'))setCheckout(false);});
-       const paymentResult=new URLSearchParams(location.search).get('pago');if(paymentResult){const paymentMessages={aprobado:'¡Pago aprobado! Gracias por tu compra. El recetario y el video de armado van a llegar a tu correo.',pendiente:'Tu pago quedó pendiente. Te vamos a avisar cuando se acredite.',rechazado:'El pago fue rechazado. Podés intentar de nuevo con otro medio de pago.'};const message=paymentMessages[paymentResult];if(paymentResult==='aprobado'){fbqTrack('Purchase',{content_ids:[daringPixel.id],content_name:daringPixel.name,content_type:'product',num_items:1,value:daringPrice(),currency:'UYU'});}if(message){const banner=document.createElement('div');banner.className='payment-banner';banner.setAttribute('role','status');banner.textContent=message;document.body.appendChild(banner);setTimeout(()=>banner.remove(),12000);}history.replaceState({},'',location.pathname);}
+       const paymentResult=new URLSearchParams(location.search).get('pago');if(paymentResult){const paymentMessages={aprobado:'¡Pago aprobado! Gracias por tu compra. El recetario y el video de armado van a llegar a tu correo.',pendiente:'Tu pago quedó pendiente. Te vamos a avisar cuando se acredite.',rechazado:'El pago fue rechazado. Podés intentar de nuevo con otro medio de pago.'};const message=paymentMessages[paymentResult];if(paymentResult==='aprobado'){try{if(!sessionStorage.getItem('daring_purchase_tracked')){fbqTrack('Purchase',{content_ids:[daringPixel.id],content_name:daringPixel.name,content_type:'product',num_items:1,value:daringPrice(),currency:'UYU'});sessionStorage.setItem('daring_purchase_tracked','1');}}catch{fbqTrack('Purchase',{content_ids:[daringPixel.id],content_name:daringPixel.name,content_type:'product',num_items:1,value:daringPrice(),currency:'UYU'});}}if(message){const banner=document.createElement('div');banner.className='payment-banner';banner.setAttribute('role','status');banner.textContent=message;document.body.appendChild(banner);setTimeout(()=>banner.remove(),12000);}history.replaceState({},'',location.pathname);}
         if(reduced){caps.forEach((cap,index)=>cap.style.display=index?'none':'block');}
      })();
    </script>
@@ -359,7 +359,13 @@
            const big = document.querySelector('.price-row .price-big');
            if (big) big.textContent = priceText;
          }
-         if (data.stock && typeof data.stock.available === 'number') {
+          if (data.whatsapp) {
+            const numero = String(data.whatsapp).replace(/\D/g, '');
+            if (numero) document.querySelectorAll('a[href*="wa.me/"]').forEach((a) => {
+              try { const url = new URL(a.href); url.pathname = '/' + numero; a.href = url.toString(); } catch {}
+            });
+          }
+          if (data.stock && typeof data.stock.available === 'number') {
            const clock = document.querySelector('.flip-clock');
            if (clock) {
              const digits = String(Math.max(0, data.stock.available)).padStart(3, '0');
@@ -376,9 +382,19 @@
                  if (data.price_cents) nodo.offers.price = String(Math.round(data.price_cents));
                  ofertaSchema.textContent = JSON.stringify(datos);
                }
-             } catch (e) {}
-           }
-         }
+              } catch (e) {}
+            }
+            if (data.stock.available <= 0) {
+              window.__daringSoldOut = true;
+              const cta = document.getElementById('open-checkout');
+              if (cta) {
+                cta.disabled = true;
+                cta.setAttribute('aria-disabled', 'true');
+                const etiqueta = cta.querySelector('[data-cms="oferta.cta"]');
+                if (etiqueta) etiqueta.textContent = 'Agotado por el momento';
+              }
+            }
+          }
          if (Array.isArray(data.faq) && data.faq.length) {
            const faqSchema = document.querySelectorAll('script[type="application/ld+json"]');
            faqSchema.forEach(function(script){

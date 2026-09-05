@@ -49,7 +49,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
     priceCents = row ? Number(row.value) : null;
   } catch { priceCents = null; }
 
-  return new Response(JSON.stringify({ content: flat, faq: faq.results, images, stock, price_cents: priceCents }), { headers: { ...headers, 'Content-Type': 'application/json' } });
+  let whatsapp: string | null = null;
+  try {
+    const row = await env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('whatsapp_phone').first<{ value: string }>();
+    whatsapp = row ? String(row.value).replace(/\D/g, '') : null;
+  } catch { whatsapp = null; }
+
+  return new Response(JSON.stringify({ content: flat, faq: faq.results, images, stock, price_cents: priceCents, whatsapp }), { headers: { ...headers, 'Content-Type': 'application/json' } });
 };
 
 export const onRequestOptions: PagesFunction = async ({ request }) => {
