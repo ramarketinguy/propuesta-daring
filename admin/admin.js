@@ -1039,6 +1039,7 @@ async function boot() {
 
   document.querySelectorAll('.sidebar-nav a').forEach((a) => a.addEventListener('click', (event) => {
     const section = a.dataset.section;
+    if (!section) return;
     if (window.location.hash !== `#${section}`) {
       window.location.hash = `#${section}`;
     }
