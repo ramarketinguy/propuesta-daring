@@ -576,3 +576,8 @@
 
 ## Cambio de pixel de Meta (05-sep-2026)
 - Pixel anterior 1395478826107134 reemplazado por 1073871952239425 (pedido del usuario). Eventos estándar intactos (no llevan ID). Desplegado y verificado en producción.
+
+## API de conversiones CAPI (05-sep-2026)
+- Código implementado y desplegado (deployment f200128e): Purchase server-side desde el webhook al aprobarse el pago, con valor/moneda/contenido + email y teléfono hasheados + IP/UA/fbp/fbc + event_id compartido con el navegador para deduplicar.
+- Migración 0012_meta_capi aplicada en remoto (columnas meta_event_id, fbp, fbc, client_ip, client_ua en orders). Landing genera y envía event_id. Si no hay token, el webhook sigue igual (CAPI se saltea en silencio).
+- Token recibido del usuario SIN permisos: es de un System User (ID 122093997699476974) sin ads_management y sin acceso al pixel 1073871952239425. NO se guardó. Falta: token con ads_management + pixel asignado, y test_event_code para probar.

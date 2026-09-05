@@ -32,6 +32,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const city = clean(body.localidad, 120);
   const address = clean(body.direccion, 240);
   const color = clean(body.color, 20).toLowerCase();
+  const metaEventId = typeof body.meta_event_id === 'string' ? body.meta_event_id.trim().slice(0, 64) : '';
+
+  const cookieHeader = request.headers.get('Cookie') ?? '';
+  const cookie = (name: string): string => {
+    const found = cookieHeader.split(';').map((p) => p.trim()).find((p) => p.startsWith(name + '='));
+    return found ? decodeURIComponent(found.slice(name.length + 1)).slice(0, 255) : '';
+  };
+  const fbp = cookie('_fbp');
+  const fbc = cookie('_fbc');
+  const clientIp = (request.headers.get('CF-Connecting-IP') ?? '').trim().slice(0, 64);
+  const clientUa = (request.headers.get('User-Agent') ?? '').trim().slice(0, 300);
 
   if (!name || !phone || !department || !city || !address) return json({ error: 'Faltan completar datos del formulario.' }, 400);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'El correo electrónico no es válido.' }, 400);
@@ -63,8 +74,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   try {
-    await env.DB.prepare('INSERT INTO orders (id, external_reference, order_code, status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_department, color, quantity, amount_cents, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(orderId, orderId, orderCode, 'checkout_started', name, email, phone, address, city, department, color, 1, amountCents, currency)
+    await env.DB.prepare('INSERT INTO orders (id, external_reference, order_code, status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_department, color, quantity, amount_cents, currency, meta_event_id, fbp, fbc, client_ip, client_ua) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(orderId, orderId, orderCode, 'checkout_started', name, email, phone, address, city, department, color, 1, amountCents, currency, metaEventId || null, fbp || null, fbc || null, clientIp || null, clientUa || null)
       .run();
   } catch {
     return json({ error: 'No se pudo registrar la orden. Probá de nuevo.' }, 500);

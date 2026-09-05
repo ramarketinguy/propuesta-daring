@@ -1,0 +1,5 @@
+ALTER TABLE orders ADD COLUMN meta_event_id TEXT;
+ALTER TABLE orders ADD COLUMN fbp TEXT;
+ALTER TABLE orders ADD COLUMN fbc TEXT;
+ALTER TABLE orders ADD COLUMN client_ip TEXT;
+ALTER TABLE orders ADD COLUMN client_ua TEXT;

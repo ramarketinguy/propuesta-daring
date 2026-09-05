@@ -3,6 +3,7 @@ import { json } from './response';
 interface Env {
   DB: D1Database;
   MERCADOPAGO_ACCESS_TOKEN?: string;
+  META_CAPI_TOKEN?: string;
   RESEND_API_KEY?: string;
   MEDIA: R2Bucket;
 }
@@ -18,6 +19,11 @@ export interface OrderRow {
   shipping_address: string | null;
   color: string;
   amount_cents: number;
+  meta_event_id: string | null;
+  fbp: string | null;
+  fbc: string | null;
+  client_ip: string | null;
+  client_ua: string | null;
 }
 
 export interface EmailResult {
@@ -304,6 +310,53 @@ async function registrarEmail(env: Env, orderId: string, provider: string, resul
   }
 }
 
+async function sha256(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function enviarCapiPurchase(env: Env, origin: string, order: OrderRow, paymentId: string): Promise<void> {
+  const token = env.META_CAPI_TOKEN;
+  if (!token) return;
+  try {
+    const userData: Record<string, unknown> = {};
+    const email = order.customer_email.trim().toLowerCase();
+    if (email) userData.em = [await sha256(email)];
+    const phone = (order.customer_phone ?? '').replace(/\D/g, '');
+    if (phone) userData.ph = [await sha256(phone)];
+    if (order.client_ip) userData.client_ip_address = order.client_ip;
+    if (order.client_ua) userData.client_user_agent = order.client_ua;
+    if (order.fbp) userData.fbp = order.fbp;
+    if (order.fbc) userData.fbc = order.fbc;
+    const evento: Record<string, unknown> = {
+      event_name: 'Purchase',
+      event_time: Math.floor(Date.now() / 1000),
+      action_source: 'website',
+      event_source_url: origin.endsWith('/') ? origin : origin + '/',
+      user_data: userData,
+      custom_data: {
+        value: Math.round((order.amount_cents / 100) * 100) / 100,
+        currency: 'UYU',
+        content_ids: ['sarten-daring-28'],
+        content_type: 'product',
+        order_id: order.order_code ?? order.id
+      }
+    };
+    if (order.meta_event_id) evento.event_id = order.meta_event_id;
+    const response = await fetch(`https://graph.facebook.com/v21.0/1073871952239425/events?access_token=${encodeURIComponent(token)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: [evento] })
+    });
+    if (!response.ok) {
+      const detalle = await response.text().catch(() => '');
+      console.log(`CAPI Purchase no aceptado para orden ${order.id}: HTTP ${response.status} ${detalle.slice(0, 200)}`);
+    }
+  } catch (error) {
+    console.log(`CAPI Purchase falló para orden ${order.id}: ${error instanceof Error ? error.message : 'error desconocido'}`);
+  }
+}
+
 const PRODUCT_ID = 'sarten-daring-28';
 
 async function ajustarStock(env: Env, color: string, campo: 'stock_reserved' | 'stock_sold', delta: number, reason: string, orderId: string): Promise<void> {
@@ -386,7 +439,7 @@ export async function sincronizarPago(env: Env, origin: string, paymentId: strin
     }
 
     if (status === 'approved' && oldStatus !== 'approved') {
-      const order = await env.DB.prepare('SELECT id, customer_name, customer_email, customer_phone, shipping_department, shipping_city, shipping_address, color, amount_cents FROM orders WHERE id = ?').bind(previous.id).first<OrderRow>();
+      const order = await env.DB.prepare('SELECT id, customer_name, customer_email, customer_phone, shipping_department, shipping_city, shipping_address, color, amount_cents, order_code, meta_event_id, fbp, fbc, client_ip, client_ua FROM orders WHERE id = ?').bind(previous.id).first<OrderRow>();
       if (order) {
         const existingEmail = await env.DB.prepare('SELECT id FROM email_deliveries WHERE order_id = ? AND provider = ? AND status = ? LIMIT 1')
           .bind(order.id, 'resend-buyer', 'sent')
@@ -397,6 +450,7 @@ export async function sincronizarPago(env: Env, origin: string, paymentId: strin
           const ownerResult = await enviarEmailDueno(env, order, paymentId, buyerResult.ok);
           if (ownerResult) await registrarEmail(env, order.id, 'resend-owner', ownerResult);
           await enviarTelegram(env, `Nueva venta aprobada en daring.com.uy\n\nCliente: ${order.customer_name}\nCorreo: ${order.customer_email}\nColor: ${order.color}\nTotal: $ ${(order.amount_cents / 100).toLocaleString('es-UY')}\nPago Mercado Pago: ${paymentId}\nOrden: ${order.id}`);
+          await enviarCapiPurchase(env, origin, order, paymentId);
         }
       }
     }
