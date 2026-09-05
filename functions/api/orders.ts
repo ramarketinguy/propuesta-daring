@@ -47,21 +47,35 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   if (q) {
-    conditions.push('(customer_email LIKE ? OR customer_name LIKE ? OR id LIKE ?)');
+    conditions.push('(customer_email LIKE ? OR customer_name LIKE ? OR id LIKE ? OR order_code LIKE ?)');
     const like = `%${q}%`;
-    bindings.push(like, like, like);
+    bindings.push(like, like, like, like);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const baseFrom = `FROM orders ${where}`;
 
+  const filterConditions: string[] = [];
+  const filterBindings: unknown[] = [];
+  if (period === '7d') {
+    filterConditions.push('created_at >= datetime(\'now\', \'-7 days\')');
+  } else if (period === '30d') {
+    filterConditions.push('created_at >= datetime(\'now\', \'-30 days\')');
+  }
+  if (q) {
+    filterConditions.push('(customer_email LIKE ? OR customer_name LIKE ? OR id LIKE ? OR order_code LIKE ?)');
+    const like = `%${q}%`;
+    filterBindings.push(like, like, like, like);
+  }
+  const filterWhere = filterConditions.length ? `WHERE ${filterConditions.join(' AND ')}` : '';
+
   const orders = await env.DB.prepare(
-    `SELECT id, order_code, customer_name, customer_email, customer_phone, shipping_department, shipping_city, color, amount_cents, currency, status, shipping_status, tracking_number, created_at, approved_at ${baseFrom} ORDER BY ${sortColumn} ${order} LIMIT ? OFFSET ?`
+    `SELECT id, order_code, customer_name, customer_email, customer_phone, shipping_department, shipping_city, shipping_address, quantity, color, amount_cents, currency, status, shipping_status, tracking_number, created_at, approved_at ${baseFrom} ORDER BY ${sortColumn} ${order} LIMIT ? OFFSET ?`
   ).bind(...bindings, limit, offset).all<Record<string, unknown>>();
 
   const total = await env.DB.prepare(`SELECT COUNT(*) AS total ${baseFrom}`).bind(...bindings).first<{ total: number }>();
 
-  const counts = await env.DB.prepare('SELECT status, COUNT(*) AS total FROM orders GROUP BY status').all<{ status: string; total: number }>();
+  const counts = await env.DB.prepare(`SELECT status, COUNT(*) AS total FROM orders ${filterWhere} GROUP BY status`).bind(...filterBindings).all<{ status: string; total: number }>();
   const buckets = { initiated: 0, pending: 0, completed: 0, rejected: 0, cancelled: 0, refunded: 0, total: 0 };
   for (const row of counts.results) {
     if (row.status === 'checkout_started') buckets.initiated += row.total;
@@ -72,7 +86,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     else if (row.status === 'refunded') buckets.refunded += row.total;
     buckets.total += row.total;
   }
-  const revenue = await env.DB.prepare('SELECT COALESCE(SUM(amount_cents), 0) AS gross, COALESCE(SUM(COALESCE(mp_fee_cents, 0)), 0) AS fees FROM orders WHERE status = ?').bind('approved').first<{ gross: number; fees: number }>();
+  const revenueWhere = filterConditions.length ? `${filterWhere} AND status = ?` : 'WHERE status = ?';
+  const revenue = await env.DB.prepare(`SELECT COALESCE(SUM(amount_cents), 0) AS gross, COALESCE(SUM(COALESCE(mp_fee_cents, 0)), 0) AS fees FROM orders ${revenueWhere}`).bind(...filterBindings, 'approved').first<{ gross: number; fees: number }>();
   const grossCents = Number(revenue?.gross ?? 0);
   const feesCents = Number(revenue?.fees ?? 0);
 

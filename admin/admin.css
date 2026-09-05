@@ -81,6 +81,8 @@ body.theme-light .sidebar { background: linear-gradient(180deg, #fff 0%, #fbeef0
 .sidebar-logout, .sidebar-theme { flex: 1; padding: .5rem .65rem; border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--muted); font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: .35rem; }
 .sidebar-logout:hover, .sidebar-theme:hover { color: var(--text); border-color: var(--accent); }
 .sidebar-theme svg, .sidebar-logout svg { width: 14px; height: 14px; }
+.sidebar-external { display: block; margin-bottom: .5rem; color: var(--muted); font-size: 12px; text-decoration: none; }
+.sidebar-external:hover { color: var(--text); }
 
 /* ---------- MAIN ---------- */
 .main { padding: 1.75rem 2rem 3rem; max-width: 1400px; }

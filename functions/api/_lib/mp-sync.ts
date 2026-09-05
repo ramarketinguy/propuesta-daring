@@ -411,7 +411,7 @@ export async function reembolsarPago(env: Env, orderId: string): Promise<{ ok: b
   const token = env.MERCADOPAGO_ACCESS_TOKEN;
   if (!token) return { ok: false, error: 'MERCADOPAGO_ACCESS_TOKEN no configurada' };
 
-  const order = await env.DB.prepare('SELECT id, status, payment_id, color FROM orders WHERE id = ?').bind(orderId).first<{ id: string; status: string; payment_id: string | null; color: string; order_code: string | null }>();
+  const order = await env.DB.prepare('SELECT id, status, payment_id, color, amount_cents, customer_name, order_code FROM orders WHERE id = ?').bind(orderId).first<{ id: string; status: string; payment_id: string | null; color: string; order_code: string | null }>();
   if (!order) return { ok: false, error: 'Venta no encontrada.' };
   if (!order.payment_id) return { ok: false, error: 'Esta venta no tiene un pago de Mercado Pago asociado todavía.' };
   if (order.status !== 'approved') return { ok: false, error: 'Solo se pueden reembolsar ventas con pago aprobado.' };
@@ -437,7 +437,7 @@ export async function reembolsarPago(env: Env, orderId: string): Promise<{ ok: b
       .bind(crypto.randomUUID(), orderId, 'payment_refunded', order.payment_id)
       .run();
     await env.DB.prepare('INSERT INTO audit_log (id, action, entity, entity_id, details) VALUES (?, ?, ?, ?, ?)')
-      .bind(crypto.randomUUID(), 'orders.refund', 'orders', orderId, JSON.stringify({ payment_id: order.payment_id, color: order.color }))
+      .bind(crypto.randomUUID(), 'orders.refund', 'orders', orderId, JSON.stringify({ payment_id: order.payment_id, color: order.color, amount_cents: order.amount_cents, order_code: order.order_code, customer_name: order.customer_name }))
       .run();
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : 'error actualizando la venta' };

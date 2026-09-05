@@ -17,20 +17,20 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const bindings: unknown[] = [];
 
   if (status === 'sent' || status === 'failed' || status === 'queued') {
-    conditions.push('status = ?');
+    conditions.push('e.status = ?');
     bindings.push(status);
   }
   if (provider === 'buyer' || provider === 'owner') {
-    conditions.push('provider = ?');
+    conditions.push('e.provider = ?');
     bindings.push(provider === 'buyer' ? 'resend-buyer' : 'resend-owner');
   }
-  if (period === '7d') conditions.push('created_at >= datetime(\'now\', \'-7 days\')');
-  else if (period === '30d') conditions.push('created_at >= datetime(\'now\', \'-30 days\')');
+  if (period === '7d') conditions.push('e.created_at >= datetime(\'now\', \'-7 days\')');
+  else if (period === '30d') conditions.push('e.created_at >= datetime(\'now\', \'-30 days\')');
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const rows = await env.DB.prepare(`SELECT id, order_id, provider, provider_message_id, status, error_message, created_at, sent_at FROM email_deliveries ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).bind(...bindings, limit, offset).all<{ id: string; order_id: string; provider: string; provider_message_id: string | null; status: string; error_message: string | null; created_at: string; sent_at: string | null }>();
-  const total = await env.DB.prepare(`SELECT COUNT(*) AS total FROM email_deliveries ${where}`).bind(...bindings).first<{ total: number }>();
+  const rows = await env.DB.prepare(`SELECT e.id, e.order_id, o.order_code, e.provider, e.provider_message_id, e.status, e.error_message, e.created_at, e.sent_at FROM email_deliveries e LEFT JOIN orders o ON o.id = e.order_id ${where} ORDER BY e.created_at DESC LIMIT ? OFFSET ?`).bind(...bindings, limit, offset).all<{ id: string; order_id: string; order_code: string | null; provider: string; provider_message_id: string | null; status: string; error_message: string | null; created_at: string; sent_at: string | null }>();
+  const total = await env.DB.prepare(`SELECT COUNT(*) AS total FROM email_deliveries e ${where}`).bind(...bindings).first<{ total: number }>();
 
   const counts = await env.DB.prepare('SELECT provider, status, COUNT(*) AS total FROM email_deliveries GROUP BY provider, status').all<{ provider: string; status: string; total: number }>();
   const buckets = { buyer_total: 0, buyer_sent: 0, buyer_failed: 0, owner_total: 0, owner_sent: 0, owner_failed: 0 };

@@ -3,6 +3,8 @@
   ventas: { data: null, page: 1, limit: 20, filters: { q: '', status: '', period: 'all' } },
   emails: { data: null, page: 1, limit: 20, filters: { status: '', provider: '', period: 'all' } },
   settings: null,
+  resumen: { period: 'all' },
+  stockColors: {},
   theme: 'dark'
 };
 
@@ -59,22 +61,27 @@ function showPage(section) {
 }
 
 async function loadResumen() {
-  const period = state.ventas.filters.period;
+  const period = state.resumen.period;
   const query = `?period=${period}`;
   const [summaryRes, alertsRes, ordersRes] = await Promise.all([
     fetch(`/api/metrics/summary${query}`, { credentials: 'same-origin' }),
     fetch(`/api/alerts${query}`, { credentials: 'same-origin' }),
     api(`/api/orders?limit=1&period=${period}`)
   ]);
+  if (summaryRes.status === 401 || alertsRes.status === 401) { window.location.replace('/admin/login/'); throw new Error('auth'); }
   if (!summaryRes.ok || !alertsRes.ok || !ordersRes.ok) throw new Error('resumen');
   const summary = await summaryRes.json();
   const alerts = await alertsRes.json();
   const ventas = await ordersRes.json();
-  document.querySelector('#kpi-visits').textContent = number(summary.page_views);
+  const visitantes = Number(summary.unique_visitors ?? 0);
+  const concluidas = Number(ventas.counts.completed ?? 0);
+  document.querySelector('#kpi-visits').textContent = number(visitantes);
+  document.querySelector('#kpi-visits-trend').textContent = `${number(summary.page_views)} páginas vistas en total`;
   document.querySelector('#kpi-buy-clicks').textContent = number(summary.buy_clicks);
   document.querySelector('#kpi-checkout-opens').textContent = number(summary.checkout_opens);
   document.querySelector('#kpi-checkout-submits').textContent = number(summary.checkout_submits);
-  document.querySelector('#kpi-resumen-completed').textContent = number(ventas.counts.completed);
+  document.querySelector('#kpi-resumen-completed').textContent = number(concluidas);
+  document.querySelector('#kpi-resumen-conversion').textContent = visitantes > 0 ? `Convierte el ${Math.round((concluidas / visitantes) * 100)}% de las visitas` : 'Pagos aprobados en Mercado Pago';
   document.querySelector('#kpi-resumen-revenue').textContent = money(ventas.net_cents);
   document.querySelector('#kpi-resumen-fee').textContent = 'Comisión Mercado Pago: ' + money(ventas.fees_cents);
   document.querySelector('#kpi-resumen-initiated').textContent = number(ventas.counts.initiated);
@@ -151,9 +158,11 @@ async function loadVentas() {
       const id = button.closest('tr').dataset.orderId;
       openOrderDetail(id);
     }));
-    tbody.querySelectorAll('select.envio-select').forEach((select) => select.addEventListener('change', async () => {
+    tbody.querySelectorAll('select.envio-select').forEach((select) => {
+      select.dataset.current = select.value;
+      select.addEventListener('change', async () => {
       const id = select.dataset.orderId;
-      const valorAnterior = select.getAttribute('data-current') ?? '';
+      const valorAnterior = select.dataset.current ?? '';
       select.disabled = true;
       const response = await api(`/api/orders/${id}`, { method: 'PATCH', body: JSON.stringify({ shipping_status: select.value || null }) });
       const result = await response.json().catch(() => ({}));
@@ -161,7 +170,8 @@ async function loadVentas() {
       if (!response.ok) { select.value = valorAnterior; toast(result.error ?? 'No se pudo cambiar el estado de envío.', 'error'); return; }
       toast('Estado de envío actualizado', 'success');
       await loadVentas();
-    }));
+      });
+    });
   }
   renderPagination('ventas-pagination', result.total, page, limit, (p) => { state.ventas.page = p; loadVentas(); });
 }
@@ -169,8 +179,19 @@ async function loadVentas() {
 function statusLabel(status) {
   return { checkout_started: 'Iniciado', pending: 'Pendiente', approved: 'Concluida', rejected: 'Rechazada', cancelled: 'Cancelada', refunded: 'Reembolsada' }[status] ?? status;
 }
+function emailStatusLabel(status) {
+  return { sent: 'Enviado', failed: 'Con error', queued: 'En cola' }[status] ?? status;
+}
 function shippingLabel(status) {
   return { preparing: 'Preparando', shipped: 'Despachado', delivered: 'Entregado', returned: 'Devuelto' }[status] ?? 'Sin estado';
+}
+function normalizarWa(phone) {
+  const digitos = String(phone ?? '').replace(/\D/g, '');
+  if (!digitos) return '';
+  if (digitos.startsWith('598') && digitos.length >= 11) return digitos;
+  if (digitos.length === 9 && digitos.startsWith('0')) return '598' + digitos.slice(1);
+  if (digitos.length === 8) return '598' + digitos;
+  return digitos.length >= 8 ? digitos : '';
 }
 
 function renderPagination(elementId, total, page, limit, onChange) {
@@ -203,10 +224,13 @@ async function openOrderDetail(id) {
 
 function renderOrderDetail(order, timeline, emails) {
   const container = document.querySelector('#venta-detail');
+  const waNumero = normalizarWa(order.customer_phone);
+  const waLink = waNumero ? `https://wa.me/${waNumero}?text=${encodeURIComponent(`Hola ${order.customer_name ?? ''}, te escribo de Daring por tu compra ${order.order_code ?? ''}.`)}` : '';
   container.innerHTML = `
     <header class="venta-detail-header">
       <h2>Compra <code>${escapeHTML(order.order_code ?? order.id)}</code></h2>
       <div class="venta-header-actions">
+        ${waLink ? `<a class="button-secondary" href="${waLink}" target="_blank" rel="noopener">Escribir por WhatsApp</a>` : ''}
         ${order.payment_id ? '<button class="button-secondary" type="button" data-action="verificar-mp">Verificar pago en Mercado Pago</button>' : ''}
         ${order.status === 'approved' ? '<button class="button-secondary" type="button" data-action="reembolsar">Devolver pago</button>' : ''}
         <button class="button-secondary" type="button" data-action="cerrar-detalle">Cerrar</button>
@@ -265,7 +289,7 @@ function renderOrderDetail(order, timeline, emails) {
         ${emails.length ? emails.map((email) => `
           <div class="timeline-item">
             <strong>${escapeHTML(email.provider === 'resend-buyer' ? 'Al comprador' : 'Al dueño')}</strong>
-            <span class="status-pill s-${escapeHTML(email.status)}">${escapeHTML(email.status)}</span>
+            <span class="status-pill s-${escapeHTML(email.status)}">${escapeHTML(emailStatusLabel(email.status))}</span>
             <time>${escapeHTML(formatDate(email.created_at))}</time>
             ${email.error_message ? `<div class="text-muted">${escapeHTML(email.error_message)}</div>` : ''}
           </div>`).join('') : '<div class="text-muted">Todavía no se enviaron mails automáticos.</div>'}
@@ -289,7 +313,7 @@ function renderOrderDetail(order, timeline, emails) {
   });
   const reembolsarBtn = container.querySelector('[data-action="reembolsar"]');
   if (reembolsarBtn) reembolsarBtn.addEventListener('click', async () => {
-    if (!window.confirm('¿Devolver el pago completo a la clienta por Mercado Pago? La venta pasará a "Reembolsada" y la unidad volverá al stock.')) return;
+    if (!window.confirm(`¿Devolver ${money(order.amount_cents)} a ${order.customer_name} por Mercado Pago? La venta pasará a "Reembolsada" y la unidad volverá al stock.`)) return;
     reembolsarBtn.disabled = true;
     reembolsarBtn.textContent = 'Procesando devolución...';
     const response = await api(`/api/orders/${order.id}/refund`, { method: 'POST' });
@@ -322,37 +346,66 @@ function renderOrderDetail(order, timeline, emails) {
   });
 }
 
-function exportVentasCSV() {
-  if (!state.ventas.data?.orders?.length) { toast('No hay datos para exportar.', 'error'); return; }
-  const rows = state.ventas.data.orders;
-  const headers = ['id', 'codigo', 'fecha', 'cliente', 'email', 'telefono', 'departamento', 'localidad', 'direccion', 'color', 'monto_cents', 'comision_mp_cents', 'neto_cents', 'estado_pago', 'estado_envio'];
-  const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
-  const lines = [headers.join(',')];
-  rows.forEach((order) => {
-    lines.push([
-      order.id,
-      order.created_at,
-      order.customer_name,
-      order.customer_email,
-      order.customer_phone ?? '',
-      order.shipping_department ?? '',
-      order.shipping_city ?? '',
-      order.shipping_address ?? '',
-      order.color,
-      order.amount_cents,
-      order.mp_fee_cents ?? 0,
-      (order.amount_cents ?? 0) - (order.mp_fee_cents ?? 0),
-      order.status,
-      order.shipping_status ?? ''
-    ].map(escape).join(','));
-  });
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `ventas-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+async function exportVentasCSV() {
+  const button = document.querySelector('#ventas-export');
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Armando archivo...';
+  try {
+    const { filters } = state.ventas;
+    const base = new URLSearchParams({ page: '1', limit: '100', period: filters.period });
+    if (filters.q) base.set('q', filters.q);
+    if (filters.status) base.set('status', filters.status);
+    const todas = [];
+    let page = 1;
+    for (;;) {
+      base.set('page', String(page));
+      const response = await api(`/api/orders?${base.toString()}`);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'No se pudo exportar.');
+      todas.push(...(result.orders ?? []));
+      if (!result.orders?.length || todas.length >= (result.total ?? 0)) break;
+      page += 1;
+    }
+    if (!todas.length) { toast('No hay datos para exportar.', 'error'); return; }
+    const pesos = (cents) => Math.round((cents ?? 0) / 100);
+    const headers = ['Fecha', 'Código', 'Cliente', 'Email', 'Teléfono', 'Departamento', 'Localidad', 'Dirección', 'Color', 'Cantidad', 'Monto ($)', 'Comisión MP ($)', 'Neto ($)', 'Estado pago', 'Estado envío', 'Seguimiento'];
+    const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const lines = [headers.map(escape).join(';')];
+    todas.forEach((order) => {
+      lines.push([
+        formatDate(order.created_at),
+        order.order_code ?? '',
+        order.customer_name,
+        order.customer_email,
+        order.customer_phone ?? '',
+        order.shipping_department ?? '',
+        order.shipping_city ?? '',
+        order.shipping_address ?? '',
+        order.color,
+        order.quantity ?? 1,
+        pesos(order.amount_cents),
+        pesos(order.mp_fee_cents),
+        pesos(order.amount_cents) - pesos(order.mp_fee_cents),
+        statusLabel(order.status),
+        shippingLabel(order.shipping_status),
+        order.tracking_number ?? ''
+      ].map(escape).join(';'));
+    });
+    const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ventas-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast(`Archivo armado con ${todas.length} ventas.`, 'success');
+  } catch (error) {
+    toast(error.message ?? 'No se pudo exportar.', 'error');
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
 }
 
 async function loadEmails() {
@@ -381,10 +434,10 @@ async function loadEmails() {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${escapeHTML(formatDate(email.created_at))}</td>
-        <td><code class="text-muted">${escapeHTML(email.order_id.slice(0, 8))}</code></td>
+        <td><code class="text-muted">${escapeHTML(email.order_code ?? email.order_id.slice(0, 8))}</code></td>
         <td>${escapeHTML(email.provider === 'resend-buyer' ? 'Al comprador' : 'Al dueño')}</td>
-        <td><span class="status-pill s-${escapeHTML(email.status)}">${escapeHTML(email.status)}</span></td>
-        <td class="text-muted">${escapeHTML(email.error_message ?? email.provider_message_id ?? 'OK')}</td>`;
+        <td><span class="status-pill s-${escapeHTML(email.status)}">${escapeHTML(emailStatusLabel(email.status))}</span></td>
+        <td class="text-muted">${escapeHTML(email.error_message ?? 'OK')}</td>`;
       tbody.append(row);
     });
   }
@@ -546,6 +599,32 @@ async function loadCarouselManager(placement, containerId, hintId, nombre) {
   });
 }
 
+async function compressImage(file) {
+  if (!file.type.startsWith('image/')) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const MAX = 1920;
+    const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size <= 2 * 1024 * 1024) { if (bitmap.close) bitmap.close(); return file; }
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    if (bitmap.close) bitmap.close();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    if (!blob) return file;
+    const name = (file.name || 'imagen').replace(/\.[^.]+$/, '');
+    return new File([blob], `${name}.jpg`, { type: 'image/jpeg' });
+  } catch { return file; }
+}
+
+const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
+function validarVideo(file) {
+  if (file.size > MAX_VIDEO_BYTES) {
+    throw new Error(`Ese video pesa ${(file.size / 1048576).toFixed(1)} MB y el máximo permitido es 12 MB. Probá con una versión más corta o comprimida.`);
+  }
+}
+
 async function subirArchivo(placement, file) {
   const formData = new FormData();
   formData.set('placement', placement);
@@ -569,6 +648,7 @@ async function wireCarouselUpload(placement, buttonSelector, inputSelector, cont
     button.disabled = true;
     button.textContent = 'Subiendo…';
     try {
+      if (file.type.startsWith('video/')) validarVideo(file);
       await subirArchivo(placement, file);
       toast('Archivo agregado y publicado', 'success');
       await loadCarouselManager(placement, containerId, hintId, nombre);
@@ -713,27 +793,36 @@ async function loadUso() {
 function renderUsageLimits(data) {
   const container = document.querySelector('#usage-limits');
   container.replaceChildren();
+  const r2Percent = Number(data.r2?.used_percent ?? 0);
+  const resumen = document.createElement('p');
+  resumen.className = 'empty-state';
+  resumen.style.textAlign = 'left';
+  resumen.style.margin = '0 0 1rem';
+  resumen.textContent = r2Percent >= 80
+    ? 'Atención: el almacenamiento está llegando al límite del plan gratuito. Avisale a Ramiro.'
+    : 'Todo está dentro de lo normal: no hay riesgo de costos extra ni de cortes por límites.';
+  container.append(resumen);
   const groups = [
-    { title: 'R2 (almacenamiento de medios)', items: [
-      { label: 'Objetos almacenados', current: `${number(data.r2?.object_count)} objetos`, limit: 'ilimitado (pago por uso)' },
+    { title: 'Fotos y videos guardados', items: [
+      { label: 'Archivos guardados', current: `${number(data.r2?.object_count)} archivos`, limit: 'ilimitado (se paga por uso)' },
       { label: 'Espacio ocupado', current: `${((data.r2?.size_bytes ?? 0) / 1024 / 1024).toFixed(2)} MB`, limit: data.r2?.limit_label ?? '10 GB' },
-      { label: 'Lecturas por mes', current: '— (no se mide)', limit: '10.000.000' },
-      { label: 'Escrituras por mes', current: '— (no se mide)', limit: '1.000.000' }
+      { label: 'Lecturas de archivos por mes', current: '— (no se mide)', limit: '10.000.000' },
+      { label: 'Subidas de archivos por mes', current: '— (no se mide)', limit: '1.000.000' }
     ]},
-    { title: 'D1 (base de datos)', items: [
-      { label: 'Filas estimadas en uso', current: `${number(data.d1?.estimate_rows ?? 0)} filas`, limit: 'millones' },
-      { label: 'Almacenamiento de base', current: '— (no se mide)', limit: data.d1?.limit_label ?? '5 GB' },
-      { label: 'Lecturas por día', current: '— (no se mide)', limit: '5.000.000' },
-      { label: 'Escrituras por día', current: '— (no se mide)', limit: '100.000' }
+    { title: 'Base de datos (ventas, mails, visitas)', items: [
+      { label: 'Registros guardados (aprox.)', current: `${number(data.d1?.estimate_rows ?? 0)} registros`, limit: 'millones' },
+      { label: 'Espacio de la base', current: '— (no se mide)', limit: data.d1?.limit_label ?? '5 GB' },
+      { label: 'Consultas por día', current: '— (no se mide)', limit: '5.000.000' },
+      { label: 'Guardados por día', current: '— (no se mide)', limit: '100.000' }
     ]},
-    { title: 'Pages (la página en sí)', items: [
-      { label: 'Deploys por mes', current: '— (no se mide)', limit: '500' },
-      { label: 'Dominios personalizados', current: '1 conectado', limit: '100' },
-      { label: 'Archivos por proyecto', current: '— (no se mide)', limit: '20.000' }
+    { title: 'La página en sí', items: [
+      { label: 'Publicaciones por mes', current: '— (no se mide)', limit: '500' },
+      { label: 'Dominios conectados', current: '1 conectado', limit: '100' },
+      { label: 'Archivos del sitio', current: '— (no se mide)', limit: '20.000' }
     ]},
-    { title: 'Workers (funciones)', items: [
-      { label: 'Requests por día', current: '— (no se mide)', limit: '100.000' },
-      { label: 'CPU por request', current: '—', limit: '10 ms' }
+    { title: 'Funciones automáticas', items: [
+      { label: 'Visitas y consultas por día', current: '— (no se mide)', limit: '100.000' },
+      { label: 'Tiempo de proceso por visita', current: '— (no se mide)', limit: '10 ms por visita (límite generoso)' }
     ]}
   ];
   groups.forEach((group) => {
@@ -761,6 +850,7 @@ async function loadStock() {
   document.querySelector('#stock-sold').textContent = number(data.totals.sold);
   const porColor = {};
   data.colors.forEach((c) => { porColor[c.color] = c; });
+  state.stockColors = porColor;
   const rojo = porColor.rojo;
   const negro = porColor.negro;
   document.querySelector('#stock-rojo').textContent = number(rojo?.available ?? 0);
@@ -859,6 +949,12 @@ function describirAuditoria(entry) {
       if (d.admin_notes) partes.push('notas internas');
       return 'Se actualizó una venta' + (partes.length ? ' (' + partes.join(', ') + ')' : '') + '.';
     }
+    case 'orders.refund': {
+      const monto = d.amount_cents != null ? ' de ' + money(d.amount_cents) : '';
+      const compra = d.order_code ? ` (compra ${d.order_code})` : '';
+      const quien = d.customer_name ? ` a ${d.customer_name}` : '';
+      return `Se devolvió el pago${monto}${quien} por Mercado Pago${compra}.`;
+    }
     case 'stock.update':
       return 'Se ajustó el stock' + (entry.entity_id ? ' del color ' + entry.entity_id : '') + ': de ' + (d.previous ?? '?') + ' a ' + (d.next ?? '?') + ' unidades' + (d.reason ? ' — ' + d.reason : '') + '.';
     case 'faq.create':
@@ -908,7 +1004,15 @@ function navigate() {
   const section = SECTIONS[hash] ? hash : 'resumen';
   showPage(section);
   const loader = LOADERS[SECTIONS[section].loader];
-  if (loader) loader().catch(() => undefined);
+  if (loader) loader().catch(() => {
+    toast(`No se pudo cargar la sección ${SECTIONS[section].title}. Revisá tu conexión y volvé a entrar.`, 'error');
+    if (section === 'ventas') {
+      document.querySelector('#ventas-hint').textContent = 'No se pudo cargar. Probá recargando la página.';
+      const banner = document.querySelector('#ventas-error');
+      banner.textContent = 'No se pudieron cargar las ventas. Revisá tu conexión y probá de nuevo.';
+      banner.classList.remove('hidden');
+    }
+  });
 }
 
 function applyTheme(theme) {
@@ -948,6 +1052,11 @@ async function boot() {
   document.querySelector('#contenido-save').addEventListener('click', saveContenido);
   document.querySelector('#faq-form').addEventListener('submit', createFaq);
   document.querySelector('#stock-form').addEventListener('submit', saveStock);
+  document.querySelector('#stock-form select[name="color"]').addEventListener('change', (event) => {
+    const fila = state.stockColors[event.currentTarget.value];
+    const input = document.querySelector('#stock-form input[name="stock_total"]');
+    if (fila && document.activeElement !== input) input.value = fila.stock_total;
+  });
 
   const auditAction = document.querySelector('#audit-action');
   auditAction.addEventListener('change', () => {
@@ -970,6 +1079,9 @@ async function boot() {
   ventasStatus.addEventListener('change', () => { state.ventas.filters.status = ventasStatus.value; refreshVentas(); });
   ventasPeriod.addEventListener('change', () => { state.ventas.filters.period = ventasPeriod.value; refreshVentas(); });
   document.querySelector('#ventas-export').addEventListener('click', exportVentasCSV);
+
+  const resumenPeriod = document.querySelector('#resumen-period');
+  resumenPeriod.addEventListener('change', () => { state.resumen.period = resumenPeriod.value; loadResumen().catch(() => undefined); });
 
   const emailsStatus = document.querySelector('#emails-status');
   const emailsProvider = document.querySelector('#emails-provider');
