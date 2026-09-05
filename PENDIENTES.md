@@ -11,7 +11,7 @@
 - [x] EnvÃ­o de recetario por email con Resend. (Mail al comprador con PDF adjunto + link de video, mail al dueÃ±o con toda la orden incluido color.)
 - [x] Subir recetario y video de armado a R2 (`entregables/recetario-pizza-daring.pdf` y `entregables/video-armado-daring.mp4`).
 - [x] Provisionar usuario admin real en D1 production. (Creado y login verificado el 28-ago-2026; fix iteraciones PBKDF2 a 100.000 por lÃ­mite de Cloudflare Workers.)
-- [ ] Probar el flujo completo de compra real: pago aprobado â†’ mail al comprador con recetario y video + aviso al dueÃ±o.
+- [x] Probar el flujo completo de compra real: pago aprobado -> mail al comprador con recetario y video + aviso al dueno. (Verificado 03-sep-2026 via D1: DR-000001 approved, mails resend-buyer y resend-owner en sent, stock convertido, sin reservas trabadas.)
 - [x] Conectar `daring.com.uy` al proyecto Pages. (Activo y verificado el 27-ago-2026, con www y HTTPS.)
 - [x] Actualizar la URL del webhook de Mercado Pago al dominio definitivo `https://daring.com.uy/api/webhooks/mercadopago`.
 
