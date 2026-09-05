@@ -581,3 +581,8 @@
 - Código implementado y desplegado (deployment f200128e): Purchase server-side desde el webhook al aprobarse el pago, con valor/moneda/contenido + email y teléfono hasheados + IP/UA/fbp/fbc + event_id compartido con el navegador para deduplicar.
 - Migración 0012_meta_capi aplicada en remoto (columnas meta_event_id, fbp, fbc, client_ip, client_ua en orders). Landing genera y envía event_id. Si no hay token, el webhook sigue igual (CAPI se saltea en silencio).
 - Token recibido del usuario SIN permisos: es de un System User (ID 122093997699476974) sin ads_management y sin acceso al pixel 1073871952239425. NO se guardó. Falta: token con ads_management + pixel asignado, y test_event_code para probar.
+
+## CAPI conectada y verificada (05-sep-2026)
+- Token bueno generado desde Events Manager (flujo sin Dataset Quality). Meta aceptó evento Purchase de prueba (events_received:1, TEST77405). Guardado como secreto META_CAPI_TOKEN en Pages + .dev.vars local (nunca en git).
+- Desde ahora cada venta aprobada envía Purchase server-side con deduplicación (mismo event_id que el navegador). El misterio birch.click: era un Signals Gateway de un socio pago, no se necesita (integración directa gratuita).
+- Primer token recibido solo tenía read_ads_dataset_quality (era de Dataset Quality API, solo lectura): descartado.
