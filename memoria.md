@@ -570,3 +570,6 @@
 - Causa de fondo de la URL fea: la home (/) hacia 308 a /daring-landing (regla _redirects + pretty-URL de Pages). Solucion: daring-landing.html renombrado a index.html (Pages lo sirve en / con 200 directo, sin redirect) y _redirects ahora manda /daring-landing y /daring-landing.html con 301 a / (consolida SEO y ads en el dominio limpio).
 - vercel.json actualizado a /index.html. /api/health, pixel, eventos y archivos de verificacion re-verificados en produccion (deployment 931dca34): home 200 sin redirect, urls viejas 301 a /, verificacion GSC 200 GET+HEAD en ambas rutas, api/health 200.
 - Los dos archivos de verificacion GSC se sirven via Pages Functions (functions/google83c5729b27d1923d.html.ts y functions/daring-landing/google83c5729b27d1923d.html.ts), no como archivos estaticos (el estatico hacia 308 por pretty-URL y Google no lo aceptaba).
+
+## Imagen para compartir OG (05-sep-2026)
+- Generada assets/og-cover.jpg (1200x630, 68KB): fondo de marca + sartén recortada + titular SARTÉN ANTIADHERENTE + precio/envío. Cableada en og:image y twitter:image. La foto vertical anterior sigue como imagen de producto en schema. Deployment a3bbdc61 verificado (200 image/jpeg + meta en HTML).
