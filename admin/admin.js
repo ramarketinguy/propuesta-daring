@@ -408,6 +408,58 @@ async function exportVentasCSV() {
   }
 }
 
+async function exportClientesCSV() {
+  const button = document.querySelector('#clientes-export');
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Armando archivo...';
+  try {
+    const base = new URLSearchParams({ page: '1', limit: '100', period: 'all', status: 'completed', sort: 'created_at', order: 'desc' });
+    const vistos = new Map();
+    let page = 1;
+    for (;;) {
+      base.set('page', String(page));
+      const response = await api(`/api/orders?${base.toString()}`);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'No se pudo exportar.');
+      for (const order of (result.orders ?? [])) {
+        const email = String(order.customer_email ?? '').trim().toLowerCase();
+        if (!email || vistos.has(email)) continue;
+        vistos.set(email, order);
+      }
+      if (!result.orders?.length || (result.total ?? 0) <= page * 100) break;
+      page += 1;
+    }
+    if (!vistos.size) { toast('No hay clientes con pago aprobado para exportar.', 'error'); return; }
+    const headers = ['Cliente', 'Email', 'Teléfono', 'Departamento', 'Localidad', 'Dirección'];
+    const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const lines = [headers.map(escape).join(';')];
+    [...vistos.values()].forEach((order) => {
+      lines.push([
+        order.customer_name,
+        order.customer_email,
+        order.customer_phone ?? '',
+        order.shipping_department ?? '',
+        order.shipping_city ?? '',
+        order.shipping_address ?? ''
+      ].map(escape).join(';'));
+    });
+    const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `clientes-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast(`Archivo armado con ${vistos.size} clientes.`, 'success');
+  } catch (error) {
+    toast(error.message ?? 'No se pudo exportar.', 'error');
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
 async function loadEmails() {
   const { page, limit, filters } = state.emails;
   const tbody = document.querySelector('#emails-table tbody');
@@ -1105,6 +1157,7 @@ async function boot() {
   ventasStatus.addEventListener('change', () => { state.ventas.filters.status = ventasStatus.value; refreshVentas(); });
   ventasPeriod.addEventListener('change', () => { state.ventas.filters.period = ventasPeriod.value; refreshVentas(); });
   document.querySelector('#ventas-export').addEventListener('click', exportVentasCSV);
+  document.querySelector('#clientes-export').addEventListener('click', exportClientesCSV);
 
   const resumenPeriod = document.querySelector('#resumen-period');
   resumenPeriod.addEventListener('change', () => { state.resumen.period = resumenPeriod.value; loadResumen().catch(() => undefined); });
