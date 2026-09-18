@@ -590,3 +590,21 @@
 - Token bueno generado desde Events Manager (flujo sin Dataset Quality). Meta aceptó evento Purchase de prueba (events_received:1, TEST77405). Guardado como secreto META_CAPI_TOKEN en Pages + .dev.vars local (nunca en git).
 - Desde ahora cada venta aprobada envía Purchase server-side con deduplicación (mismo event_id que el navegador). El misterio birch.click: era un Signals Gateway de un socio pago, no se necesita (integración directa gratuita).
 - Primer token recibido solo tenía read_ads_dataset_quality (era de Dataset Quality API, solo lectura): descartado.
+
+## Preferencia del usuario: despliegue automático (08-sep-2026)
+- El usuario pidió que SIEMPRE que se hagan cambios en el proyecto se desplieguen automáticamente a producción, sin preguntar.
+- Flujo: robocopy completo a staging (excluyendo .git/.wrangler/cloudflare-dist/node_modules/.dev.vars + MP4 pesados de Testimonios nuevos + Armado sartén) + `wrangler pages deploy <staging> --project-name daring-landing` + verificación en daring.com.uy. No hacer commit ni push salvo pedido explícito.
+
+## Videos con miniatura + portadas reales + botón WhatsApp desktop (07/08-sep-2026)
+- GSC reportaba "No se ha proporcionado ninguna URL de la miniatura": se agregaron 8 VideoObject con thumbnailUrl en el JSON-LD + atributo poster en los 8 videos + sitemap con lastmod actualizado. Validación iniciada en GSC el 7/9.
+- Portadas reales de testimonios: 6 JPG extraídos con ffmpeg (frame al 0.5s, 720x960, 40-80KB) en assets/Testimonios nuevos/web/poster-testimonio-N.jpg, cableados como poster y thumbnailUrl. El poster genérico del intro se quitó (quedaba un flash poco profesional; fondo negro hasta que arranca).
+- Panel: botón nuevo "Exportar clientes" (solo pagos aprobados, una fila por email con compra más reciente; columnas Cliente/Email/Teléfono/Departamento/Localidad/Dirección).
+- Landing: botón flotante de WhatsApp solo en escritorio (min-width 860px), con tono bordó de la página; usa el mismo número dinámico del panel y el mismo tracking de Contact.
+
+
+## Bloqueo de páginas internas (18-sep-2026)
+- Se detectaron en público daring-propuesta.html y daring-auditoria.html (contenidos internos con precios). Se borraron los dos HTML del proyecto.
+- Lección: Cloudflare Pages sin 404.html actúa como SPA y sirve la home con 200 para rutas sin asset; las reglas de _redirects NO prevalecen sobre ese fallback para estas rutas (probado: /daring-propuesta.html /410.html 410 no se aplicó).
+- Solución definitiva: Pages Functions functions/daring-propuesta.html.ts y functions/daring-auditoria.html.ts con onRequest que responden 410 + x-robots-tag: noindex (GET y HEAD). Funciones corren antes que el fallback: verificado 410 en daring.com.uy para ambas (home y /api/health siguen 200). Google las desindexa solo en los próximos días; si urge, pedir Retirada de URLs en GSC.
+- Se agregó 410.html y reglas en _redirects (respaldo, aunque Pages no las aplica para estas rutas). La instalación de wrangler en %TEMP%\\opencode\\wr estaba rota (carpeta bin vacía); reinstalada con npm install wrangler --prefix. Al desplegar por robocopy NO excluir la carpeta completa Testimonios nuevos: la landing usa sus web/*.mp4 y posters; solo excluir los MP4 pesados de la raíz de esa carpeta.
+- Cambios sin commitear (borrado de las 2 páginas + funciones 410 + 410.html + _redirects): pendiente commit y push.
